@@ -1,0 +1,12 @@
+This is my set of applications to create, modify and similarly duplicate
+existing entries into slightly modified entries.
+
+There are 4 applications.
+Two are to insert, view, update, show column information and delete
+duplicate entries in the products table (which means parts to be
+purchased, not sold)
+
+The other two are for duplicating existing entries to something closely
+similar and also for seeing the "big picture" of a complete materials
+or labor assembly from bottom to top with all table entries.
+
