@@ -1,6 +1,6 @@
 package BWC::InsertRecord_B;
 
-our $VERSION = 4.1.22;
+our $VERSION = 4.2.00;
 
 use warnings;
 use strict;
@@ -81,8 +81,7 @@ qq{<h3 class="cent">NOTE&nbsp;WELL:&nbsp;You&nbsp;must&nbsp;have&nbsp;appropriat
 			$ucfirst =~ s/Sku/SKU/;
 			$r->print(qq{<tr>});
 
-			unless ( $table eq "labor_units"
-				|| $table eq "method_to_charge"
+			unless ( $table eq "method_to_charge"
 				|| $table eq "labor_skill"
 				|| $table eq "labor_service" )
 			{
@@ -101,8 +100,7 @@ qq{<td align="left"><strong>$ucfirst</strong></td><td align="left" style="width:
 				);
 			}
 		}
-		if (   $table eq "labor_units"
-			|| $table eq "method_to_charge"
+		if ( $table eq "method_to_charge"
 			|| $table eq "labor_skill"
 			|| $table eq "labor_service" )
 		{
@@ -129,8 +127,7 @@ qq{<td align="left"><strong>$ucfirst</strong></td><td align="left" style="width:
 
 		}
 
-		unless ( $table eq "labor_units"
-			|| $table eq "method_to_charge"
+		unless ( $table eq "method_to_charge"
 			|| $table eq "labor_skill"
 			|| $table eq "labor_service" )
 		{
@@ -163,13 +160,10 @@ qq{<td align="left"><strong>$ucfirst</strong></td><td align="left" style="width:
 			elsif ( $table eq "labor_project" ) {
 				if ( $itemtoi == 3 ) {
 					push( @all_fill,
-						"labor_unit",
 						"method_to_charge",
 						"labor_project_currency",
 						"labor_project_is_subcontracted" );
 				}
-				print_option_list( $r, $dbh, "labor_unit", "labor_units",
-					$itemtoi, "Labor Unit", "labor_unit" );
 				print_option_list( $r, $dbh, "method_to_charge",
 					"method_to_charge", $itemtoi, "Method to Charge",
 					"method_to_charge" );
@@ -218,15 +212,12 @@ qq{<td align="left"><strong>$ucfirst</strong></td><td align="left" style="width:
 			elsif ( $table eq "general_labor" ) {
 				if ( $itemtoi == 3 ) {
 					push( @all_fill,
-						"labor_unit",
 						"method_to_charge",
 						"general_labor_is_subcontracted",
 						"general_labor_is_project",
 						"labor_category_id",
 						"labor_project_name" );
 				}
-				print_option_list( $r, $dbh, "labor_unit", "labor_units",
-					$itemtoi, "Labor Unit", "labor_unit" );
 				print_option_list( $r, $dbh, "method_to_charge",
 					"method_to_charge", $itemtoi, "Method to Charge",
 					"method_to_charge" );
@@ -864,7 +855,7 @@ BWC::InsertRecord_B
 
 =head1 VERSION
 
-This documentation refers to BWC::InsertRecord_B version 4.1.22.
+This documentation refers to BWC::InsertRecord_B version 4.2.00.
 
 =head1 SYNOPSIS
 

@@ -1,6 +1,6 @@
 package BWC::ViewLPLRecords;
 
-our $VERSION = 0.1.11;
+our $VERSION = 0.1.20;
 use warnings;
 use strict;
 
@@ -80,7 +80,6 @@ sub ViewLPLRecords {
 			'labor_project_received_in',
 			'labor_project_pay_out_rate',
 			'method_to_charge',
-			'labor_unit',
 			'labor_project_unit_price',
 			'units_charged',
 			'labor_project_total_paid_out',
@@ -92,7 +91,7 @@ sub ViewLPLRecords {
 			'labor_project_id'
 			);
 		$sth = $dbh->prepare(
-"SELECT labor_project_name,labor_project_section,labor_project_class,labor_project_subclass,labor_project_is_subcontracted,labor_project_received_in,labor_project_pay_out_rate,method_to_charge,labor_unit,labor_project_unit_price,units_charged,labor_project_total_paid_out,labor_project_total,labor_project_currency,labor_project_notes,labor_project_unit_notes,labor_project_labor_project_list_id,labor_project_id FROM labor_project WHERE labor_project_id = $labor_project_selected;"
+"SELECT labor_project_name,labor_project_section,labor_project_class,labor_project_subclass,labor_project_is_subcontracted,labor_project_received_in,labor_project_pay_out_rate,method_to_charge,labor_project_unit_price,units_charged,labor_project_total_paid_out,labor_project_total,labor_project_currency,labor_project_notes,labor_project_unit_notes,labor_project_labor_project_list_id,labor_project_id FROM labor_project WHERE labor_project_id = $labor_project_selected;"
 		);
 		$sth->execute();
 		$r->print(
@@ -147,7 +146,6 @@ $r->print(
 	<td align="left" class="full_assembly">$assem_part_hash_ref->{ labor_project_received_in }</td>
 	<td align="left" class="full_assembly">$assem_part_hash_ref->{ labor_project_pay_out_rate }</td>
 	<td align="left" class="full_assembly">$assem_part_hash_ref->{ method_to_charge }</td>
-	<td align="left" class="full_assembly">$assem_part_hash_ref->{ labor_unit }</td>
 	<td align="left" class="full_assembly">$assem_part_hash_ref->{ labor_project_unit_price }</td>
 	<td align="left" class="full_assembly">$assem_part_hash_ref->{ units_charged }</td>
 	<td align="left" class="full_assembly">$assem_part_hash_ref->{ labor_project_total_paid_out }</td>
@@ -308,7 +306,6 @@ sub DuplicateFullLPLRecordsForm {
 			'labor_project_received_in',
 			'labor_project_pay_out_rate',
 			'method_to_charge',
-			'labor_unit',
 			'units_charged',
 			'labor_project_currency',
 			'labor_project_notes',
@@ -377,7 +374,7 @@ sub DuplicateFullLPLRecordsForm {
 
 
 	$sth = $dbh->prepare(
-"SELECT labor_project_name,labor_project_section,labor_project_class,labor_project_subclass,labor_project_is_subcontracted,labor_project_received_in,labor_project_pay_out_rate,method_to_charge,labor_unit,labor_project_unit_price,units_charged,labor_project_total_paid_out,labor_project_total,labor_project_currency,labor_project_notes,labor_project_unit_notes,labor_project_labor_project_list_id,labor_project_id FROM labor_project WHERE labor_project_name=$labor_project_list_selected2;"
+"SELECT labor_project_name,labor_project_section,labor_project_class,labor_project_subclass,labor_project_is_subcontracted,labor_project_received_in,labor_project_pay_out_rate,method_to_charge,labor_project_unit_price,units_charged,labor_project_total_paid_out,labor_project_total,labor_project_currency,labor_project_notes,labor_project_unit_notes,labor_project_labor_project_list_id,labor_project_id FROM labor_project WHERE labor_project_name=$labor_project_list_selected2;"
 	);
 	$sth->execute();
 

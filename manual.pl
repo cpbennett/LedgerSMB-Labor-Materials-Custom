@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 
-our $VERSION = 0.0.03;
+our $VERSION = 0.0.04;
 use warnings;
 use strict;
 
@@ -139,10 +139,6 @@ $r->print(qq{<?xml version="1.0" encoding="utf-8"?>
 	</tr>
 	<tr>
 	<td class="medium3" align="left">method_to_charge</td><td class="medium3" align="left">Methods used to charge</td>
-	</tr>
-	<tr>
-
-	<td class="medium3" align="left">labor_units</td><td class="medium3" align="left">Units used to charge labor</td>
 	</tr>
 	<tr>
 	<td class="medium3" align="left">labor_service</td><td class="medium3" align="left">Service types</td>
@@ -346,10 +342,6 @@ elsif ($lang =~ /^es/) {
 	</tr>
 	<tr>
 	<td class="medium3" align="left">method_to_charge</td><td class="medium3" align="left">Métodos para cobrar labor</td>
-	</tr>
-	<tr>
-
-	<td class="medium3" align="left">labor_units</td><td class="medium3" align="left">Unidades usados para cobrar labor</td>
 	</tr>
 	<tr>
 	<td class="medium3" align="left">labor_service</td><td class="medium3" align="left">Tipos de servicio</td>

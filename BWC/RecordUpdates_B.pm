@@ -1,6 +1,6 @@
 package BWC::RecordUpdates_B;
 
-our $VERSION = 4.2.02;
+our $VERSION = 4.3.00;
 
 use warnings;
 use strict;
@@ -91,13 +91,6 @@ qq{<table class="cent" summary="Form to update records" rules="groups" cellspaci
 
 	if ( $table eq "labor_project" ) {
 		print_update_option_list(
-			$r,              $dbh,
-			"labor_unit",    "labor_project_id",
-			"labor_project", $id_selected,
-			"labor_unit",    "General Labor Unit",
-			"labor_unit",    "labor_units"
-		);
-		print_update_option_list(
 			$r,                       $dbh,
 			"labor_project_currency", "labor_project_id",
 			"labor_project",          $id_selected,
@@ -154,13 +147,6 @@ qq{<table class="cent" summary="Form to update records" rules="groups" cellspaci
 		);
 	}
 	elsif ( $table eq "general_labor" ) {
-		print_update_option_list(
-			$r,              $dbh,
-			"labor_unit",    "general_labor_id",
-			"general_labor", $id_selected,
-			"labor_unit",    "General Labor Unit",
-			"labor_unit",    "labor_units"
-		);
 		print_update_option_list(
 			$r,                       $dbh,
 			"general_labor_currency", "general_labor_id",
@@ -970,7 +956,7 @@ BWC::RecordUpdates_B
 
 =head1 VERSION
 
-This documentation refers to BWC::RecordUpdates_B version 4.2.02.
+This documentation refers to BWC::RecordUpdates_B version 4.3.00.
 
 =head1 SYNOPSIS
 

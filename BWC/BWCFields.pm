@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 package BWC::BWCFields;
-our $VERSION = 1.0.1;
+our $VERSION = 1.1.0;
 use warnings;
 use strict;
 
@@ -60,14 +60,6 @@ if ($table eq "products") {
 );
 		@notes_fields = qw(vendor_notes);
 		$table_id_field = "vendor_id";
-		@no_quote_fields = qw();
-} elsif ($table eq "labor_units") {
-		@select_fields = qw();
-		@field_names = qw(
-			labor_unit
-);
-		@notes_fields = qw();
-		$table_id_field = "labor_unit_id";
 		@no_quote_fields = qw();
 } elsif ($table eq "labor_skill") {
 		@select_fields = qw();
@@ -245,7 +237,6 @@ if ($table eq "products") {
 		@no_quote_fields = qw();
 } elsif ($table eq "labor_project") {
 		@select_fields = qw(
-			labor_unit
 			method_to_charge
 			labor_project_is_subcontracted
 			labor_project_currency
@@ -272,7 +263,6 @@ if ($table eq "products") {
 		@select_fields = qw(
 			labor_category_id
 			general_labor_currency
-			labor_unit
 			method_to_charge
 			general_labor_is_subcontracted
 			
