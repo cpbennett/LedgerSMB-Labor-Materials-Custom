@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 package BWC::BWCFields;
-our $VERSION = 1.1.0;
+our $VERSION = 1.1.1;
 use warnings;
 use strict;
 
@@ -356,4 +356,70 @@ if ($sub eq "InsertRecord") {
 }
 
 
+=pod
+
+=head1 NAME
+
+BWC::BWCFields
+
+=head1 VERSION
+
+This documentation refers to BWC::BWCFields version 1.1.1.
+
+=head1 SYNOPSIS
+
+Breaks up columns from each table into groups, which are returned.
+
+=head1 DESCRIPTION
+
+The modules which call upon Selector need different columns returned,
+depending on how these columns will be used.
+ViewTable requires all columns to be returned.
+RecordUpdatesForm needs only specialty and ordinary fields to be returned.
+The RecordUpdatesForm module produces select form fields on its own.
+RecordUpdates requires all fields except view only fields which are
+produced by stored procedures in the database.
+InsertRecordForm require ordinary fields and the "no quote" fields.
+Select form fields are produced by InsertRecordForm module itself.
+InsertRecord requires all fields except view only fields which are
+produced by stored procedures in the database.
+
+@order gives the final order the columns will be used.
+@field_names are ordinary columns.
+@specialty_fields are columns with certain special treatment.
+@select_fields are columns that have values that will be pulled from a
+form select field.
+@no_quote_fields are columns that are never quoted by $dbh->quote().
+@view_only are columns produced by stored procedures and should be seen
+but never changed.
+@notes_fields are columns whose output will be used in textareas
+$table_id_field is the name of the tables ID column.
+
+=head1 BUGS AND LIMITATIONS
+
+Please report problems to Chris Bennett (chris@bennettconstruction.us)
+
+Patches are welcome.
+
+=head1 AUTHOR
+
+Chris Bennett  (chris@bennettconstruction.us)
+
+=head1 LICENSE AND COPYRIGHT
+
+Copyright (c) 2012 Chris Bennett (chris@bennettconstruction.us).
+
+Permission to use, copy, modify, and distribute this software for any
+purpose with or without fee is hereby granted, provided that the above
+copyright notice and this permission notice appear in all copies.
+
+THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
+ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
+ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
+OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+
+=cut
 1;
