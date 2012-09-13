@@ -1,13 +1,151 @@
 package BWC::SelectTable_B;
 
-our $VERSION = 2.3.00;
+our $VERSION = 3.0.00;
 use warnings;
 use strict;
 
 require Exporter;
 our @ISA       = qw(Exporter);
-our @EXPORT_OK = qw(SelectTable);
+our @EXPORT_OK = qw(PrepareHead SelectTable);
 
+#######################################################################
+##		Sub PrepareHead
+
+sub PrepareHead {
+	my $r                = shift;
+	my $dbh              = shift;
+	my $title            = shift;
+	my $description      = shift;
+	my $lang             = shift;
+
+#######################################################################
+#	Prepare Javascript in Head
+
+my $table_string  = "";
+my $case_string   = "";
+my $option_string = "";
+my @columns       = ();
+my @tables        = ();
+my $sth           = $dbh->table_info( '', 'public', undef, 'TABLE' );
+for my $rel ( @{ $sth->fetchall_arrayref( {} ) } ) {
+	push( @tables, "\'$rel->{TABLE_NAME}\'" );
+}
+$sth->finish();
+$option_string .= qq{field_selected[field_selected.length] = new Option("", "");
+field_selected2[field_selected2.length] = new Option("", "");
+};
+
+$table_string = join( ',', @tables );
+foreach my $chosen (@tables) {
+	$case_string .= qq{
+		case $chosen :
+		field_selected.length = 0;
+		field_selected2.length = 0;
+		field_selected[field_selected.length] = new Option("", "");
+		field_selected2[field_selected2.length] = new Option("", "");
+
+};
+	my $statement =
+"SELECT column_name FROM information_schema.columns WHERE table_name = $chosen;";
+	my $sth = $dbh->prepare($statement);
+	my $rv  = $sth->execute() or die "can't execute the query: $sth->errstr";
+	my $tbl = $sth->fetchall_arrayref or die "$sth->errstr\n";
+	for my $i ( 0 .. $#{$tbl} ) {
+		$case_string .= qq{
+field_selected[field_selected.length] = new Option("$tbl->[$i][0]", "$tbl->[$i][0]");
+field_selected2[field_selected2.length] = new Option("$tbl->[$i][0]", "$tbl->[$i][0]");
+};
+		if ( $chosen eq $tables[0] ) {
+			$option_string .= qq{
+field_selected[field_selected.length] = new Option("$tbl->[$i][0]", "$tbl->[$i][0]");
+field_selected2[field_selected2.length] = new Option("$tbl->[$i][0]", "$tbl->[$i][0]");
+};
+		}
+	}
+	$case_string .= qq{break;
+};
+}
+
+#######################################################################
+##		Print Page Head
+
+$r->print(
+	qq#<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="$lang" lang="$lang">
+<head>
+<title>$title</title>
+<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+<meta http-equiv="Content-language" content="$lang" />
+<meta name="robots" content="noindex,nofollow" />
+<meta http-equiv="Content-Script-Type" content="text/javascript" />
+<meta name="description" content=$description" />
+<meta name="author" content="Chris Bennett" />
+<link rel="shortcut icon" href="/favicon.ico" />
+<link href="/db.css" type="text/css" rel="stylesheet" media="screen" />
+<link rel="stylesheet" type="text/css" href="/print.css" media="print" />
+<link rel="stylesheet" type="text/css" href="/handheldimg.css" media="handheld" />
+<script type="text/javascript" src="/javascript/external.js"></script>
+<script type="text/javascript">
+//<![CDATA[
+if (window.addEventListener) {
+	window.addEventListener("load",setupEvents,false);
+} else if (window.attachEvent) {
+	window.attachEvent("onload",setupEvents);
+} else {
+	window.onload=setupEvents;
+}
+
+function setupEvents(evnt) {
+	var opts = document.getElementById("someForm").table_selected.options;
+	var field_selected = document.getElementById("someForm").field_selected.options;
+	var field_selected2 = document.getElementById("someForm").field_selected2.options;
+	$option_string
+	document.getElementById("someForm").table_selected.onchange = checkSelect;
+	
+}
+
+function checkSelect(evnt) {
+	var opts = document.getElementById("someForm").table_selected.options;
+	var field_selected = document.getElementById("someForm").field_selected.options;
+	var field_selected2 = document.getElementById("someForm").field_selected2.options;
+
+	for ( var i = 0; i < opts.length; i++) {
+		if ( opts[i].selected ) {
+			switch(opts[i].value) {
+				$case_string
+			}
+		}
+	}
+
+	return false;
+}
+function checkscript() {
+	for (i=0;i<document.someForm.command.length;i++) {
+		if (document.someForm.command[i].checked) {
+			return true;
+		}
+}
+alert("Please Select a Command");
+return false;
+}
+//]]>
+</script>
+</head>
+<body>
+<div>
+<a class="bigblue" href="/index.html" rel="external">Bennett Construction Home Page</a><br />
+<a class="biggreen" href="/perl/VP/manual.pl" rel="external">VIEW USAGE MANUAL</a><br />
+<a class="bigblue" href="/perl/VP/gl.pl" rel="external">Labor and Projects</a><br />
+<a class="bigblue" href="/perl/VP/pg.pl" rel="external">Products Vendors Customers Assemblies</a><br />
+<a class="bigblue" href="/perl/VP/tr.pl" rel="external">Materials Viewer and Duplicator</a><br />
+<a class="bigblue" href="/perl/VP/lab.pl" rel="external">Labor Viewer and Duplicator</a><br />
+<a class="bigred" href="/logout">Log Off</a>
+</div>
+#
+);
+
+}
 #######################################################################
 ##		Sub SelectTable
 
@@ -183,11 +321,12 @@ BWC::SelectTable_B
 
 =head1 VERSION
 
-This documentation refers to BWC::SelectTable_B version 2.2.10.
+This documentation refers to BWC::SelectTable_B version 3.0.00.
 
 =head1 SYNOPSIS
 
-Select a table to work with and commands to use.
+Prepares page head, including language and javascript.
+Prepares form fields and commands to use.
 
 =head1 DESCRIPTION
 

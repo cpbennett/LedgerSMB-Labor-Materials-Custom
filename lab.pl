@@ -231,11 +231,11 @@ $dbh->disconnect;
 
 =head1 NAME
 
-labbz.pl - View and reproduce similar labor project list trees to bottom.
+lab.pl - View and reproduce similar labor project list trees to bottom.
 
 =head1 VERSION
 
-This documentation refers to labbz.pl version 0.0.01.
+This documentation refers to lab.pl version 0.0.01.
 
 =head1 SYNOPSIS
 
