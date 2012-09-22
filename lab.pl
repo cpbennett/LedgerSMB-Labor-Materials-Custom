@@ -7,8 +7,8 @@ use strict;
 use Apache::Request();
 use DBI();
 
-use BWC::SelectLPL qw(SelectLPLs);
-use BWC::ViewLPLRecords
+use BWCL::SelectLPL qw(SelectLPLs);
+use BWCL::ViewLPLRecords
   qw(ViewLPLRecords DuplicateFullLPLRecordsForm DuplicateFullLPLRecords);
 
 #######################################################################

@@ -8,11 +8,11 @@ use Apache::Request();
 use DBI();
 
 #subs Modules
-use BWC::ShowAdmin qw(ShowTables ShowColumns);
-use BWC::InsertRecord_B qw(InsertRecordGroup InsertRecordGroupForm);
-use BWC::SelectTable_B qw(PrepareHead SelectTable);
-use BWC::RecordUpdates_B qw(UpdateRecordForm UpdateRecord DeleteDuplicates);
-use BWC::ViewRecords_B qw(ViewRecords);
+use BWCL::ShowAdmin qw(ShowTables ShowColumns);
+use BWCL::InsertRecord_B qw(InsertRecordGroup InsertRecordGroupForm);
+use BWCL::SelectTable_B qw(PrepareHead SelectTable);
+use BWCL::RecordUpdates_B qw(UpdateRecordForm UpdateRecord DeleteDuplicates);
+use BWCL::ViewRecords_B qw(ViewRecords);
 
 #######################################################################
 ##		Connect to Database

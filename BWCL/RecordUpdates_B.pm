@@ -1,4 +1,4 @@
-package BWC::RecordUpdates_B;
+package BWCL::RecordUpdates_B;
 
 our $VERSION = 4.3.00;
 
@@ -12,8 +12,8 @@ our @EXPORT_OK = qw(UpdateRecord UpdateRecordForm DeleteDuplicates);
 use HTML::Entities();
 use Encode;
 
-use BWC::ViewRecords_B qw(ViewUpdatedRecord);
-use BWC::BWCFields qw (Selecter);
+use BWCL::ViewRecords_B qw(ViewUpdatedRecord);
+use BWCL::BWCLFields qw (Selecter);
 
 #######################################################################
 ##		Sub UpdateRecordForm
@@ -951,12 +951,12 @@ qq{<option value="$$values_aref[$i]" style="width:99%;">$$names_aref[$i]</option
 
 =head1 NAME
 
-BWC::RecordUpdates_B
+BWCL::RecordUpdates_B
 
 
 =head1 VERSION
 
-This documentation refers to BWC::RecordUpdates_B version 4.3.00.
+This documentation refers to BWCL::RecordUpdates_B version 4.3.00.
 
 =head1 SYNOPSIS
 

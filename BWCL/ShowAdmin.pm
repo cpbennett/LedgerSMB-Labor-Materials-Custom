@@ -1,4 +1,4 @@
-package BWC::ShowAdmin;
+package BWCL::ShowAdmin;
 
 our $VERSION = 1.0.11;
 use warnings;
@@ -332,11 +332,11 @@ ORDER BY 1;";
 
 =head1 NAME
 
-BWC::ShowAdmin
+BWCL::ShowAdmin
 
 =head1 VERSION
 
-This documentation refers to BWC::ShowAdmin version 1.0.11.
+This documentation refers to BWCL::ShowAdmin version 1.0.11.
 
 =head1 SYNOPSIS
 

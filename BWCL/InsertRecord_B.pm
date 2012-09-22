@@ -1,4 +1,4 @@
-package BWC::InsertRecord_B;
+package BWCL::InsertRecord_B;
 
 our $VERSION = 4.2.00;
 
@@ -8,8 +8,8 @@ use strict;
 use Encode;
 use HTML::Entities();
 
-use BWC::ViewRecords_B qw(ViewUpdatedRecord);
-use BWC::BWCFields qw (Selecter);
+use BWCL::ViewRecords_B qw(ViewUpdatedRecord);
+use BWCL::BWCLFields qw (Selecter);
 
 require Exporter;
 our @ISA       = qw(Exporter);
@@ -851,11 +851,11 @@ qq|document.insertform.$all_fill[$t]$u.value=document.insertform.$all_fill[$t]3.
 
 =head1 NAME
 
-BWC::InsertRecord_B
+BWCL::InsertRecord_B
 
 =head1 VERSION
 
-This documentation refers to BWC::InsertRecord_B version 4.2.00.
+This documentation refers to BWCL::InsertRecord_B version 4.2.00.
 
 =head1 SYNOPSIS
 

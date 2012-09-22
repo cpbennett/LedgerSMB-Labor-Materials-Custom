@@ -1,4 +1,4 @@
-package BWC::ViewFALRecords;
+package BWCL::ViewFALRecords;
 
 our $VERSION = 1.1.22;
 use warnings;
@@ -9,7 +9,7 @@ our @ISA = qw(Exporter);
 our @EXPORT_OK =
   qw(ViewFALRecords ViewFullFALRecords DuplicateFullFALRecordsForm DuplicateFullFALRecords);
 
-use BWC::InsertRecord_B qw(InsertRecordGroup);
+use BWCL::InsertRecord_B qw(InsertRecordGroup);
 
 #######################################################################
 ##		Sub ViewFALRecords
@@ -1668,12 +1668,12 @@ qq{INSERT INTO full_assembly_list ($full_assembly_list_fields) VALUES ($full_ass
 
 =head1 NAME
 
-BWC::ViewFALRecords - View full assembly list tree and reproduce
+BWCL::ViewFALRecords - View full assembly list tree and reproduce
 similar trees.
 
 =head1 VERSION
 
-This documentation refers to BWC::ViewFALRecords version 1.1.21.
+This documentation refers to BWCL::ViewFALRecords version 1.1.21.
 
 =head1 SYNOPSIS
 

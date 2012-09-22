@@ -7,8 +7,8 @@ use strict;
 use Apache::Request();
 use DBI();
 
-use BWC::SelectFAL qw(SelectFALs);
-use BWC::ViewFALRecords
+use BWCL::SelectFAL qw(SelectFALs);
+use BWCL::ViewFALRecords
   qw(ViewFALRecords ViewFullFALRecords DuplicateFullFALRecordsForm DuplicateFullFALRecords);
 
 #######################################################################

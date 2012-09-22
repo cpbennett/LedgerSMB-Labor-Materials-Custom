@@ -1,4 +1,4 @@
-package BWC::ViewRecords_B;
+package BWCL::ViewRecords_B;
 
 our $VERSION = 1.2.22;
 use warnings;
@@ -10,7 +10,7 @@ our @EXPORT_OK = qw(ViewRecords ViewUpdatedRecord);
 
 use HTML::Entities();
 use Encode;
-use BWC::BWCFields qw (Selecter);
+use BWCL::BWCLFields qw (Selecter);
 
 #######################################################################
 ##		Sub ViewRecords
@@ -459,11 +459,11 @@ sub view_table {
 
 =head1 NAME
 
-BWC::ViewRecords_B
+BWCL::ViewRecords_B
 
 =head1 VERSION
 
-This documentation refers to BWC::ViewRecords_B version 1.2.22.
+This documentation refers to BWCL::ViewRecords_B version 1.2.22.
 
 =head1 SYNOPSIS
 

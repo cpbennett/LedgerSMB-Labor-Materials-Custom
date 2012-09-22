@@ -1,23 +1,22 @@
-package BWC::SelectLPL;
+package BWCL::SelectFAL;
 
-our $VERSION = 0.0.02;
+our $VERSION = 1.0.00;
 use warnings;
 use strict;
 
 require Exporter;
 our @ISA       = qw(Exporter);
-our @EXPORT_OK = qw(SelectLPLs);
+our @EXPORT_OK = qw(SelectFALs);
 
 #######################################################################
-##		Sub SelectLPLs
+##		Sub SelectFALs
 
-sub SelectLPLs {
-	# version 0.2
+sub SelectFALs {
 	my $r       = shift;
 	my $dbh     = shift;
 	my $program = shift;
 	my $sth;
-	my @labor_project_lists = ();
+	my @full_assembly_lists = ();
 	my @currencies          = ();
 	my @vetor               = ();
 	my $build;
@@ -29,19 +28,19 @@ sub SelectLPLs {
 	<table summary="" border="2" rules="all">
 	<tbody>
 	<tr>
-	<td><label for="labor_project_list_selected">Labor Project List Item</label></td>
-	<td><select id="labor_project_list_selected" name="labor_project_list_selected">
+	<td><label for="full_assembly_list_selected">Full Assembly List Item</label></td>
+	<td><select id="full_assembly_list_selected" name="full_assembly_list_selected">
 	}
 	);
 	$sth = $dbh->prepare(
-"SELECT labor_project_list_name FROM labor_project_list ORDER BY labor_project_list_name;"
+"SELECT full_assembly_list_name FROM full_assembly_list ORDER BY full_assembly_list_name;"
 	);
 	$sth->execute;
 	while ( @vetor = $sth->fetchrow ) {
-		push( @labor_project_lists, @vetor );
+		push( @full_assembly_lists, @vetor );
 	}
 	$sth->finish();
-	for my $build (@labor_project_lists) {
+	for my $build (@full_assembly_lists) {
 		$build =~ s/"/''/g
 		  ; # This substitution is done for form which allows javascript to function
 		$r->print(
@@ -53,13 +52,13 @@ sub SelectLPLs {
 		qq{</select></td>
 	</tr>
 	<tr>
-	<td><label for="labor_project_selected">Labor Project Section to See</label></td>
+	<td><label for="assembly_selected">Full Assembly Section to See</label></td>
 	<td><script type="text/javascript">
 	//<![CDATA[
-	document.writeln("<select id='labor_project_selected' name='labor_project_selected'></select>");
+	document.writeln("<select id='assembly_selected' name='assembly_selected'></select>");
 	//]]>
 	</script>
-	<noscript><input type="text" id="labor_project_selected" name="labor_project_selected" value="All" /></noscript>
+	<noscript><input type="text" id="assembly_selected" name="assembly_selected" value="All" /></noscript>
 	</td>
 	</tr>
 	<tr>
@@ -68,7 +67,7 @@ sub SelectLPLs {
 	}
 	);
 	$sth =
-	  $dbh->prepare("SELECT currency FROM currenciesg ORDER BY currency DESC;");
+	  $dbh->prepare("SELECT currency FROM currencies ORDER BY currency DESC;");
 	$sth->execute;
 	while ( @vetor = $sth->fetchrow ) {
 		push( @currencies, @vetor );
@@ -87,11 +86,15 @@ sub SelectLPLs {
 	</tbody></table>
 	<br />
 	<label for="command">View Records</label>
-	<input type="radio" value="ViewLPLRecords" checked="checked" id="ViewLPLRecords" name="command" />
+	<input type="radio" value="ViewFALRecords" checked="checked" id="ViewFALRecords" name="command" />
+	<br />
+	<br />
+	<label for="command">View Full Records</label>
+	<input type="radio" value="ViewFullFALRecords" id="ViewFullFALRecords" name="command" />
 	<br />
 	<br />
 	<label for="command">Duplicate Records</label>
-	<input type="radio" value="DuplicateFullLPLRecordsForm" id="DuplicateFullLPLRecordsForm" name="command" />
+	<input type="radio" value="DuplicateFullFALRecordsForm" id="DuplicateFullFALRecordsForm" name="command" />
 	<br />
 	<br />
 
@@ -110,11 +113,11 @@ sub SelectLPLs {
 
 =head1 NAME
 
-BWC::SelectLPL - Select which tree to examine or duplicate.
+BWCL::SelectFAL - Select which tree to examine or duplicate.
 
 =head1 VERSION
 
-This documentation refers to BWC::SelectLPL version 0.0.02.
+This documentation refers to BWCL::SelectFAL version 1.0.00.
 
 =head1 SYNOPSIS
 

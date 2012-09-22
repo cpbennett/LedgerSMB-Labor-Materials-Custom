@@ -1,4 +1,4 @@
-package BWC::ViewLPLRecords;
+package BWCL::ViewLPLRecords;
 
 our $VERSION = 0.1.20;
 use warnings;
@@ -8,7 +8,7 @@ require Exporter;
 our @ISA       = qw(Exporter);
 our @EXPORT_OK = qw(ViewLPLRecords DuplicateFullLPLRecordsForm DuplicateFullLPLRecords);
 
-use BWC::InsertRecord_B qw(InsertRecordGroup);
+use BWCL::InsertRecord_B qw(InsertRecordGroup);
 
 
 #######################################################################

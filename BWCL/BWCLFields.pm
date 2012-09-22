@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-package BWC::BWCFields;
+package BWCL::BWCLFields;
 our $VERSION = 1.1.1;
 use warnings;
 use strict;
@@ -360,11 +360,11 @@ if ($sub eq "InsertRecord") {
 
 =head1 NAME
 
-BWC::BWCFields
+BWCL::BWCLFields
 
 =head1 VERSION
 
-This documentation refers to BWC::BWCFields version 1.1.1.
+This documentation refers to BWCL::BWCLFields version 1.1.1.
 
 =head1 SYNOPSIS
 

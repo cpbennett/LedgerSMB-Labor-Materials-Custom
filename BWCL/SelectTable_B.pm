@@ -1,4 +1,4 @@
-package BWC::SelectTable_B;
+package BWCL::SelectTable_B;
 
 our $VERSION = 3.0.00;
 use warnings;
@@ -317,11 +317,11 @@ sub SelectTable {
 
 =head1 NAME
 
-BWC::SelectTable_B
+BWCL::SelectTable_B
 
 =head1 VERSION
 
-This documentation refers to BWC::SelectTable_B version 3.0.00.
+This documentation refers to BWCL::SelectTable_B version 3.0.00.
 
 =head1 SYNOPSIS
 
