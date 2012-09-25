@@ -77,7 +77,7 @@ for my $subclass (@$all_subclasses_aref) {
 }
 my $case_stringc = '';
 my $statement = "SELECT distinct class from products ORDER BY class;";
-my $sth = $dbh->prepare($statement);
+$sth = $dbh->prepare($statement);
 my $rv  = $sth->execute() or die "can't execute the query: $sth->errstr";
 my $classes_aref = $dbh->selectcol_arrayref($statement);# or die "$sth->errstr\n";
 	$case_stringc .= qq{
