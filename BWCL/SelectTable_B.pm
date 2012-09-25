@@ -1,6 +1,6 @@
 package BWCL::SelectTable_B;
 
-our $VERSION = 3.0.00;
+our $VERSION = 4.0.00;
 use warnings;
 use strict;
 
@@ -66,6 +66,53 @@ field_selected2[field_selected2.length] = new Option("$tbl->[$i][0]", "$tbl->[$i
 };
 }
 
+my $option_stringc = '';
+my $all_subclasses_aref = $dbh->selectcol_arrayref("SELECT DISTINCT subclass FROM products ORDER BY subclass;");
+for my $subclass (@$all_subclasses_aref) {
+	if (defined $subclass) {
+	$option_stringc .= qq{
+					subclass_selected[subclass_selected.length] = new Option("$subclass", "$subclass");
+					};
+}
+}
+my $case_stringc = '';
+my $statement = "SELECT distinct class from products ORDER BY class;";
+my $sth = $dbh->prepare($statement);
+my $rv  = $sth->execute() or die "can't execute the query: $sth->errstr";
+my $classes_aref = $dbh->selectcol_arrayref($statement);# or die "$sth->errstr\n";
+	$case_stringc .= qq{
+		case 'All' :
+					subclass_selected.length = 0;
+					subclass_selected[subclass_selected.length] = new Option("All", "All");
+					$option_stringc
+					break;
+};
+
+for my $i ( 0 .. ($#{$classes_aref} - 1) ) {
+	$$classes_aref[$i] = $dbh->quote($$classes_aref[$i]);
+	$statement = "SELECT DISTINCT subclass FROM products WHERE class = $$classes_aref[$i] ORDER BY subclass;";
+
+	$case_stringc .= qq|
+		case $$classes_aref[$i] :
+					subclass_selected.length = 0;
+					subclass_selected[subclass_selected.length] = new Option("All", "All");
+				|;
+	my $subclass_href = $dbh->selectall_hashref($statement, 'subclass');
+	for my $keys (sort keys %$subclass_href) {
+		for my $keys2 (sort keys %{$$subclass_href{$keys}}) {
+			if (defined $$subclass_href{$keys}{$keys2}) {
+				$case_stringc .= qq|
+					subclass_selected[subclass_selected.length] = new Option("$$subclass_href{$keys}{$keys2}", "$$subclass_href{$keys}{$keys2}");
+|;
+
+			}
+		}
+
+	}
+		$case_stringc .= qq{break;
+};
+
+}
 #######################################################################
 ##		Print Page Head
 
@@ -131,10 +178,44 @@ return false;
 }
 //]]>
 </script>
+<script type="text/javascript">
+//<![CDATA[
+if (window.addEventListener) {
+	window.addEventListener("load",setupEventsC,false);
+} else if (window.attachEvent) {
+	window.attachEvent("onload",setupEventsC);
+} else {
+	window.onload=setupEventsC;
+}
+
+function setupEventsC(evnt) {
+	var opts = document.getElementById("someForm").class_selected.options;
+	var subclass_selected = document.getElementById("someForm").subclass_selected.options;
+					subclass_selected[subclass_selected.length] = new Option("All", "All");
+	$option_stringc
+	document.getElementById("someForm").class_selected.onchange = checkSelectC;
+	
+}
+
+function checkSelectC(evnt) {
+	var opts = document.getElementById("someForm").class_selected.options;
+	var subclass_selected = document.getElementById("someForm").subclass_selected.options;
+
+	for ( var i = 0; i < opts.length; i++) {
+		if ( opts[i].selected ) {
+			switch(opts[i].value) {
+				$case_stringc
+			}
+		}
+	}
+
+	return false;
+}
+</script>
 </head>
 <body>
 <div>
-<a class="bigblue" href="/index.html" rel="external">Bennett Construction Home Page</a><br />
+<a class="bigblue" href="http://www.bennettconstruction.us/index.html" rel="external">Bennett Construction Home Page</a><br />
 <a class="biggreen" href="/perl/VP/manual.pl" rel="external">VIEW USAGE MANUAL</a><br />
 <a class="bigblue" href="/perl/VP/gl.pl" rel="external">Labor and Projects</a><br />
 <a class="bigblue" href="/perl/VP/pg.pl" rel="external">Products Vendors Customers Assemblies</a><br />
@@ -321,7 +402,7 @@ BWCL::SelectTable_B
 
 =head1 VERSION
 
-This documentation refers to BWCL::SelectTable_B version 3.0.00.
+This documentation refers to BWCL::SelectTable_B version 4.0.00.
 
 =head1 SYNOPSIS
 
@@ -330,8 +411,16 @@ Prepares form fields and commands to use.
 
 =head1 DESCRIPTION
 
+Prepares page head, including language and javascript.
+Prepares form fields and commands to use.
+Selects fields for table selected with javascript.
+Add javascript to only show relevant subclasses after
+selecting a class
+
 
 =head1 BUGS AND LIMITATIONS
+
+Using back in browser to not reset field and second field correctly.
 
 Please report problems to Chris Bennett (chris@bennettconstruction.us)
 
