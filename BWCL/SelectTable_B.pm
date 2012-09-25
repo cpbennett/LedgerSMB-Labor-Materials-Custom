@@ -68,7 +68,7 @@ field_selected2[field_selected2.length] = new Option("$tbl->[$i][0]", "$tbl->[$i
 	$case_string .= qq{break;
 };
 }
-if ($program =~ /pg/) {
+unless ($program =~ /gl/) {
 my $all_subclasses_aref = $dbh->selectcol_arrayref("SELECT DISTINCT subclass FROM products ORDER BY subclass;");
 for my $subclass (@$all_subclasses_aref) {
 	if (defined $subclass) {
@@ -181,7 +181,7 @@ return false;
 </script>
 #);
 
-if ($program =~ /pg/) {
+unless ($program =~ /gl/) {
 	$r->print(qq#<script type="text/javascript">
 //<![CDATA[
 if (window.addEventListener) {
