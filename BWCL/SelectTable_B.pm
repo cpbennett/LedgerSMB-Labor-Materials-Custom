@@ -1,6 +1,6 @@
 package BWCL::SelectTable_B;
 
-our $VERSION = 4.0.00;
+our $VERSION = 4.0.01;
 use warnings;
 use strict;
 
@@ -25,6 +25,8 @@ sub PrepareHead {
 my $table_string  = "";
 my $case_string   = "";
 my $option_string = "";
+my $option_stringc= '';
+my $case_stringc  = '';
 my @columns       = ();
 my @tables        = ();
 my $sth           = $dbh->table_info( '', 'public', undef, 'TABLE' );
@@ -67,7 +69,6 @@ field_selected2[field_selected2.length] = new Option("$tbl->[$i][0]", "$tbl->[$i
 };
 }
 if ($program =~ /^pg/) {
-my $option_stringc = '';
 my $all_subclasses_aref = $dbh->selectcol_arrayref("SELECT DISTINCT subclass FROM products ORDER BY subclass;");
 for my $subclass (@$all_subclasses_aref) {
 	if (defined $subclass) {
@@ -76,7 +77,6 @@ for my $subclass (@$all_subclasses_aref) {
 					};
 }
 }
-my $case_stringc = '';
 my $statement = "SELECT distinct class from products ORDER BY class;";
 $sth = $dbh->prepare($statement);
 my $rv  = $sth->execute() or die "can't execute the query: $sth->errstr";
@@ -217,6 +217,7 @@ function checkSelectC(evnt) {
 }
 </script>
 #);
+}
 $r->print(qq#
 </head>
 <body>
@@ -408,7 +409,7 @@ BWCL::SelectTable_B
 
 =head1 VERSION
 
-This documentation refers to BWCL::SelectTable_B version 4.0.00.
+This documentation refers to BWCL::SelectTable_B version 4.0.01.
 
 =head1 SYNOPSIS
 
