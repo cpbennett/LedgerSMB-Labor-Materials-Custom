@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 
-our $VERSION = 1.3.10;
+our $VERSION = 1.3.11;
 use warnings;
 use strict;
 
@@ -67,7 +67,7 @@ $lang = $1;
 my $title = "Product Assembly DB";
 my $description = "Database Access-Vendors/Products/Customers/Jobsites/Purchases/Assemblies/Full Assemblies";
 
-PrepareHead ($r, $dbh, $title, $description, $lang);
+PrepareHead ($r, $dbh, $program, $title, $description, $lang);
 
 #######################################################################
 ##		Get CGI Params
@@ -321,7 +321,7 @@ pg.pl
 
 =head1 VERSION
 
-This documentation refers to pg.pl version 1.3.10.
+This documentation refers to pg.pl version 1.3.11.
 
 =head1 SYNOPSIS
 

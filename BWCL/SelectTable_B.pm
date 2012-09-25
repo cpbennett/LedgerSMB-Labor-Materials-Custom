@@ -14,6 +14,7 @@ our @EXPORT_OK = qw(PrepareHead SelectTable);
 sub PrepareHead {
 	my $r                = shift;
 	my $dbh              = shift;
+	my $program          = shift;
 	my $title            = shift;
 	my $description      = shift;
 	my $lang             = shift;
@@ -65,7 +66,7 @@ field_selected2[field_selected2.length] = new Option("$tbl->[$i][0]", "$tbl->[$i
 	$case_string .= qq{break;
 };
 }
-
+if ($program =~ /^pg/) {
 my $option_stringc = '';
 my $all_subclasses_aref = $dbh->selectcol_arrayref("SELECT DISTINCT subclass FROM products ORDER BY subclass;");
 for my $subclass (@$all_subclasses_aref) {
@@ -111,7 +112,7 @@ for my $i ( 0 .. ($#{$classes_aref} - 1) ) {
 	}
 		$case_stringc .= qq{break;
 };
-
+}
 }
 #######################################################################
 ##		Print Page Head
@@ -178,7 +179,10 @@ return false;
 }
 //]]>
 </script>
-<script type="text/javascript">
+#);
+
+if ($program =~ /^pg/) {
+	$r->print(qq#<script type="text/javascript">
 //<![CDATA[
 if (window.addEventListener) {
 	window.addEventListener("load",setupEventsC,false);
@@ -212,6 +216,8 @@ function checkSelectC(evnt) {
 	return false;
 }
 </script>
+#);
+$r->print(qq#
 </head>
 <body>
 <div>

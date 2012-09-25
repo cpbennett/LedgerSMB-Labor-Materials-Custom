@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 
-our $VERSION = 1.3.10;
+our $VERSION = 1.3.11;
 use warnings;
 use strict;
 
@@ -65,7 +65,7 @@ $lang = $1;
 my $title = "Labor DB";
 my $description = "Database Access-General Labor/Labor Categories/Labor Projects";
 
-PrepareHead ($r, $dbh, $title, $description, $lang);
+PrepareHead ($r, $dbh, $program, $title, $description, $lang);
 
 
 #######################################################################
@@ -325,7 +325,7 @@ gl.pl
 
 =head1 VERSION
 
-This documentation refers to gl.pl version 1.3.10.
+This documentation refers to gl.pl version 1.3.11.
 
 =head1 SYNOPSIS
 
