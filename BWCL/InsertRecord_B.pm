@@ -1,6 +1,6 @@
 package BWCL::InsertRecord_B;
 
-our $VERSION = 4.2.00;
+our $VERSION = 4.2.10;
 
 use warnings;
 use strict;
@@ -187,7 +187,8 @@ qq{<td align="left"><strong>$ucfirst</strong></td><td align="left" style="width:
 				}
 				print_option_list( $r, $dbh, "labor_project_name",
 					"labor_project", $itemtoi, "Labor Project List Name",
-					"labor_project_list_name" );
+					"labor_project_list_name", );
+					"WHERE labor_project_name NOT IN (SELECT labor_project_list_name FROM labor_project_list)" );
 				print_option_list( $r, $dbh, "currency", "currenciesg",
 					$itemtoi, "Labor Project List Currency",
 					"labor_project_list_currency" );
@@ -855,7 +856,7 @@ BWCL::InsertRecord_B
 
 =head1 VERSION
 
-This documentation refers to BWCL::InsertRecord_B version 4.2.00.
+This documentation refers to BWCL::InsertRecord_B version 4.2.10.
 
 =head1 SYNOPSIS
 

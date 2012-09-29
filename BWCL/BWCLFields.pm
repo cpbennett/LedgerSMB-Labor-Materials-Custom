@@ -185,7 +185,6 @@ if ($table eq "products") {
 		@select_fields = qw(assembly_part_assembly_id assembly_part_currency);
 		@field_names = qw(
 			assembly_part_name
-			assembly_part_description
 			assembly_part_class
 			assembly_part_subclass
 			assembly_part_quantity
@@ -194,7 +193,7 @@ if ($table eq "products") {
 		@notes_fields = qw(assembly_part_notes);
 		$table_id_field = "assembly_part_id";
 		@no_quote_fields = qw();
-		@view_only = qw(assembly_part_subtotal);
+		@view_only = qw(assembly_part_subtotal assembly_part_description);
 } elsif ($table eq "full_assembly") {
 		@select_fields = qw(full_assembly_assembly_id full_assembly_currency);
 		@field_names = qw(
