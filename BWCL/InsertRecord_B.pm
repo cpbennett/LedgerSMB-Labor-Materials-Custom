@@ -187,7 +187,7 @@ qq{<td align="left"><strong>$ucfirst</strong></td><td align="left" style="width:
 				}
 				print_option_list( $r, $dbh, "labor_project_name",
 					"labor_project", $itemtoi, "Labor Project List Name",
-					"labor_project_list_name", );
+					"labor_project_list_name",
 					"WHERE labor_project_name NOT IN (SELECT labor_project_list_name FROM labor_project_list)" );
 				print_option_list( $r, $dbh, "currency", "currenciesg",
 					$itemtoi, "Labor Project List Currency",
