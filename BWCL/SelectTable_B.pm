@@ -1,6 +1,6 @@
 package BWCL::SelectTable_B;
 
-our $VERSION = 4.0.01;
+our $VERSION = 4.0.11;
 use warnings;
 use strict;
 
@@ -174,7 +174,18 @@ function checkscript() {
 			return true;
 		}
 }
+#);
+
+if ($lang =~ /^es/) {
+	$r->print(qq#
+alert("Por favor, selecciona un comando");
+#);
+} else {
+	$r->print(qq#
 alert("Please Select a Command");
+#);
+}
+$r->print(qq#
 return false;
 }
 //]]>
@@ -242,10 +253,24 @@ sub SelectTable {
 	my $dbh              = shift;
 	my $program          = shift;
 	my $field_table_aref = shift;
+	my $lang             = shift;
 	my $select_label;
 	my $ucfirst;
 	my $tbl       = "";
 	my $statement = "";
+		if ($lang =~ /^es/) {
+			$r->print(qq{<div>
+	<h2>Favor de seleccionar un comando y tabla para usar</h2>
+	<form id="someForm" name="someForm" action="$program" method="post">
+	<div>
+	<table summary="" border="2" rules="all">
+	<tbody>
+	<tr>
+	<td><label for="table_selected">Tabla</label></td>
+	<td><select id="table_selected" name="table_selected">
+	}
+	);
+		} else {
 	$r->print(
 		qq{<div>
 	<h2>Please select a command and a table to use</h2>
@@ -258,6 +283,7 @@ sub SelectTable {
 	<td><select id="table_selected" name="table_selected">
 	}
 	);
+		}
 	my $sth = $dbh->table_info( '', 'public', undef, 'TABLE' );
 	for my $rel ( @{ $sth->fetchall_arrayref( {} ) } ) {
 		$r->print(
@@ -315,13 +341,21 @@ sub SelectTable {
 		}
 		$r->print(qq{</select></td>});
 	}
-
+	if ($lang =~ /^es/) {
 	$r->print(
+		qq{
+	<td><label for="itemstoinsert">Numero de unidades en grupo para insertar</label></td><td><select id="itemstoinsert" name="itemstoinsert">
+	<option selected="selected" value="1">1</option>
+	}
+	);
+	} else {
+			$r->print(
 		qq{
 	<td><label for="itemstoinsert">Items to Insert in Group</label></td><td><select id="itemstoinsert" name="itemstoinsert">
 	<option selected="selected" value="1">1</option>
 	}
 	);
+	}
 	for my $i ( 2 .. 36 ) {
 		$r->print(
 			qq{
@@ -329,6 +363,78 @@ sub SelectTable {
 		}
 		);
 	}
+	if ($lang =~ /^es/) {
+		$r->print(
+		qq{</select></td>	
+	</tr>
+	<tr>
+	<td><label for="field_selected">Columna</label></td>
+	<td><script type="text/javascript">
+	//<![CDATA[
+	document.writeln('<select id="field_selected" name="field_selected"></select>');
+	//]]>
+	</script>
+	<noscript><input type="text" id="field_selected" name="field_selected" value="" /></noscript>
+	</td>
+	<td><label for="field_value_selected">RegEx para valor de columna</label></td>
+	<td><input type="text" id="field_value_selected" name="field_value_selected" value="" />
+	<label for="field_value_selected_null">NULL</label>
+	<input type="checkbox" value="NULL" id="field_value_selected_null" name="field_value_selected_null" /></td>
+	</tr>
+	<tr>
+	<td><label for="field_selected2">Segunda columna</label></td>
+	<td><script type="text/javascript">
+	//<![CDATA[
+	document.writeln('<select id="field_selected2" name="field_selected2"></select>');
+	//]]>
+	</script>
+	<noscript><input type="text" id="field_selected2" name="field_selected2" value="" /></noscript>
+	</td>
+	<td><label for="field_value_selected2">RegEx para valor de segunda columna</label></td>
+	<td><input type="text" id="field_value_selected2" name="field_value_selected2" value="" />
+	<label for="field_value_selected2_null">NULL</label>
+	<input type="checkbox" value="NULL" id="field_value_selected2_null" name="field_value_selected2_null" /></td>
+	</tr>
+	</tbody></table>
+	<br />
+	<div>
+	<input type="submit" value="Enviar" name="submitForm" onclick="return checkscript()" />
+	<input type="reset" value="Borrar" name="reset1" />
+	</div>
+	<input type="radio" value="InsertRecordGroupForm" id="InsertRecordGroupForm" name="command" />
+	<label class="bigred" for="InsertRecordGroupForm">Insertar registro(s) (Selecciona una tabla con un numero de unidades para insertar)</label>
+	<br />
+	<br />
+	<input type="radio" value="UpdateRecordForm" id="UpdateRecordForm" name="command" />
+	<label class="bigblue" for="UpdateRecordForm">Actualizar un registro (Selecciona una tabla con un numero de ID)</label>
+	<br />
+	<br />
+	<input type="radio" value="ViewRecords" id="ViewRecords" name="command" />
+	<label class="bigblack" for="ViewRecords">Ver Registros (Selecciona una tabla con las opciones arriba y/o con columnas y sus RegEx seleccionados o NULL)</label>
+	<br />
+	<br />
+	<input type="radio" value="ShowColumns" id="ShowColumns" name="command" />
+	<label class="biggreen" for="ShowColumns">Mostrar columnas (Selecciona una tabla)</label>
+	<br />
+	<br />
+	<input type="radio" value="DeleteDuplicates" id="DeleteDuplicates" name="command" />
+	<label class="bigred" for="DeleteDuplicates">Borrar Duplicados(Selecciona una tabla, con limitaciones como clase y/o nombre de vendor con products tabla)</label>
+	<br />
+	<br />
+	<input type="radio" value="ShowTables" id="ShowTables" name="command" />
+	<label class="biggreen" for="ShowTables">Mostrar Tablas</label>
+	<br />
+	<br />
+	<div>
+	<input type="submit" value="Enviar" name="submitForm" onclick="return checkscript()" />
+	<input type="reset" value="Borrar" name="reset1" />
+	</div>
+	</div></form>
+	</div>
+	</body></html>
+	}
+	);
+	} else {
 	$r->print(
 		qq{</select></td>	
 	</tr>
@@ -399,6 +505,7 @@ sub SelectTable {
 	</body></html>
 	}
 	);
+	}
 }
 
 =pod
@@ -409,7 +516,7 @@ BWCL::SelectTable_B
 
 =head1 VERSION
 
-This documentation refers to BWCL::SelectTable_B version 4.0.01.
+This documentation refers to BWCL::SelectTable_B version 4.0.11.
 
 =head1 SYNOPSIS
 
