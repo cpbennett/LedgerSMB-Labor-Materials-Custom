@@ -313,7 +313,7 @@ $dbh->{AutoCommit} = 1;
 #######################################################################
 ##		Call SelectTable
 ERROR_END:
-SelectTable( $r, $dbh, $program, \@field_select_tables );
+SelectTable( $r, $dbh, $program, \@field_select_tables, $lang );
 
 $dbh->disconnect;
 
