@@ -55,6 +55,7 @@ if ($table eq "products") {
 	);
 		@field_names = qw(
 			time_unit
+			convert_to_days
 );
 		@notes_fields = qw(time_unit_notes);
 		$table_id_field = "time_unit_id";
