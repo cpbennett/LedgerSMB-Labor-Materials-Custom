@@ -1,6 +1,6 @@
 package BWCL::ViewLPLRecords;
 
-our $VERSION = 0.1.20;
+our $VERSION = 0.1.30;
 use warnings;
 use strict;
 
@@ -11,243 +11,6 @@ our @EXPORT_OK = qw(ViewLPLRecords DuplicateFullLPLRecordsForm DuplicateFullLPLR
 use BWCL::InsertRecord_B qw(InsertRecordGroup);
 
 
-#######################################################################
-##		Sub ViewLPLRecords
-
-sub ViewLPLRecords {
-
-	# version 0.4
-	my $r   = shift;
-	my $dbh = shift;
-	my $q   = shift;
-	my $labor_project_list_selected;
-	my $labor_project_list_selected2;
-	my $labor_project_selected;
-	my $labor_project_name;
-	my $labor_project_name_aref;
-	my $assem_part_hash_ref;
-	my $labor_project_list_hash_ref;
-	my @labor_project_list_hash_assemblys;
-	my $statement;
-	my $sth;
-	my @all_labor_projects = ();
-	my @vetor          = ();
-	$labor_project_list_selected = $q->param("labor_project_list_selected");
-	$labor_project_list_selected =~ s/''/"/g;
-	   # This substitution reverses substitution done in form which allows javascript to function
-	$labor_project_selected = $q->param("labor_project_selected");
-	$labor_project_selected =~ s/''/"/g;
-	   # This substitution reverses substitution done in form which allows javascript to function
-	$labor_project_list_selected2 = $dbh->quote($labor_project_list_selected);
-
-	if ( $labor_project_selected eq 'All' ) {
-		my $sth = $dbh->prepare(
-"SELECT labor_project_id FROM labor_project WHERE labor_project_labor_project_list_id IN (SELECT labor_project_list_id FROM labor_project_list WHERE labor_project_list_name=$labor_project_list_selected2) ORDER BY labor_project_name;"
-		);
-		$sth->execute;
-		while ( @vetor = $sth->fetchrow ) {
-			push( @all_labor_projects, @vetor );
-		}
-		$sth->finish();
-
-	}
-	else {
-		push( @all_labor_projects, $labor_project_selected );
-	}
-	######################################################################
-	##		View Records
-	$r->print(
-		qq{
-	<div><h2 class="titlehead">$labor_project_list_selected</h2>
-	<br /><br />
-	}
-	);
-
-	for my $labor_project_selected (@all_labor_projects) {
-		$statement =
-"SELECT labor_project_name FROM labor_project WHERE labor_project_id = $labor_project_selected ORDER BY labor_project_name;";
-		$labor_project_name_aref = $dbh->selectcol_arrayref($statement)
-		  || die $dbh->errstr;
-
-		$labor_project_name = $$labor_project_name_aref[0];
-
-		my @hash_assemblys = (
-			'labor_project_name',
-			'labor_project_section',
-			'labor_project_class',
-			'labor_project_subclass',
-			'labor_project_is_subcontracted',
-			'labor_project_received_in',
-			'labor_project_pay_out_rate',
-			'method_to_charge',
-			'labor_project_unit_price',
-			'units_charged',
-			'labor_project_total_paid_out',
-			'labor_project_total',
-			'labor_project_currency',
-			'labor_project_notes',
-			'labor_project_unit_notes',
-			'labor_project_labor_project_list_id',
-			'labor_project_id'
-			);
-		$sth = $dbh->prepare(
-"SELECT labor_project_name,labor_project_section,labor_project_class,labor_project_subclass,labor_project_is_subcontracted,labor_project_received_in,labor_project_pay_out_rate,method_to_charge,labor_project_unit_price,units_charged,labor_project_total_paid_out,labor_project_total,labor_project_currency,labor_project_notes,labor_project_unit_notes,labor_project_labor_project_list_id,labor_project_id FROM labor_project WHERE labor_project_id = $labor_project_selected;"
-		);
-		$sth->execute();
-		$r->print(
-			qq{
-	<table summary="" border="2" rules="all" class="full_assembly">
-	<caption class="black"><strong class="black">$labor_project_name</strong></caption>
-	<thead>
-	    <tr>
-<th align="left">Labor Project Name</th>
-<th align="left">Labor Project Section</th>
-<th align="left">Labor Project Class</th>
-<th align="left">Labor Project Subclass</th>
-<th align="left">Labor Project Is Subcontracted</th>
-<th align="left">Labor Project Received In</th>
-<th align="left">Labor Project Pay Out Rate</th>
-<th align="left">Method To Charge</th>
-<th align="left">Labor Unit</th>
-<th align="left">Labor Project Unit Price</th>
-<th align="left">Units Charged</th>
-<th align="left">Labor Project Total Paid Out</th>
-<th align="left">Labor Project Total</th>
-<th align="left">Labor Project Currency</th>
-<th align="left">Labor Project Notes</th>
-<th align="left">Labor Project Unit Notes</th>
-<th align="left">Labor Project Labor Project List ID</th>
-<th align="left">Labor Project ID</th>
-	    </tr>
-	</thead>
-	<tbody>}
-		);
-
-		while ( $assem_part_hash_ref = $sth->fetchrow_hashref ) {
-			$r->print(qq{<tr>});
-			foreach my $assemblyh (@hash_assemblys) {
-				if ( $$assem_part_hash_ref{$assemblyh} ) {
-					$$assem_part_hash_ref{$assemblyh} =
-					  $$assem_part_hash_ref{$assemblyh};
-					$$assem_part_hash_ref{$assemblyh} =~ s/\n/<br \/>/g
-					  ; # This substitution allows newlines to be converted to HTML code
-				}
-				else {
-					$$assem_part_hash_ref{$assemblyh} = '';
-				}
-			}
-$r->print(
-	qq|
-	<td align="left" class="full_assembly">$assem_part_hash_ref->{ labor_project_name }</td>
-	<td align="left" class="full_assembly">$assem_part_hash_ref->{ labor_project_section }</td>
-	<td align="left" class="full_assembly">$assem_part_hash_ref->{ labor_project_class }</td>
-	<td align="left" class="full_assembly">$assem_part_hash_ref->{ labor_project_subclass }</td>
-	<td align="left" class="full_assembly">$assem_part_hash_ref->{ labor_project_is_subcontracted }</td>
-	<td align="left" class="full_assembly">$assem_part_hash_ref->{ labor_project_received_in }</td>
-	<td align="left" class="full_assembly">$assem_part_hash_ref->{ labor_project_pay_out_rate }</td>
-	<td align="left" class="full_assembly">$assem_part_hash_ref->{ method_to_charge }</td>
-	<td align="left" class="full_assembly">$assem_part_hash_ref->{ labor_project_unit_price }</td>
-	<td align="left" class="full_assembly">$assem_part_hash_ref->{ units_charged }</td>
-	<td align="left" class="full_assembly">$assem_part_hash_ref->{ labor_project_total_paid_out }</td>
-	<td align="left" class="full_assembly">$assem_part_hash_ref->{ labor_project_total }</td>
-	<td align="left" class="full_assembly">$assem_part_hash_ref->{ labor_project_currency }</td>
-	<td align="left" class="full_assembly">$assem_part_hash_ref->{ labor_project_notes }</td>
-	<td align="left" class="full_assembly">$assem_part_hash_ref->{ labor_project_unit_notes }</td>
-	<td align="left" class="full_assembly">$assem_part_hash_ref->{ labor_project_labor_project_list_id }</td>
-	<td align="left" class="full_assembly">$assem_part_hash_ref->{ labor_project_id }</td>
-	|
-);
-$r->print(qq{</tr>});
-		}
-		$r->print(
-			qq{</tbody></table>
-		<br /><br />
-		}
-		);
-		$sth->finish;
-	}
-
-
-	@labor_project_list_hash_assemblys = (
-		'labor_project_list_id',       'labor_project_list_name',
-		'labor_project_list_category', 'labor_project_list_subcategory',
-		'labor_project_list_total',    'labor_project_list_currency',
-		'labor_project_list_notes'
-	);
-	$sth = $dbh->prepare(
-"SELECT  labor_project_list_id, labor_project_list_name, labor_project_list_category, labor_project_list_subcategory, labor_project_list_total, labor_project_list_currency, labor_project_list_notes FROM labor_project_list WHERE labor_project_list_name = $labor_project_list_selected2;"
-	);
-	$sth->execute();
-	$r->print(
-		qq{
-	<table summary="" border="2" rules="all" class="full_assembly_list">
-	<caption class="FALcaption"><strong class="">Description of Final Complete Labor Project</strong></caption>
-	<thead>
-	    <tr>
-	    <th align="left">Labor Project List ID</th>
-	    <th align="left">Labor Project List Name</th>
-	    <th align="left">Labor Project List Category</th>
-	    <th align="left">Labor Project List Subcategory</th>
-	    <th align="left">Labor Project List Total</th>
-	    <th align="left">Labor Project List Currency</th>
-	    <th align="left">Labor Project List Notes</th>
-	    </tr>
-	</thead>
-	<tbody>}
-	);
-
-	while ( $labor_project_list_hash_ref = $sth->fetchrow_hashref ) {
-		$r->print(qq{<tr>});
-		foreach my $assemblyh (@labor_project_list_hash_assemblys) {
-			if ( $$labor_project_list_hash_ref{$assemblyh} ) {
-				$$labor_project_list_hash_ref{$assemblyh} =
-				  $$labor_project_list_hash_ref{$assemblyh};
-				$$labor_project_list_hash_ref{$assemblyh} =~ s/\n/<br \/>/g
-				  ; # This substitution allows newlines to be converted to HTML code
-			}
-			else {
-				$$labor_project_list_hash_ref{$assemblyh} = '';
-			}
-		}
-		$r->print(
-qq{<td align="left" class="full_assembly_list">$labor_project_list_hash_ref->{labor_project_list_id}</td>}
-		);
-		$r->print(
-qq{<td align="left" class="full_assembly_list">$labor_project_list_hash_ref->{labor_project_list_name}</td>}
-		);
-		$r->print(
-qq{<td align="left" class="full_assembly_list">$labor_project_list_hash_ref->{labor_project_list_category}</td>}
-		);
-		$r->print(
-qq{<td align="left" class="full_assembly_list">$labor_project_list_hash_ref->{labor_project_list_subcategory}</td>}
-		);
-		$r->print(
-qq{<td align="left" class="full_assembly_list">$labor_project_list_hash_ref->{labor_project_list_total}</td>}
-		);
-		$r->print(
-qq{<td align="left" class="full_assembly_list">$labor_project_list_hash_ref->{labor_project_list_currency}</td>}
-		);
-		$r->print(
-qq{<td align="left" class="full_assembly_list">$labor_project_list_hash_ref->{labor_project_list_notes}</td>}
-		);
-		$r->print(qq{</tr>});
-	}
-	$r->print(
-		qq{</tbody></table>
-	}
-	);
-	$r->print(
-		qq{</td>
-		</tr>
-		</tbody></table>
-		<br />
-		<hr />
-		<br />
-	}
-	);
-	$sth->finish;
-	return 1;
-}
 
 
 #######################################################################
@@ -761,4 +524,226 @@ qq{INSERT INTO labor_project_list ($labor_project_list_fields) VALUES ($labor_pr
 	return 1;
 }
 
+
+
+#######################################################################
+##		Sub ViewLPLRecords
+
+
+sub ViewLPLRecords {
+
+	# version 1.0
+	my $r   = shift;
+	my $dbh = shift;
+	my $q   = shift;
+	my $labor_project_list_selected;
+	my $labor_project_list_selected2;
+	my $labor_project_selected;
+	my $labor_project_name;
+	my $labor_project_name_aref;
+	my $assem_part_hash_ref;
+	my $labor_project_list_hash_ref;
+	my @labor_project_list_hash_assemblys;
+	my $statement;
+	my $sth;
+	my @all_labor_projects = ();
+	my @vetor          = ();
+	my $ucfirst = '';
+	$labor_project_list_selected = $q->param("labor_project_list_selected");
+	$labor_project_list_selected =~ s/''/"/g;
+	   # This substitution reverses substitution done in form which allows javascript to function
+	$labor_project_selected = $q->param("labor_project_selected");
+	$labor_project_selected =~ s/''/"/g;
+	   # This substitution reverses substitution done in form which allows javascript to function
+	$labor_project_list_selected2 = $dbh->quote($labor_project_list_selected);
+
+	if ( $labor_project_selected eq 'All' ) {
+		my $sth = $dbh->prepare(
+"SELECT labor_project_id FROM labor_project WHERE labor_project_labor_project_list_id IN (SELECT labor_project_list_id FROM labor_project_list WHERE labor_project_list_name=$labor_project_list_selected2) ORDER BY labor_project_name;"
+		);
+		$sth->execute;
+		while ( @vetor = $sth->fetchrow ) {
+			push( @all_labor_projects, @vetor );
+		}
+		$sth->finish();
+
+	}
+	else {
+		push( @all_labor_projects, $labor_project_selected );
+	}
+	######################################################################
+	##		View Records
+	$r->print(
+		qq{
+	<div><h2 class="titlehead">$labor_project_list_selected</h2>
+	<br /><br />
+	}
+	);
+
+	for my $labor_project_selected (@all_labor_projects) {
+		$statement =
+"SELECT labor_project_name FROM labor_project WHERE labor_project_id = $labor_project_selected ORDER BY labor_project_name;";
+		$labor_project_name_aref = $dbh->selectcol_arrayref($statement)
+		  || die $dbh->errstr;
+
+		$labor_project_name = $$labor_project_name_aref[0];
+
+		my @hash_assemblys = qw(
+			labor_project_name
+			labor_project_section
+			labor_project_class
+			labor_project_subclass
+			labor_project_is_subcontracted
+			labor_project_days
+			labor_project_overhead_expenses
+			labor_project_received_in
+			labor_project_pay_out_rate
+			method_to_charge
+			labor_project_unit_price
+			units_charged
+			labor_project_total_paid_out
+			labor_project_total
+			labor_project_currency
+			labor_project_notes
+			labor_project_unit_notes
+			labor_project_labor_project_list_id
+			labor_project_id
+			);
+			$statement = join (', ',@hash_assemblys);
+		$sth = $dbh->prepare(
+"SELECT $statement FROM labor_project WHERE labor_project_id = $labor_project_selected;"
+		);
+		$sth->execute();
+		$r->print(
+			qq{
+	<table summary="" border="2" rules="all" class="full_assembly">
+	<caption class="black"><strong class="black">$labor_project_name</strong></caption>
+	<thead>
+	    <tr>});
+    for my $i (0 .. $#hash_assemblys) {
+	$ucfirst = $hash_assemblys[$i];
+	$ucfirst =~ s/,//g;
+	$ucfirst =~ s/_(\w)/ \u$1/g;
+	$ucfirst =~ s/ Id/ ID/;
+	$ucfirst =~ s/ Url/ URL/;
+	$ucfirst = ucfirst($ucfirst);
+$r->print(qq{
+	<th align="left">$ucfirst</th>
+	}
+	);
+	}
+$r->print(qq{
+	</tr>
+	</thead>
+	<tbody>}
+	);
+
+		while ( $assem_part_hash_ref = $sth->fetchrow_hashref ) {
+			$r->print(qq{<tr>});
+			foreach my $assemblyh (@hash_assemblys) {
+				if ( $$assem_part_hash_ref{$assemblyh} ) {
+					$$assem_part_hash_ref{$assemblyh} =
+					  $$assem_part_hash_ref{$assemblyh};
+					$$assem_part_hash_ref{$assemblyh} =~ s/\n/<br \/>/g
+					  ; # This substitution allows newlines to be converted to HTML code
+				}
+				else {
+					$$assem_part_hash_ref{$assemblyh} = '';
+				}
+			}
+			for my $i (0 .. $#hash_assemblys) {
+
+$r->print(
+	qq|
+	<td align="left" class="full_assembly">$assem_part_hash_ref->{ $hash_assemblys[$i] }</td>
+	|
+	);
+			}
+$r->print(qq{</tr>});
+		}
+		$r->print(
+			qq{</tbody></table>
+		<br /><br />
+		}
+		);
+		$sth->finish;
+	}
+
+
+	@labor_project_list_hash_assemblys = qw(
+		labor_project_list_id
+		labor_project_list_name
+		labor_project_list_category
+		labor_project_list_subcategory
+		labor_project_list_total
+		labor_project_list_currency
+		labor_project_list_notes
+	);
+	$statement = join (', ',@labor_project_list_hash_assemblys);
+	$sth = $dbh->prepare(
+"SELECT $statement FROM labor_project_list WHERE labor_project_list_name = $labor_project_list_selected2;"
+	);
+	$sth->execute();
+	$r->print(
+		qq{
+	<table summary="" border="2" rules="all" class="full_assembly_list">
+	<caption class="FALcaption"><strong class="">Description of Final Complete Labor Project</strong></caption>
+	<thead>
+	    <tr>
+	    }
+    );
+    for my $i (0 .. $#labor_project_list_hash_assemblys) {
+	$ucfirst = $labor_project_list_hash_assemblys[$i];
+	$ucfirst =~ s/,//g;
+	$ucfirst =~ s/_(\w)/ \u$1/g;
+	$ucfirst =~ s/ Id/ ID/;
+	$ucfirst =~ s/ Url/ URL/;
+	$ucfirst = ucfirst($ucfirst);
+	    $r->print(qq{
+		    <th align="left">$ucfirst</th>
+		    }
+	    );
+    }
+	   $r->print(qq{
+		</tr>
+        	</thead>
+	        <tbody>}
+		);
+
+	while ( $labor_project_list_hash_ref = $sth->fetchrow_hashref ) {
+		$r->print(qq{<tr>});
+		foreach my $assemblyh (@labor_project_list_hash_assemblys) {
+			if ( $$labor_project_list_hash_ref{$assemblyh} ) {
+				$$labor_project_list_hash_ref{$assemblyh} =
+				  $$labor_project_list_hash_ref{$assemblyh};
+				$$labor_project_list_hash_ref{$assemblyh} =~ s/\n/<br \/>/g
+				  ; # This substitution allows newlines to be converted to HTML code
+			}
+			else {
+				$$labor_project_list_hash_ref{$assemblyh} = '';
+			}
+		}
+		for my $i (0 .. $#labor_project_list_hash_assemblys) {
+		$r->print(
+qq|<td align="left" class="full_assembly_list">$labor_project_list_hash_ref->{$labor_project_list_hash_assemblys[$i]}</td>|
+		);
+	}
+		$r->print(qq{</tr>});
+	}
+	$r->print(
+		qq{</tbody></table>
+	}
+	);
+	$r->print(
+		qq{</td>
+		</tr>
+		</tbody></table>
+		<br />
+		<hr />
+		<br />
+	}
+	);
+	$sth->finish;
+	return 1;
+}
 1;

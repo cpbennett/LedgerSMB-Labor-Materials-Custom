@@ -188,7 +188,7 @@ qq{<td align="left"><strong>$ucfirst</strong></td><td align="left" style="width:
 				print_option_list( $r, $dbh, "labor_project_name",
 					"labor_project", $itemtoi, "Labor Project List Name",
 					"labor_project_list_name",
-					"WHERE labor_project_name NOT IN (SELECT labor_project_list_name FROM labor_project_list)" );
+			   		"WHERE labor_project_name NOT IN (SELECT labor_project_list_name FROM labor_project_list)" );
 				print_option_list( $r, $dbh, "currency", "currenciesg",
 					$itemtoi, "Labor Project List Currency",
 					"labor_project_list_currency" );
@@ -210,6 +210,23 @@ qq{<td align="left"><strong>$ucfirst</strong></td><td align="left" style="width:
 					"Assembly Currency",
 					"assembly_currency" );
 			}
+			elsif ( $table eq "expenses" ) {
+				if ( $itemtoi == 3 ) { push( @all_fill, "expense_currency" ); }
+				print_option_list( $r, $dbh, "currency", "currenciesg", $itemtoi,
+					"Expense Currency",
+					"expense_currency" );
+				if ( $itemtoi == 3 ) { push( @all_fill, "time_unit" ); }
+				print_option_list( $r, $dbh, "time_unit", "time_units", $itemtoi,
+					"Time Unit",
+					"time_unit" );
+			}
+			elsif ( $table eq "expenses_total" ) {
+				if ( $itemtoi == 3 ) { push( @all_fill, "expenses_total_currency" ); }
+				print_option_list( $r, $dbh, "currency", "currenciesg", $itemtoi,
+					"Expenses Total Currency",
+					"expenses_total_currency" );
+			}
+
 			elsif ( $table eq "general_labor" ) {
 				if ( $itemtoi == 3 ) {
 					push( @all_fill,

@@ -146,6 +146,31 @@ qq{<table class="cent" summary="Form to update records" rules="groups" cellspaci
 			"labor_category_service", "labor_category"
 		);
 	}
+	elsif ( $table eq "expenses" ) {
+		print_update_option_list(
+			$r,                       $dbh,
+			"expense_currency",       "expense_id",
+			"expenses",               $id_selected,
+			"currency",               "Expense Currency",
+			"expense_currency",       "currenciesg"
+		);
+		print_update_option_list(
+            $r,                       $dbh,
+			"time_unit",              "expense_id",
+			"expenses",               $id_selected,
+			"time_unit",              "Time Unit",
+			"time_unit",              "time_units"
+		);
+	}
+	elsif ( $table eq "expenses_total" ) {
+		print_update_option_list(
+			$r,                       $dbh,
+			"expenses_total_currency","expenses_total_id",
+			"expenses_total",          $id_selected,
+			"currency",                "Expenses Total Currency",
+			"expenses_total_currency", "currenciesg"
+		);
+	}
 	elsif ( $table eq "general_labor" ) {
 		print_update_option_list(
 			$r,                       $dbh,

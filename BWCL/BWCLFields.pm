@@ -38,6 +38,37 @@ if ($table eq "products") {
 		);
 		$table_id_field = "product_id";
 		@no_quote_fields = qw();
+} elsif ($table eq "expenses") {
+		@select_fields = qw(
+			time_unit
+			expense_currency
+	);
+		@field_names = qw(
+			expense_type
+			expense_amount
+);
+		@notes_fields = qw(expense_notes);
+		$table_id_field = "expense_id";
+		@no_quote_fields = qw();
+} elsif ($table eq "time_units") {
+		@select_fields = qw(
+	);
+		@field_names = qw(
+			time_unit
+);
+		@notes_fields = qw(time_unit_notes);
+		$table_id_field = "time_unit_id";
+		@no_quote_fields = qw();
+} elsif ($table eq "expenses_total") {
+		@select_fields = qw(
+			expenses_total_currency
+	);
+		@field_names = qw(
+			expenses_total_total
+);
+		@notes_fields = qw(expenses_total_notes);
+		$table_id_field = "expenses_total_id";
+		@no_quote_fields = qw();
 } elsif ($table eq "vendors") {
 		@select_fields = qw(
 			vendor_currency
@@ -248,6 +279,7 @@ if ($table eq "products") {
 			labor_project_pay_out_rate
 			units_charged
 			labor_project_received_in
+			labor_project_days
 );
 		@notes_fields = qw(labor_project_unit_notes labor_project_notes);
 		$table_id_field = "labor_project_id";
@@ -257,6 +289,7 @@ if ($table eq "products") {
 			labor_project_total_paid_out
 			labor_project_total
 			labor_project_labor_project_list_id
+			labor_project_overhead_expenses
 			);
 } elsif ($table eq "general_labor") {
 		@select_fields = qw(
