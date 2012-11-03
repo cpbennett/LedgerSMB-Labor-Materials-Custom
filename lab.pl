@@ -1,15 +1,15 @@
 #!/usr/bin/perl
 
-our $VERSION = 0.0.02;
+our $VERSION = 0.1.00;
 use warnings;
 use strict;
 
 use Apache::Request();
 use DBI();
 
-use BWCL::SelectLPL qw(SelectLPLs);
-use BWCL::ViewLPLRecords
-  qw(ViewLPLRecords DuplicateFullLPLRecordsForm DuplicateFullLPLRecords);
+use BWC::SelectLPL qw(SelectLPLs);
+use BWC::ViewLPLRecords
+    qw(ViewLPLRecords DuplicateFullLPLRecordsForm DuplicateFullLPLRecords);
 
 #######################################################################
 ##		Connect to Database
@@ -20,10 +20,15 @@ my $database = 'gl';
 my $hostname = '127.0.0.1';
 
 my $r = Apache->request;
-my $q = Apache::Request->new( $r, POST_MAX => 100000, DISABLE_UPLOADS => 1 );
+my $q = Apache::Request->new(
+    $r,
+    POST_MAX        => 100000,
+    DISABLE_UPLOADS => 1
+);
 
-my $dbh = DBI->connect( "DBI:Pg:dbname=$database;host=$hostname;port=5432",
-	$username, $password, { 'RaiseError' => 1, pg_enable_utf8 => 1 } );
+my $dbh
+    = DBI->connect( "DBI:Pg:dbname=$database;host=$hostname;port=5432",
+    $username, $password, { 'RaiseError' => 1, pg_enable_utf8 => 1 } );
 ## Note: Nonpersistent Database connection in a Persistent Environment is as Follows:
 ##my $dbh = DBI->connect("DBI:Pg:dbname=$database;host=$hostname;port=5432", $username, $password, {'RaiseError' => 1, dbi_connect_method => 'connect'});
 
@@ -56,54 +61,66 @@ my $statement;
 my $rv;
 
 $sth = $dbh->prepare(
-"SELECT labor_project_list_name FROM labor_project_list ORDER BY labor_project_list_name;"
+    "SELECT
+            labor_project_list_name
+       FROM labor_project_list
+   ORDER BY labor_project_list_name;"
 );
 $sth->execute;
 while ( @vetor = $sth->fetchrow ) {
-	push( @labor_project_lists, @vetor );
+    push( @labor_project_lists, @vetor );
 }
 $sth->finish();
-$option_string .=
-  qq{labor_project_selected[labor_project_selected.length] = new Option("All", "All");
+$option_string
+    .= qq{labor_project_selected[labor_project_selected.length] = new Option("All", "All");
 };
 
 $labor_project_list_string = join( ',', @labor_project_lists );
 foreach my $chosen (@labor_project_lists) {
-	$chosenh        = $chosen;
-	$chosenh_pretty = $chosen;
-	$chosenh_pretty =~ s/"/''/g
-	  ; # This substitution is done for form which allows javascript to function
-	$case_string .= qq{
+    $chosenh        = $chosen;
+    $chosenh_pretty = $chosen;
+    $chosenh_pretty =~ s/"/''/g
+        ; # This substitution is done for form which allows javascript to function
+    $case_string .= qq{
 		case "$chosenh_pretty" :
 		labor_project_selected.length = 0;
 		labor_project_selected[labor_project_selected.length] = new Option("All", "All");
 
 };
-	$chosen2 = $dbh->quote($chosen);
-	$statement =
-"SELECT labor_project_id FROM labor_project WHERE labor_project_name = $chosen2 ORDER BY labor_project_id;";
-	$sth = $dbh->prepare($statement);
-	$rv  = $sth->execute() or die "can't execute the query: $sth->errstr";
-	$tbl = $sth->fetchall_arrayref or die "$sth->errstr\n";
+    $chosen2   = $dbh->quote($chosen);
+    $statement = "SELECT
+                         labor_project_id
+                    FROM labor_project
+                   WHERE labor_project_name = $chosen2
+                ORDER BY labor_project_id;";
+    $sth = $dbh->prepare($statement);
+    $rv  = $sth->execute()
+        or die "can't execute the query: $sth->errstr";
+    $tbl = $sth->fetchall_arrayref or die "$sth->errstr\n";
 
-	for my $i ( 0 .. $#{$tbl} ) {
-		$statement = "SELECT labor_project_section FROM labor_project WHERE labor_project_id = $tbl->[$i][0] ORDER BY labor_project_section;";
-		my $option_aref = $dbh->selectcol_arrayref($statement) || die $dbh->errstr;
+    for my $i ( 0 .. $#{$tbl} ) {
+        $statement = "SELECT
+                             labor_project_section
+                        FROM labor_project
+                       WHERE labor_project_id = $tbl->[$i][0]
+                    ORDER BY labor_project_section;";
+        my $option_aref = $dbh->selectcol_arrayref($statement)
+            || die $dbh->errstr;
 
-		$option = $$option_aref[0];
-		unless (defined $option) {next;}
-		$option =~ s/"/''/g
-		  ; # This substitution is done for form which allows javascript to function
-		$case_string .= qq{
+        $option = $$option_aref[0];
+        unless ( defined $option ) { next; }
+        $option =~ s/"/''/g
+            ; # This substitution is done for form which allows javascript to function
+        $case_string .= qq{
 labor_project_selected[labor_project_selected.length] = new Option("$option", "$tbl->[$i][0]");
 };
-		if ( $chosen eq $labor_project_lists[0] ) {
-			$option_string .= qq{
+        if ( $chosen eq $labor_project_lists[0] ) {
+            $option_string .= qq{
 labor_project_selected[labor_project_selected.length] = new Option("$option", "$tbl->[$i][0]");
 };
-		}
-	}
-	$case_string .= qq{break;
+        }
+    }
+    $case_string .= qq{break;
 };
 }
 
@@ -111,7 +128,7 @@ labor_project_selected[labor_project_selected.length] = new Option("$option", "$
 ##		Print Page Head
 
 $r->print(
-	qq{<?xml version="1.0" encoding="utf-8"?>
+    qq{<?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en-US" lang="en-US">
 <head>
@@ -132,7 +149,7 @@ $r->print(
 }
 );
 $r->print(
-	qq/
+    qq/
 if (window.addEventListener) {
 	window.addEventListener("load",setupEvents,false);
 } else if (window.attachEvent) {
@@ -166,16 +183,16 @@ function checkSelect(evnt) {
 /
 );
 $r->print(
-	qq{
+    qq{
 //]]>
 </script>}
 );
 $r->print(
-	qq{
+    qq{
 </head>
 <body>
 <div>
-<a class="bigblue" href="/index.html" rel="external">Bennett Construction Home Page</a><br />
+<a class="bigblue" href="http://www.bennettconstruction.us/index.html" rel="external">Bennett Construction Home Page</a><br />
 <a class="biggreen" href="/perl/VP/manual.pl?lang=en" rel="external">VIEW USAGE MANUAL</a><br />
 <a class="biggreen" href="/perl/VP/manual.pl?lang=es" rel="external">VER MANUAL DE USAR</a><br />
 <a class="bigblue" href="/perl/VP/gl.pl" rel="external">Labor and Projects</a><br />
@@ -194,8 +211,9 @@ my $labor_project_list_selected = '';
 my $labor_project_selected      = '';
 my $labor_project_name          = '';
 
-$labor_project_list_selected      = $q->param("labor_project_list_selected") || '';
-$labor_project_selected           = $q->param("labor_project_selected")      || '';
+$labor_project_list_selected = $q->param("labor_project_list_selected")
+    || '';
+$labor_project_selected = $q->param("labor_project_selected") || '';
 my $command = $q->param("command") || '';
 
 #######################################################################
@@ -203,19 +221,21 @@ my $command = $q->param("command") || '';
 $dbh->{AutoCommit} = 0;
 
 if ( $command eq "ViewLPLRecords" ) {
-	ViewLPLRecords( $r, $dbh, $q );
+    ViewLPLRecords( $r, $dbh, $q );
 }
 elsif ( $command eq "ViewFullLPLRecords" ) {
-	ViewFullLPLRecords( $r, $dbh, $q );
+    ViewFullLPLRecords( $r, $dbh, $q );
 }
 elsif ( $command eq "DuplicateFullLPLRecordsForm" ) {
-	DuplicateFullLPLRecordsForm( $r, $dbh, $q, $program );
+    DuplicateFullLPLRecordsForm( $r, $dbh, $q, $program );
 }
 elsif ( $command eq "DuplicateFullLPLRecords" ) {
-	DuplicateFullLPLRecords( $r, $dbh, $q, $database );
+    DuplicateFullLPLRecords( $r, $dbh, $q, $database );
 }
 else {
-	$r->print(qq{<div class="cent"><p class="error">Please make a selection.</p></div>});
+    $r->print(
+        qq{<div class="cent"><p class="error">Please make a selection.</p></div>}
+    );
 }
 
 $dbh->commit();
@@ -231,11 +251,11 @@ $dbh->disconnect;
 
 =head1 NAME
 
-lab.pl - View and reproduce similar labor project list trees to bottom.
+labbz.pl - View and reproduce similar labor project list trees to bottom.
 
 =head1 VERSION
 
-This documentation refers to lab.pl version 0.0.01.
+This documentation refers to labbz.pl version 0.1.00.
 
 =head1 SYNOPSIS
 

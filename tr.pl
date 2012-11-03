@@ -1,15 +1,15 @@
 #!/usr/bin/perl
 
-our $VERSION = 1.2.00;
+our $VERSION = 1.3.00;
 use warnings;
 use strict;
 
 use Apache::Request();
 use DBI();
 
-use BWCL::SelectFAL qw(SelectFALs);
-use BWCL::ViewFALRecords
-  qw(ViewFALRecords ViewFullFALRecords DuplicateFullFALRecordsForm DuplicateFullFALRecords);
+use BWC::SelectFAL qw(SelectFALs);
+use BWC::ViewFALRecords
+    qw(ViewFALRecords ViewFullFALRecords DuplicateFullFALRecordsForm DuplicateFullFALRecords);
 
 #######################################################################
 ##		Connect to Database
@@ -20,10 +20,15 @@ my $database = 'vp';
 my $hostname = '127.0.0.1';
 
 my $r = Apache->request;
-my $q = Apache::Request->new( $r, POST_MAX => 100000, DISABLE_UPLOADS => 1 );
+my $q = Apache::Request->new(
+    $r,
+    POST_MAX        => 100000,
+    DISABLE_UPLOADS => 1
+);
 
-my $dbh = DBI->connect( "DBI:Pg:dbname=$database;host=$hostname;port=5432",
-	$username, $password, { 'RaiseError' => 1, pg_enable_utf8 => 1 } );
+my $dbh
+    = DBI->connect( "DBI:Pg:dbname=$database;host=$hostname;port=5432",
+    $username, $password, { 'RaiseError' => 1, pg_enable_utf8 => 1 } );
 ## Note: Nonpersistent Database connection in a Persistent Environment is as Follows:
 ##my $dbh = DBI->connect("DBI:Pg:dbname=$database;host=$hostname;port=5432", $username, $password, {'RaiseError' => 1, dbi_connect_method => 'connect'});
 
@@ -55,54 +60,69 @@ my $sth;
 my $statement;
 my $rv;
 
-$sth = $dbh->prepare(
-"SELECT full_assembly_list_name FROM full_assembly_list ORDER BY full_assembly_list_name;"
-);
+$sth
+    = $dbh->prepare(
+    "SELECT
+            full_assembly_list_name
+       FROM full_assembly_list
+   ORDER BY full_assembly_list_name;"
+    );
 $sth->execute;
 while ( @vetor = $sth->fetchrow ) {
-	push( @full_assembly_lists, @vetor );
+    push( @full_assembly_lists, @vetor );
 }
 $sth->finish();
-$option_string .=
-  qq{assembly_selected[assembly_selected.length] = new Option("All", "All");
+$option_string
+    .= qq{assembly_selected[assembly_selected.length] = new Option("All", "All");
 };
 
 $full_assembly_list_string = join( ',', @full_assembly_lists );
 foreach my $chosen (@full_assembly_lists) {
-	$chosenh        = $chosen;
-	$chosenh_pretty = $chosen;
-	$chosenh_pretty =~ s/"/''/g
-	  ; # This substitution is done for form which allows javascript to function
-	$case_string .= qq{
+    $chosenh        = $chosen;
+    $chosenh_pretty = $chosen;
+    $chosenh_pretty =~ s/"/''/g
+        ; # This substitution is done for form which allows javascript to function
+    $case_string .= qq{
 		case "$chosenh_pretty" :
 		assembly_selected.length = 0;
 		assembly_selected[assembly_selected.length] = new Option("All", "All");
 
 };
-	$chosen2 = $dbh->quote($chosen);
-	$statement =
-"SELECT full_assembly_assembly_id FROM full_assembly WHERE full_assembly_name = $chosen2 ORDER BY full_assembly_assembly_id;";
-	$sth = $dbh->prepare($statement);
-	$rv  = $sth->execute() or die "can't execute the query: $sth->errstr";
-	$tbl = $sth->fetchall_arrayref or die "$sth->errstr\n";
+    $chosen2 = $dbh->quote($chosen);
+    $statement
+        = "SELECT
+                  full_assembly_assembly_id
+             FROM full_assembly
+            WHERE full_assembly_name = $chosen2
+         ORDER BY full_assembly_assembly_id;";
+    $sth = $dbh->prepare($statement);
+    $rv  = $sth->execute()
+        or die "can't execute the query: $sth->errstr";
+    $tbl = $sth->fetchall_arrayref or die "$sth->errstr\n";
 
-	for my $i ( 0 .. $#{$tbl} ) {
-		$statement = "SELECT assembly_name FROM assemblies WHERE assembly_id = $tbl->[$i][0] ORDER BY assembly_name;";
-		my $option_aref = $dbh->selectcol_arrayref($statement) || die $dbh->errstr;
+    for my $i ( 0 .. $#{$tbl} ) {
+        $statement
+            = "SELECT
+                      assembly_name
+                 FROM assemblies
+                WHERE assembly_id = $tbl->[$i][0]
+             ORDER BY assembly_name;";
+        my $option_aref = $dbh->selectcol_arrayref($statement)
+            || die $dbh->errstr;
 
-		$option = $$option_aref[0];
-		$option =~ s/"/''/g
-		  ; # This substitution is done for form which allows javascript to function
-		$case_string .= qq{
+        $option = $$option_aref[0];
+        $option =~ s/"/''/g
+            ; # This substitution is done for form which allows javascript to function
+        $case_string .= qq{
 assembly_selected[assembly_selected.length] = new Option("$option", "$tbl->[$i][0]");
 };
-		if ( $chosen eq $full_assembly_lists[0] ) {
-			$option_string .= qq{
+        if ( $chosen eq $full_assembly_lists[0] ) {
+            $option_string .= qq{
 assembly_selected[assembly_selected.length] = new Option("$option", "$tbl->[$i][0]n");
 };
-		}
-	}
-	$case_string .= qq{break;
+        }
+    }
+    $case_string .= qq{break;
 };
 }
 
@@ -110,7 +130,7 @@ assembly_selected[assembly_selected.length] = new Option("$option", "$tbl->[$i][
 ##		Print Page Head
 
 $r->print(
-	qq{<?xml version="1.0" encoding="utf-8"?>
+    qq{<?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en-US" lang="en-US">
 <head>
@@ -131,7 +151,7 @@ $r->print(
 }
 );
 $r->print(
-	qq/
+    qq/
 if (window.addEventListener) {
 	window.addEventListener("load",setupEvents,false);
 } else if (window.attachEvent) {
@@ -165,16 +185,16 @@ function checkSelect(evnt) {
 /
 );
 $r->print(
-	qq{
+    qq{
 //]]>
 </script>}
 );
 $r->print(
-	qq{
+    qq{
 </head>
 <body>
 <div>
-<a class="bigblue" href="/index.html" rel="external">Bennett Construction Home Page</a><br />
+<a class="bigblue" href="http://www.bennettconstruction.us/index.html" rel="external">Bennett Construction Home Page</a><br />
 <a class="biggreen" href="/perl/VP/manual.pl?lang=en" rel="external">VIEW USAGE MANUAL</a><br />
 <a class="biggreen" href="/perl/VP/manual.pl?lang=es" rel="external">VER MANUAL DE USAR</a><br />
 <a class="bigblue" href="/perl/VP/gl.pl" rel="external">Labor and Projects</a><br />
@@ -192,8 +212,9 @@ my $full_assembly_list_selected = '';
 my $assembly_selected           = '';
 my $assembly_name               = '';
 
-$full_assembly_list_selected = $q->param("full_assembly_list_selected") || '';
-$assembly_selected           = $q->param("assembly_selected")           || '';
+$full_assembly_list_selected = $q->param("full_assembly_list_selected")
+    || '';
+$assembly_selected = $q->param("assembly_selected") || '';
 my $command = $q->param("command") || '';
 
 #######################################################################
@@ -201,19 +222,20 @@ my $command = $q->param("command") || '';
 $dbh->{AutoCommit} = 0;
 
 if ( $command eq "ViewFALRecords" ) {
-	ViewFALRecords( $r, $dbh, $q );
+    ViewFALRecords( $r, $dbh, $q );
 }
 elsif ( $command eq "ViewFullFALRecords" ) {
-	ViewFullFALRecords( $r, $dbh, $q );
+    ViewFullFALRecords( $r, $dbh, $q );
 }
 elsif ( $command eq "DuplicateFullFALRecordsForm" ) {
-	DuplicateFullFALRecordsForm( $r, $dbh, $q, $program );
+    DuplicateFullFALRecordsForm( $r, $dbh, $q, $program );
 }
 elsif ( $command eq "DuplicateFullFALRecords" ) {
-	DuplicateFullFALRecords( $r, $dbh, $q, $database );
+    DuplicateFullFALRecords( $r, $dbh, $q, $database );
 }
 else {
-	$r->print(qq{<div class="cent"><p class="error">New Search?</p></div>});
+    $r->print(
+        qq{<div class="cent"><p class="error">New Search?</p></div>});
 }
 
 $dbh->commit();
@@ -229,11 +251,11 @@ $dbh->disconnect;
 
 =head1 NAME
 
-tr.pl - View and reproduce similar full assembly list trees to bottom.
+treez.pl - View and reproduce similar full assembly list trees to bottom.
 
 =head1 VERSION
 
-This documentation refers to tr.pl version 1.1.00.
+This documentation refers to treez.pl version 1.3.00.
 
 =head1 SYNOPSIS
 

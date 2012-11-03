@@ -1,6 +1,6 @@
 package BWCL::SelectLPL;
 
-our $VERSION = 0.0.02;
+our $VERSION = 0.1.00;
 use warnings;
 use strict;
 
@@ -114,7 +114,7 @@ BWCL::SelectLPL - Select which tree to examine or duplicate.
 
 =head1 VERSION
 
-This documentation refers to BWCL::SelectLPL version 0.0.02.
+This documentation refers to BWCL::SelectLPL version 0.1.00.
 
 =head1 SYNOPSIS
 

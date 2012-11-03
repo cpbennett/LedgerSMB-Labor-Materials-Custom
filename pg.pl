@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 
-our $VERSION = 1.3.11;
+our $VERSION = 2.0.00;
 use warnings;
 use strict;
 
@@ -8,11 +8,11 @@ use Apache::Request();
 use DBI();
 
 #subs Modules
-use BWCL::ShowAdmin qw(ShowTables ShowColumns);
-use BWCL::InsertRecord_B qw(InsertRecordGroup InsertRecordGroupForm);
-use BWCL::SelectTable_B qw(PrepareHead SelectTable);
-use BWCL::RecordUpdates_B qw(UpdateRecordForm UpdateRecord DeleteDuplicates);
-use BWCL::ViewRecords_B qw(ViewRecords);
+use BWC::ShowAdmin qw(ShowTables ShowColumns);
+use BWC::InsertRecord_B qw(InsertRecordGroup InsertRecordGroupForm);
+use BWC::SelectTable_B qw(PrepareHead SelectTable);
+use BWC::RecordUpdates_B qw(UpdateRecordForm UpdateRecord DeleteDuplicates);
+use BWC::ViewRecords_B qw(ViewRecords);
 
 #######################################################################
 ##		Connect to Database
@@ -23,11 +23,20 @@ my $database = 'vp';
 my $hostname = '127.0.0.1';
 
 my $r = Apache->request;
-my $q = Apache::Request->new( $r, POST_MAX => 100000, DISABLE_UPLOADS => 1 );
+my $q = Apache::Request->new(
+    $r,
+    POST_MAX        => 100000,
+    DISABLE_UPLOADS => 1
+);
 
-my $dbh = DBI->connect( "DBI:Pg:dbname=$database;host=$hostname;port=5432",
-	$username, $password, { 'RaiseError' => 1, pg_enable_utf8 => 1 } );
+my $dbh
+    = DBI->connect( "DBI:Pg:dbname=$database;host=$hostname;port=5432",
+    $username, $password, { 'RaiseError' => 1, pg_enable_utf8 => 1 } );
 
+my $sth;
+my $statement;
+my $rc;
+my $tbl;
 ## Note: Nonpersistent Database connection in a Persistent Environment is as Follows:
 ##my $dbh = DBI->connect("DBI:Pg:dbname=$database;host=$hostname;port=5432",
 #$username, $password, {'RaiseError' => 1, dbi_connect_method => 'connect'});
@@ -39,268 +48,220 @@ my $program = "/perl/VP/pg.pl";
 ##	Is designed to works with odd numbers due to table cells.
 ##	Not sure if it will work with no fields at all
 my @field_select_tables = (
-	[ "class",                          "products" ],
-	[ "subclass",                       "products" ],
-	[ "vendor_name",                    "vendors" ],
-	[ "full_assembly_name",             "full_assembly" ],
-	[ "full_assembly_list_category",    "full_assembly_list" ],
+    [ "class",                       "products" ],
+    [ "subclass",                    "products" ],
+    [ "vendor_name",                 "vendors" ],
+    [ "full_assembly_name",          "full_assembly" ],
+    [ "full_assembly_list_category", "full_assembly_list" ],
 );
 #######################################################################
 ##		Print Header
 
 $r->content_type("text/html");
 $r->send_http_header;
-my $lang;
-if (defined ($q->param("lang"))) {
-	$lang = $q->param("lang");
-}
-elsif (defined $r->headers_in->get('Accept-Language')) {
-	$lang = $r->headers_in->get('Accept-Language');
-}
-else {
-	$lang = "en";
-}
+my $lang 
+    = $q->param("lang")
+    || $r->headers_in->get('Accept-Language')
+    || "en";
 
-$lang =~ /^(\w+[-]*\w*[^,])/;
-$lang = $1;
+$lang = substr $lang, 0, 2;
 
 my $title = "Product Assembly DB";
-my $description = "Database Access-Vendors/Products/Customers/Jobsites/Purchases/Assemblies/Full Assemblies";
+my $description
+    = "Database Access-Vendors/Products/Customers/Jobsites/Purchases/Assemblies/Full Assemblies";
 
-PrepareHead ($r, $dbh, $program, $title, $description, $lang);
+PrepareHead( $r, $dbh, $program, $title, $description, $lang );
 
 #######################################################################
 ##		Get CGI Params
 
-my $table_selected;
-my $class_selected;
-my $subclass_selected;
-my $vendor_name_selected;
-my $id_selected;
-my $field_selected;
-my $field_value_selected;
-my $field_selected2;
-my $field_value_selected2;
-
-$class_selected        = $q->param("class_selected")        || 'All';
-$subclass_selected     = $q->param("subclass_selected")     || 'All';
-$vendor_name_selected  = $q->param("vendor_name_selected")  || 'All';
-$table_selected        = $q->param("table_selected")        || '';
-$id_selected           = $q->param("id_selected")           || '';
-$field_selected        = $q->param("field_selected")        || '';
-$field_value_selected  = $q->param("field_value_selected")  || '';
-$field_selected2       = $q->param("field_selected2")       || '';
-$field_value_selected2 = $q->param("field_value_selected2") || '';
-my $command = $q->param("command");
-unless (defined $command) {
-	goto ERROR_END;
-}
-
-#DBI->trace(2, "/var/www/htdocs/users/bennettconstruction.us/logg/dbi_vprod.log");
+my $class_selected       = $q->param("class_selected")         || 'All';
+my $subclass_selected    = $q->param("subclass_selected")      || 'All';
+my $vendor_name_selected = $q->param("vendor_name_selected")   || 'All';
+my $table_selected = $q->param("table_selected")               || goto ERROR_END;
+my $id_selected    = $q->param("id_selected")                  || '';
+my $field_selected = $q->param("field_selected")               || '';
+my $field_value_selected  = $q->param("field_value_selected")  || '';
+my $field_selected2       = $q->param("field_selected2")       || '';
+my $field_value_selected2 = $q->param("field_value_selected2") || '';
+my $command               = $q->param("command")               || '';
 
 #######################################################################
 ##		Table Verification
-my $table_ok;
-my $SQL =
-"SELECT table_name FROM information_schema.tables WHERE table_schema = 'public' and table_type='BASE TABLE';";
-my $table_ary_ref = $dbh->selectcol_arrayref($SQL);
-foreach my $table_listed (@$table_ary_ref) {
-	if ( $table_listed eq $table_selected ) {
-		$table_ok = 1;
-		last;
-	}
+my $table_selected2 = $dbh->quote($table_selected);
+$statement
+    = "SELECT DISTINCT table_name FROM information_schema.tables WHERE table_name = $table_selected2 AND table_schema = 'public' and table_type='BASE TABLE';";
+$sth = $dbh->prepare($statement) || die $dbh->errstr;
+$rc  = $sth->execute             || die $dbh->errstr;
+$tbl = $sth->fetchrow_arrayref;
+unless ( $$tbl[0] ) {
+
+    if ( $lang eq "es" ) {
+        $r->print(
+            qq{<div class="cent"><p class="error">ERROR!! Por favor, selecciona una Tabla valida.</p></div>}
+        );
+    }
+    else {
+        $r->print(
+            qq{<div class="cent"><p class="error">ERROR!! Please select a valid table.</p></div>}
+        );
+    }
+    goto ERROR_END;
 }
-unless ($table_ok) {
-	if ($lang =~ /^es/) {
-		$r->print(
-qq{<div class="cent"><p class="error">ERROR!! Por favor, selecciona una Tabla valida.</p></div>}
-		);
-	}
-	else {
-		$r->print(
-qq{<div class="cent"><p class="error">ERROR!! Please select a valid table.</p></div>}
-		);
-	}
-	goto ERROR_END;
-}
+$sth->finish();
 #######################################################################
 ##		Class Verification
 unless ( $class_selected eq "All" ) {
-	my $class_ok;
-	my $cv_statement =
-	  "SELECT DISTINCT class FROM products WHERE class IS NOT NULL;";
-	my $class_ary_ref = $dbh->selectcol_arrayref($cv_statement);
-	foreach my $class_listed (@$class_ary_ref) {
-		if ( $class_listed eq $class_selected ) {
-			$class_ok = 1;
-			last;
-		}
-	}
-	unless ($class_ok) {
-		if ($lang =~ /^es/) {
-			$r->print(
-qq{<div class="cent"><p class="error">ERROR!! Por favor, selecciona una Clase valida.</p></div>}
-			);
-		}
-		else {
-			$r->print(
-qq{<div class="cent"><p class="error">ERROR!! Please select a valid Class.</p></div>}
-			);
-		}
-		goto ERROR_END;
-	}
+    my $class_selected2 = $dbh->quote($class_selected);
+    $statement = "SELECT $class_selected2 FROM products;";
+    $sth       = $dbh->prepare($statement) || die $dbh->errstr;
+    $rc        = $sth->execute || die $dbh->errstr;
+    $tbl       = $sth->fetchrow_arrayref;
+    unless ( $$tbl[1] ) {
+        if ( $lang eq "es" ) {
+            $r->print(
+                qq{<div class="cent"><p class="error">ERROR!! Por favor, selecciona una Clase valida.</p></div>}
+            );
+        }
+        else {
+            $r->print(
+                qq{<div class="cent"><p class="error">ERROR!! Please select a valid Class.</p></div>}
+            );
+        }
+        goto ERROR_END;
+    }
 }
 #######################################################################
 ##		Subclass Verification
 unless ( $subclass_selected eq "All" ) {
-	my $subclass_ok;
-	my $scv_statement =
-	  "SELECT DISTINCT subclass FROM products WHERE subclass IS NOT NULL;";
-	my $subclass_ary_ref = $dbh->selectcol_arrayref($scv_statement);
-	foreach my $subclass_listed (@$subclass_ary_ref) {
-		if ( $subclass_listed eq $subclass_selected ) {
-			$subclass_ok = 1;
-			last;
-		}
-	}
-	unless ($subclass_ok) {
-		if ($lang =~ /^es/) {
-			$r->print(
-	qq{<div class="cent"><p class="error">ERROR!! Por favor, selecciona una Subclase valida.</p></div>}
-			);
-		}
-		else {
-			$r->print(
-qq{<div class="cent"><p class="error">ERROR!! Please select a valid Class.</p></div>}
-			);
-		}
-		goto ERROR_END;
-	}
+    my $subclass_selected2 = $dbh->quote($subclass_selected);
+    $statement = "SELECT $subclass_selected2 FROM products;";
+    $sth       = $dbh->prepare($statement) || die $dbh->errstr;
+    $rc        = $sth->execute || die $dbh->errstr;
+    $tbl       = $sth->fetchrow_arrayref;
+    unless ( $$tbl[1] ) {
+        if ( $lang eq "es" ) {
+            $r->print(
+                qq{<div class="cent"><p class="error">ERROR!! Por favor, selecciona una Subclase valida.</p></div>}
+            );
+        }
+        else {
+            $r->print(
+                qq{<div class="cent"><p class="error">ERROR!! Please select a valid Class.</p></div>}
+            );
+        }
+        goto ERROR_END;
+    }
 
 }
 #######################################################################
 ##		Vendor Name Verification
 unless ( $vendor_name_selected eq "All" ) {
-	my $vendor_name_ok;
-	my $vnv_statement       = "SELECT DISTINCT vendor_name FROM vendors;";
-	my $vendor_name_ary_ref = $dbh->selectcol_arrayref($vnv_statement);
-	foreach my $vendor_name_listed (@$vendor_name_ary_ref) {
-		if ( $vendor_name_listed eq $vendor_name_selected ) {
-			$vendor_name_ok = 1;
-			last;
-		}
-	}
-	unless ($vendor_name_ok) {
-		if ($lang =~ /^es/) {
-			$r->print(
-qq{<div class="cent"><p class="error">ERROR!! Por favor, selecciona un Proveedor valido.</p></div>}
-			);
-		}
-		else {
-			$r->print(
-qq{<div class="cent"><p class="error">ERROR!! Please select a valid Vendor.</p></div>}
-			);
-		}
-		goto ERROR_END;
-	}
+    my $vendor_name_selected2 = $dbh->quote($vendor_name_selected);
+    $statement = "SELECT $vendor_name_selected2 FROM vendors;";
+    $sth       = $dbh->prepare($statement) || die $dbh->errstr;
+    $rc        = $sth->execute || die $dbh->errstr;
+    $tbl       = $sth->fetchrow_arrayref;
+    unless ( $$tbl[1] ) {
+        if ( $lang eq "es" ) {
+            $r->print(
+                qq{<div class="cent"><p class="error">ERROR!! Por favor, selecciona un Proveedor valido.</p></div>}
+            );
+        }
+        else {
+            $r->print(
+                qq{<div class="cent"><p class="error">ERROR!! Please select a valid Vendor.</p></div>}
+            );
+        }
+        goto ERROR_END;
+    }
 }
 #######################################################################
 ##		ID Selected Verification
 unless ( $id_selected =~ /^\d*$/ ) {
-	if ($lang =~ /^es/) {
-		$r->print(
-qq{<div class="cent"><p class="error">ERROR!! Por favor, selecciona un Numero de ID valido.</p></div>}
-		);
-	}
-	else {
-		$r->print(
-qq{<div class="cent"><p class="error">ERROR!! Please select a valid ID Number.</p></div>}
-		);
-	}
-	goto ERROR_END;
+    if ( $lang eq "es" ) {
+        $r->print(
+            qq{<div class="cent"><p class="error">ERROR!! Por favor, selecciona un Numero de ID valido.</p></div>}
+        );
+    }
+    else {
+        $r->print(
+            qq{<div class="cent"><p class="error">ERROR!! Please select a valid ID Number.</p></div>}
+        );
+    }
+    goto ERROR_END;
 }
 #######################################################################
 ##		Field Selected Verification
 unless ( $field_selected =~ /^\w*$/ ) {
-	if ($lang =~ /^es/) {
-		$r->print(
-qq{<div class="cent"><p class="error">ERROR!! Por favor, selecciona una primera columna valida.</p></div>}
-		);
-	}
-	else {
-		$r->print(
-qq{<div class="cent"><p class="error">ERROR!! Please select a valid Field Name.</p></div>}
-		);
-	}
-	goto ERROR_END;
+    if ( $lang eq "es" ) {
+        $r->print(
+            qq{<div class="cent"><p class="error">ERROR!! Por favor, selecciona una primera columna valida.</p></div>}
+        );
+    }
+    else {
+        $r->print(
+            qq{<div class="cent"><p class="error">ERROR!! Please select a valid Field Name.</p></div>}
+        );
+    }
+    goto ERROR_END;
 }
 unless ( $field_selected2 =~ /^\w*$/ ) {
-	if ($lang =~ /^es/) {
-		$r->print(
-qq{<div class="cent"><p class="error">ERROR!! Por favor, selecciona una segunda columna valida.</p></div>}
-		);
-	}
-	else {
-		$r->print(
-qq{<div class="cent"><p class="error">ERROR!! Please select a valid second Field Name.</p></div>}
-		);
-	}
-	goto ERROR_END;
+    if ( $lang eq "es" ) {
+        $r->print(
+            qq{<div class="cent"><p class="error">ERROR!! Por favor, selecciona una segunda columna valida.</p></div>}
+        );
+    }
+    else {
+        $r->print(
+            qq{<div class="cent"><p class="error">ERROR!! Please select a valid second Field Name.</p></div>}
+        );
+    }
+    goto ERROR_END;
 }
 
 #######################################################################
 ##		Select a Sub
 $dbh->{AutoCommit} = 0;
 
-if ( $command eq "ViewRecords" ) {
-	ViewRecords( $r, $dbh, $q );
+if ( $command eq "DeleteDuplicates" && $table_selected ne "products" ) {
+    if ( $lang eq "es" ) {
+        $r->print(
+            qq{<div class="cent"><p class="error">ERROR!! Delete Duplicates funciona solamente con la tabla products.</p></div>}
+        );
+    }
+    else {
+        $r->print(
+            qq{<div class="cent"><p class="error">ERROR!!  only functions with products table.</p></div>}
+        );
+    }
+    goto ERROR_END;
 }
-elsif ( $command eq "ShowColumns" ) {
-	ShowColumns( $r, $dbh, $q );
-}
-elsif ( $command eq "ShowTables" ) {
-	ShowTables( $r, $dbh );
-}
-elsif ( $command eq "InsertRecordGroupForm" ) {
-	InsertRecordGroupForm( $r, $dbh, $q, $program );
-}
-elsif ( $command eq "InsertRecordGroup" ) {
-	InsertRecordGroup( $r, $dbh, $q, $database );
-}
-elsif ( $command eq "UpdateRecordForm" ) {
-	UpdateRecordForm( $r, $dbh, $q, $program );
-}
-elsif ( $command eq "UpdateRecord" ) {
-	UpdateRecord( $r, $dbh, $q, $database );
-}
-elsif ( $command eq "DeleteDuplicates" ) {
-	unless ( $table_selected eq "products" ) {
-		if ($lang =~ /^es/) {
-			$r->print(
-qq{<div class="cent"><p class="error">ERROR!! Delete Duplicates funciona solamente con la tabla products.</p></div>}
-			);
-		}
-		else {
-			$r->print(
-qq{<div class="cent"><p class="error">ERROR!!  only functions with products table.</p></div>}
-			);
-		}
-		goto ERROR_END;
-	}
-	DeleteDuplicates( $r, $dbh, $q, $table_selected, $program );
+
+if (   $command eq "ViewRecords"
+    || "InsertRecordGroupForm"
+    || "UpdateRecordForm"
+    || "InsertRecordGroup"
+    || "UpdateRecord"
+    || "ShowColumns"
+    || "ShowTables"
+    || "DeleteDuplicates" )
+{
+    my $sub = \&{"$command"};
+    &$sub( $r, $dbh, $q, $database, $program );
 }
 else {
-	if ($lang =~ /^es/) {
-		$r->print(
-qq{<div class="cent"><p class="error">ERROR!! Por favor, selecciona un comando valida.</p></div>}
-		);
-	}
-	else {
-		$r->print(
-qq{<div class="cent"><p class="error">ERROR!! Please select a valid Command.</p></div>}
-		);
-	}
-	goto ERROR_END;
+    if ( $lang eq "es" ) {
+        $r->print(
+            qq{<div class="cent"><p class="error">ERROR!! Por favor, selecciona un comando valida.</p></div>}
+        );
+    }
+    else {
+        $r->print(
+            qq{<div class="cent"><p class="error">ERROR!! Please select a valid Command.</p></div>}
+        );
+    }
+    goto ERROR_END;
 }
 
 $dbh->commit();
@@ -321,7 +282,7 @@ pg.pl
 
 =head1 VERSION
 
-This documentation refers to pg.pl version 1.3.11.
+This documentation refers to pg.pl version 2.0.00.
 
 =head1 SYNOPSIS
 

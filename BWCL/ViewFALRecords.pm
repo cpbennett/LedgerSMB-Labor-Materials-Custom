@@ -1,6 +1,6 @@
 package BWCL::ViewFALRecords;
 
-our $VERSION = 1.1.22;
+our $VERSION = 1.2.00;
 use warnings;
 use strict;
 
@@ -40,7 +40,16 @@ sub ViewFALRecords {
 
 	if ( $assembly_selected eq 'All' ) {
 		my $sth = $dbh->prepare(
-"SELECT assembly_id FROM assemblies WHERE assembly_id IN (SELECT full_assembly_assembly_id FROM full_assembly WHERE full_assembly_name=$full_assembly_list_selected2) ORDER BY assembly_name;"
+            "SELECT
+                    assembly_id
+               FROM assemblies
+              WHERE assembly_id
+                 IN (
+                        SELECT full_assembly_assembly_id
+                          FROM full_assembly
+                         WHERE full_assembly_name=$full_assembly_list_selected2
+                    )
+           ORDER BY assembly_name;"
 		);
 		$sth->execute;
 		while ( @vetor = $sth->fetchrow ) {
@@ -63,7 +72,11 @@ sub ViewFALRecords {
 
 	for my $assembly_selected (@all_assemblies) {
 		$statement =
-"SELECT assembly_name FROM assemblies WHERE assembly_id = $assembly_selected ORDER BY assembly_name;";
+            "SELECT
+                    assembly_name
+               FROM assemblies
+              WHERE assembly_id = $assembly_selected
+           ORDER BY assembly_name;";
 		$assembly_name_aref = $dbh->selectcol_arrayref($statement)
 		  || die $dbh->errstr;
 
@@ -76,7 +89,16 @@ sub ViewFALRecords {
 			'assembly_part_quantity'
 		);
 		$sth = $dbh->prepare(
-"SELECT assembly_part_assembly_id, assembly_part_description, assembly_part_name, assembly_part_class, assembly_part_subclass, assembly_part_product_id, assembly_part_quantity FROM assemblies_parts WHERE assembly_part_assembly_id = $assembly_selected;"
+                "SELECT
+                        assembly_part_assembly_id,
+                        assembly_part_description,
+                        assembly_part_name,
+                        assembly_part_class,
+                        assembly_part_subclass,
+                        assembly_part_product_id,
+                        assembly_part_quantity
+                   FROM assemblies_parts
+                  WHERE assembly_part_assembly_id = $assembly_selected;"
 		);
 		$sth->execute();
 		$r->print(
@@ -181,7 +203,17 @@ sub ViewFullFALRecords {
 
 	if ( $assembly eq 'All' ) {
 		$sth = $dbh->prepare(
-"SELECT assembly_id FROM assemblies WHERE assembly_id IN (SELECT full_assembly_assembly_id FROM full_assembly WHERE full_assembly_name=$full_assembly_list2) ORDER BY assembly_name;"
+            "SELECT
+                    assembly_id
+               FROM assemblies
+              WHERE assembly_id
+                 IN
+                    (
+                        SELECT full_assembly_assembly_id
+                          FROM full_assembly
+                         WHERE full_assembly_name=$full_assembly_list2
+                    )
+           ORDER BY assembly_name;"
 		);
 		$sth->execute;
 		while ( @vetor = $sth->fetchrow ) {
@@ -217,7 +249,17 @@ sub ViewFullFALRecords {
 			'assembly_url',         'assembly_notes'
 		);
 		$sth = $dbh->prepare(
-"SELECT assembly_id, assembly_name, assembly_description, assembly_category, assembly_subtotal, assembly_currency, assembly_url, assembly_notes FROM assemblies WHERE assembly_id = $assembly;"
+                "SELECT
+						assembly_id,
+						assembly_name,
+						assembly_description,
+						assembly_category,
+						assembly_subtotal,
+						assembly_currency,
+						assembly_url,
+						assembly_notes
+                   FROM assemblies
+                  WHERE assembly_id = $assembly;"
 		);
 		$sth->execute();
 
@@ -300,7 +342,18 @@ qq{<td align="left" class="assemblies_b">$assem_hash_ref->{assembly_notes}</td>}
 		);
 
 		$sth = $dbh->prepare(
-"SELECT assembly_part_assembly_id, assembly_part_description, assembly_part_name, assembly_part_class, assembly_part_subclass, assembly_part_product_id, assembly_part_quantity, assembly_part_subtotal, assembly_part_currency FROM assemblies_parts WHERE assembly_part_assembly_id = $assembly;"
+                "SELECT
+						assembly_part_assembly_id,
+						assembly_part_description,
+						assembly_part_name,
+						assembly_part_class,
+						assembly_part_subclass,
+						assembly_part_product_id,
+						assembly_part_quantity,
+						assembly_part_subtotal,
+						assembly_part_currency
+                   FROM assemblies_parts
+                  WHERE assembly_part_assembly_id = $assembly;"
 		);
 		$sth->execute();
 		$r->print(
@@ -392,7 +445,19 @@ qq{<td align="left" class="assemblies_bl">$assem_part_hash_ref->{assembly_part_c
 		'full_assembly_notes'
 	);
 	$sth = $dbh->prepare(
-"SELECT full_assembly_id, full_assembly_name, full_assembly_assembly_quantity, full_assembly_assembly_subtotal, full_assembly_assembly_rowtotal, full_assembly_currency, full_assembly_assembly_id, full_assembly_full_assembly_list_id, full_assembly_url, full_assembly_notes FROM full_assembly WHERE full_assembly_name=$full_assembly_list2;"
+            "SELECT
+                    full_assembly_id,
+					full_assembly_name,
+					full_assembly_assembly_quantity,
+					full_assembly_assembly_subtotal,
+					full_assembly_assembly_rowtotal,
+					full_assembly_currency,
+					full_assembly_assembly_id,
+					full_assembly_full_assembly_list_id,
+					full_assembly_url,
+					full_assembly_notes
+               FROM full_assembly
+              WHERE full_assembly_name=$full_assembly_list2;"
 	);
 	$sth->execute();
 	$r->print(
@@ -483,7 +548,16 @@ qq{<td align="left" class="full_assembly">$full_assembly_hash_ref->{full_assembl
 		'full_assembly_list_notes'
 	);
 	$sth = $dbh->prepare(
-"SELECT  full_assembly_list_id, full_assembly_list_name, full_assembly_list_category, full_assembly_list_subcategory, full_assembly_list_total, full_assembly_list_currency, full_assembly_list_notes FROM full_assembly_list WHERE full_assembly_list_name = $full_assembly_list2;"
+            "SELECT
+                    full_assembly_list_id,
+					full_assembly_list_name,
+					full_assembly_list_category,
+					full_assembly_list_subcategory,
+					full_assembly_list_total,
+					full_assembly_list_currency,
+					full_assembly_list_notes
+               FROM full_assembly_list
+              WHERE full_assembly_list_name = $full_assembly_list2;"
 	);
 	$sth->execute();
 	$r->print(
@@ -655,7 +729,17 @@ sub DuplicateFullFALRecordsForm {
 
 	if ( $assembly_selected eq 'All' ) {
 		my $sth = $dbh->prepare(
-"SELECT assembly_id FROM assemblies WHERE assembly_id IN (SELECT full_assembly_assembly_id FROM full_assembly WHERE full_assembly_name=$full_assembly_list_selected2) ORDER BY assembly_name;"
+                    "SELECT
+                            assembly_id
+                       FROM assemblies
+                      WHERE assembly_id
+                         IN
+                            (
+                                SELECT full_assembly_assembly_id
+                                  FROM full_assembly
+                                 WHERE full_assembly_name=$full_assembly_list_selected2
+                            )
+                   ORDER BY assembly_name;"
 		);
 		$sth->execute;
 		while ( @vetor = $sth->fetchrow ) {
@@ -698,7 +782,15 @@ sub DuplicateFullFALRecordsForm {
 		$assembly_name = HTML::Entities::encode($assembly_name);
 		$assembly_name =~ s/"/''/g;
 		$sth = $dbh->prepare(
-"SELECT assembly_name, assembly_description, assembly_category, assembly_url, assembly_currency, assembly_notes FROM assemblies WHERE assembly_id = $assembly_selected;"
+                "SELECT
+                        assembly_name,
+		    			assembly_description,
+			    		assembly_category,
+				    	assembly_url,
+					    assembly_currency,
+				    	assembly_notes
+                   FROM assemblies
+                  WHERE assembly_id = $assembly_selected;"
 		);
 		$sth->execute();
 
@@ -779,7 +871,18 @@ sub DuplicateFullFALRecordsForm {
 #######################################################################
 
 		$sth = $dbh->prepare(
-"SELECT assembly_part_assembly_id, assembly_part_name, assembly_part_class, assembly_part_subclass, assembly_part_description, assembly_part_product_id, assembly_part_quantity, assembly_part_currency, assembly_part_notes FROM assemblies_parts WHERE assembly_part_assembly_id = $assembly_selected;"
+                "SELECT
+                        assembly_part_assembly_id,
+                        assembly_part_name,
+                        assembly_part_class,
+                        assembly_part_subclass,
+                        assembly_part_description,
+                        assembly_part_product_id,
+                        assembly_part_quantity,
+                        assembly_part_currency,
+                        assembly_part_notes
+                   FROM assemblies_parts
+                  WHERE assembly_part_assembly_id = $assembly_selected;"
 		);
 		$sth->execute();
 		while ( $assem_part_hash_ref = $sth->fetchrow_hashref ) {
@@ -1128,7 +1231,15 @@ qq~	if (document.duplicates.assembly_part_DoNotInsert$aund$a_c$dund$empty1.check
 #######################################################################
 
 	$sth = $dbh->prepare(
-"SELECT full_assembly_name, full_assembly_assembly_quantity, full_assembly_assembly_id, full_assembly_url, full_assembly_currency, full_assembly_notes FROM full_assembly WHERE full_assembly_name=$full_assembly_list_selected2;"
+            "SELECT
+                    full_assembly_name,
+                    full_assembly_assembly_quantity,
+                    full_assembly_assembly_id,
+                    full_assembly_url,
+                    full_assembly_currency,
+                    full_assembly_notes
+               FROM full_assembly
+              WHERE full_assembly_name=$full_assembly_list_selected2;"
 	);
 	$sth->execute();
 	while ( $full_assembly_hash_ref = $sth->fetchrow_hashref ) {
@@ -1310,7 +1421,14 @@ function FChecksEmpty (evnt) {
 	$r->print(qq{</div>});
 
 	$sth = $dbh->prepare(
-"SELECT  full_assembly_list_name, full_assembly_list_category, full_assembly_list_subcategory, full_assembly_list_currency, full_assembly_list_notes FROM full_assembly_list WHERE full_assembly_list_name = $full_assembly_list_selected2;"
+            "SELECT
+                    full_assembly_list_name,
+                    full_assembly_list_category,
+                    full_assembly_list_subcategory,
+                    full_assembly_list_currency,
+                    full_assembly_list_notes
+               FROM full_assembly_list
+              WHERE full_assembly_list_name = $full_assembly_list_selected2;"
 	);
 	$sth->execute();
 	while ( $full_assembly_list_hash_ref = $sth->fetchrow_hashref ) {
@@ -1673,7 +1791,7 @@ similar trees.
 
 =head1 VERSION
 
-This documentation refers to BWCL::ViewFALRecords version 1.1.21.
+This documentation refers to BWCL::ViewFALRecords version 1.2.00.
 
 =head1 SYNOPSIS
 

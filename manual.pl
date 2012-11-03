@@ -1,28 +1,28 @@
 #!/usr/bin/perl
 
-our $VERSION = 0.0.04;
+our $VERSION = 0.1.00;
 use warnings;
 use strict;
 
 use Apache::Request();
 my $r = Apache->request;
-my $q = Apache::Request->new($r, POST_MAX => 100000, DISABLE_UPLOADS => 1);
+my $q = Apache::Request->new(
+    $r,
+    POST_MAX        => 100000,
+    DISABLE_UPLOADS => 1
+);
 $r->content_type("text/html");
 $r->send_http_header;
-my $lang;
-if (defined ($q->param("lang"))) {
-	$lang = $q->param("lang");
-}
-elsif (defined $r->headers_in->get('Accept-Language')) {
-	$lang = $r->headers_in->get('Accept-Language');
-}
-else {
-	$lang = "en";
-}
+my $lang 
+    = $q->param("lang")
+    || $r->headers_in->get('Accept-Language')
+    || "en";
 
-if ($lang =~ /^en/) {
+$lang = substr $lang, 0, 2;
 
-$r->print(qq{<?xml version="1.0" encoding="utf-8"?>
+if ( $lang eq "en" ) {
+    $r->print(
+        qq{<?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en-US" lang="en-US">
 <head>
@@ -222,10 +222,12 @@ So %2%(x|X)%4%(x|X)%8% will perform the search of:<br />
 <br />
 </div>
 </body></html>
-});
 }
-elsif ($lang =~ /^es/) {
-	$r->print(qq{<?xml version="1.0" encoding="utf-8"?>
+    );
+}
+elsif ( $lang eq "es" ) {
+    $r->print(
+        qq{<?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xml:lang="es" xmlns="http://www.w3.org/1999/xhtml" lang="es">
 <head>
@@ -430,6 +432,7 @@ Entonces %2%(x|X)%4%(x|X)%8% buscara así:</p>
 <hr />
 <div class="right"><br /><br />Última Actualización: 25 de agosto de 2012 <br /><br /></div><br /></div>
 </body></html>
-});
+}
+    );
 }
 1;

@@ -1,6 +1,6 @@
 package BWCL::SelectTable_B;
 
-our $VERSION = 4.0.11;
+our $VERSION = 4.1.00;
 use warnings;
 use strict;
 
@@ -12,35 +12,36 @@ our @EXPORT_OK = qw(PrepareHead SelectTable);
 ##		Sub PrepareHead
 
 sub PrepareHead {
-	my $r                = shift;
-	my $dbh              = shift;
-	my $program          = shift;
-	my $title            = shift;
-	my $description      = shift;
-	my $lang             = shift;
+    my $r           = shift;
+    my $dbh         = shift;
+    my $program     = shift;
+    my $title       = shift;
+    my $description = shift;
+    my $lang        = shift;
 
 #######################################################################
-#	Prepare Javascript in Head
+    #	Prepare Javascript in Head
 
-my $table_string  = "";
-my $case_string   = "";
-my $option_string = "";
-my $option_stringc= '';
-my $case_stringc  = '';
-my @columns       = ();
-my @tables        = ();
-my $sth           = $dbh->table_info( '', 'public', undef, 'TABLE' );
-for my $rel ( @{ $sth->fetchall_arrayref( {} ) } ) {
-	push( @tables, "\'$rel->{TABLE_NAME}\'" );
-}
-$sth->finish();
-$option_string .= qq{field_selected[field_selected.length] = new Option("", "");
+    my $table_string   = "";
+    my $case_string    = "";
+    my $option_string  = "";
+    my $option_stringc = '';
+    my $case_stringc   = '';
+    my @columns        = ();
+    my @tables         = ();
+    my $sth = $dbh->table_info( '', 'public', undef, 'TABLE' );
+    for my $rel ( @{ $sth->fetchall_arrayref( {} ) } ) {
+        push( @tables, "\'$rel->{TABLE_NAME}\'" );
+    }
+    $sth->finish();
+    $option_string
+        .= qq{field_selected[field_selected.length] = new Option("", "");
 field_selected2[field_selected2.length] = new Option("", "");
 };
 
-$table_string = join( ',', @tables );
-foreach my $chosen (@tables) {
-	$case_string .= qq{
+    $table_string = join( ',', @tables );
+    foreach my $chosen (@tables) {
+        $case_string .= qq{
 		case $chosen :
 		field_selected.length = 0;
 		field_selected2.length = 0;
@@ -48,40 +49,47 @@ foreach my $chosen (@tables) {
 		field_selected2[field_selected2.length] = new Option("", "");
 
 };
-	my $statement =
-"SELECT column_name FROM information_schema.columns WHERE table_name = $chosen;";
-	my $sth = $dbh->prepare($statement);
-	my $rv  = $sth->execute() or die "can't execute the query: $sth->errstr";
-	my $tbl = $sth->fetchall_arrayref or die "$sth->errstr\n";
-	for my $i ( 0 .. $#{$tbl} ) {
-		$case_string .= qq{
+        my $statement
+            = "SELECT column_name FROM information_schema.columns WHERE table_name = $chosen;";
+        my $sth = $dbh->prepare($statement);
+        my $rv  = $sth->execute()
+            or die "can't execute the query: $sth->errstr";
+        my $tbl = $sth->fetchall_arrayref or die "$sth->errstr\n";
+        for my $i ( 0 .. $#{$tbl} ) {
+            $case_string .= qq{
 field_selected[field_selected.length] = new Option("$tbl->[$i][0]", "$tbl->[$i][0]");
 field_selected2[field_selected2.length] = new Option("$tbl->[$i][0]", "$tbl->[$i][0]");
 };
-		if ( $chosen eq $tables[0] ) {
-			$option_string .= qq{
+            if ( $chosen eq $tables[0] ) {
+                $option_string .= qq{
 field_selected[field_selected.length] = new Option("$tbl->[$i][0]", "$tbl->[$i][0]");
 field_selected2[field_selected2.length] = new Option("$tbl->[$i][0]", "$tbl->[$i][0]");
 };
-		}
-	}
-	$case_string .= qq{break;
+            }
+        }
+        $case_string .= qq{break;
 };
-}
-unless ($program =~ /gl/) {
-my $all_subclasses_aref = $dbh->selectcol_arrayref("SELECT DISTINCT subclass FROM products ORDER BY subclass;");
-for my $subclass (@$all_subclasses_aref) {
-	if (defined $subclass) {
-	$option_stringc .= qq{
+    }
+    unless ( $program =~ /gl/ ) {
+        my $all_subclasses_aref
+            = $dbh->selectcol_arrayref(
+            "SELECT DISTINCT subclass FROM products ORDER BY subclass;"
+            );
+        for my $subclass (@$all_subclasses_aref) {
+            if ( defined $subclass ) {
+                $option_stringc .= qq{
 					subclass_selected[subclass_selected.length] = new Option("$subclass", "$subclass");
 					};
-}
-}
-my $statement = "SELECT distinct class from products ORDER BY class;";
-$sth = $dbh->prepare($statement);
-my $rv  = $sth->execute() or die "can't execute the query: $sth->errstr";
-my $classes_aref = $dbh->selectcol_arrayref($statement);# or die "$sth->errstr\n";
-	$case_stringc .= qq{
+            }
+        }
+        my $statement
+            = "SELECT distinct class from products ORDER BY class;";
+        $sth = $dbh->prepare($statement);
+        my $rv = $sth->execute()
+            or die "can't execute the query: $sth->errstr";
+        my $classes_aref = $dbh->selectcol_arrayref($statement)
+            ;    # or die "$sth->errstr\n";
+        $case_stringc .= qq{
 		case 'All' :
 					subclass_selected.length = 0;
 					subclass_selected[subclass_selected.length] = new Option("All", "All");
@@ -89,36 +97,39 @@ my $classes_aref = $dbh->selectcol_arrayref($statement);# or die "$sth->errstr\n
 					break;
 };
 
-for my $i ( 0 .. ($#{$classes_aref} - 1) ) {
-	$$classes_aref[$i] = $dbh->quote($$classes_aref[$i]);
-	$statement = "SELECT DISTINCT subclass FROM products WHERE class = $$classes_aref[$i] ORDER BY subclass;";
+        for my $i ( 0 .. ( $#{$classes_aref} - 1 ) ) {
+            $$classes_aref[$i] = $dbh->quote( $$classes_aref[$i] );
+            $statement
+                = "SELECT DISTINCT subclass FROM products WHERE class = $$classes_aref[$i] ORDER BY subclass;";
 
-	$case_stringc .= qq|
+            $case_stringc .= qq|
 		case $$classes_aref[$i] :
 					subclass_selected.length = 0;
 					subclass_selected[subclass_selected.length] = new Option("All", "All");
 				|;
-	my $subclass_href = $dbh->selectall_hashref($statement, 'subclass');
-	for my $keys (sort keys %$subclass_href) {
-		for my $keys2 (sort keys %{$$subclass_href{$keys}}) {
-			if (defined $$subclass_href{$keys}{$keys2}) {
-				$case_stringc .= qq|
+            my $subclass_href
+                = $dbh->selectall_hashref( $statement, 'subclass' );
+            for my $keys ( sort keys %$subclass_href ) {
+                for my $keys2 ( sort keys %{ $$subclass_href{$keys} } )
+                {
+                    if ( defined $$subclass_href{$keys}{$keys2} ) {
+                        $case_stringc .= qq|
 					subclass_selected[subclass_selected.length] = new Option("$$subclass_href{$keys}{$keys2}", "$$subclass_href{$keys}{$keys2}");
 |;
 
-			}
-		}
+                    }
+                }
 
-	}
-		$case_stringc .= qq{break;
+            }
+            $case_stringc .= qq{break;
 };
-}
-}
+        }
+    }
 #######################################################################
 ##		Print Page Head
 
-$r->print(
-	qq#<?xml version="1.0" encoding="utf-8"?>
+    $r->print(
+        qq#<?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="$lang" lang="$lang">
 <head>
@@ -174,26 +185,35 @@ function checkscript() {
 			return true;
 		}
 }
-#);
+#
+    );
 
-if ($lang =~ /^es/) {
-	$r->print(qq#
+    if ( $lang eq "es" ) {
+        $r->print(
+            qq#
 alert("Por favor, selecciona un comando");
-#);
-} else {
-	$r->print(qq#
+#
+        );
+    }
+    else {
+        $r->print(
+            qq#
 alert("Please Select a Command");
-#);
-}
-$r->print(qq#
+#
+        );
+    }
+    $r->print(
+        qq#
 return false;
 }
 //]]>
 </script>
-#);
+#
+    );
 
-unless ($program =~ /gl/) {
-	$r->print(qq#<script type="text/javascript">
+    unless ( $program =~ /gl/ ) {
+        $r->print(
+            qq#<script type="text/javascript">
 //<![CDATA[
 if (window.addEventListener) {
 	window.addEventListener("load",setupEventsC,false);
@@ -227,39 +247,43 @@ function checkSelectC(evnt) {
 	return false;
 }
 </script>
-#);
-}
-$r->print(qq#
+#
+        );
+    }
+    $r->print(
+        qq#
 </head>
 <body>
 <div>
-<a class="bigblue" href="http://www.bennettconstruction.us/index.html" rel="external">Bennett Construction Home Page</a><br />
-<a class="biggreen" href="/perl/VP/manual.pl" rel="external">VIEW USAGE MANUAL</a><br />
-<a class="bigblue" href="/perl/VP/gl.pl" rel="external">Labor and Projects</a><br />
-<a class="bigblue" href="/perl/VP/pg.pl" rel="external">Products Vendors Customers Assemblies</a><br />
-<a class="bigblue" href="/perl/VP/tr.pl" rel="external">Materials Viewer and Duplicator</a><br />
-<a class="bigblue" href="/perl/VP/lab.pl" rel="external">Labor Viewer and Duplicator</a><br />
+<a class="bigblue" href="/index.html" rel="external">Bennett Construction</a><br />
+<a class="biggreen" href="/perl/VPCP/manual.pl" rel="external">MANUAL</a><br />
+<a class="bigblue" href="/perl/VPCP/pg_glpc-B.pl" rel="external">Labor Projects</a><br />
+<a class="bigblue" href="/perl/VPCP/pg_wmod-B.pl" rel="external">Products Vendors Customers Assemblies</a><br />
+<a class="bigblue" href="/perl/VPCP/treez.pl" rel="external">Materials Viewer and Duplicator</a><br />
+<a class="bigblue" href="/perl/VPCP/labbz.pl" rel="external">Labor Viewer and Duplicator</a><br />
 <a class="bigred" href="/logout">Log Off</a>
 </div>
 #
-);
+    );
 
 }
 #######################################################################
 ##		Sub SelectTable
 
 sub SelectTable {
-	my $r                = shift;
-	my $dbh              = shift;
-	my $program          = shift;
-	my $field_table_aref = shift;
-	my $lang             = shift;
-	my $select_label;
-	my $ucfirst;
-	my $tbl       = "";
-	my $statement = "";
-		if ($lang =~ /^es/) {
-			$r->print(qq{<div>
+    my $r                = shift;
+    my $dbh              = shift;
+    my $program          = shift;
+    my $field_table_aref = shift;
+    my $lang             = shift;
+    my $select_label;
+    my $ucfirst;
+    my $tbl       = "";
+    my $statement = "";
+
+    if ( $lang eq "es" ) {
+        $r->print(
+            qq{<div>
 	<h2>Favor de seleccionar un comando y tabla para usar</h2>
 	<form id="someForm" name="someForm" action="$program" method="post">
 	<div>
@@ -269,10 +293,11 @@ sub SelectTable {
 	<td><label for="table_selected">Tabla</label></td>
 	<td><select id="table_selected" name="table_selected">
 	}
-	);
-		} else {
-	$r->print(
-		qq{<div>
+        );
+    }
+    else {
+        $r->print(
+            qq{<div>
 	<h2>Please select a command and a table to use</h2>
 	<form id="someForm" name="someForm" action="$program" method="post">
 	<div>
@@ -282,90 +307,93 @@ sub SelectTable {
 	<td><label for="table_selected">Table</label></td>
 	<td><select id="table_selected" name="table_selected">
 	}
-	);
-		}
-	my $sth = $dbh->table_info( '', 'public', undef, 'TABLE' );
-	for my $rel ( @{ $sth->fetchall_arrayref( {} ) } ) {
-		$r->print(
-			qq{<option value="$rel->{TABLE_NAME}">$rel->{TABLE_NAME}</option>
+        );
+    }
+    my $sth = $dbh->table_info( '', 'public', undef, 'TABLE' );
+    for my $rel ( @{ $sth->fetchall_arrayref( {} ) } ) {
+        $r->print(
+            qq{<option value="$rel->{TABLE_NAME}">$rel->{TABLE_NAME}</option>
 	}
-		);
-	}
-	$sth->finish();
-	$r->print(
-		qq{</select></td>
+        );
+    }
+    $sth->finish();
+    $r->print(
+        qq{</select></td>
 	<td><label for="id_selected">ID</label></td>
 	<td><input type="text" id="id_selected" name="id_selected" value="" /></td>
 	</tr><tr>
 	}
-	);
-	#######################################################################
-	#	loop for pre-chosen fields/tables
-	for my $i ( 0 .. $#$field_table_aref ) {
-		$ucfirst = $field_table_aref->[$i][0];
-		$ucfirst =~ s/_(\w)/ \u$1/g;
-		$ucfirst =~ s/ Id/ ID/;
-		$ucfirst =~ s/ Url/ URL/;
-		$select_label = ucfirst($ucfirst);
-		$select_label =~ s/&/&amp;/g;     #Changed for HTML::Entities --Chris
-		$select_label =~ s/ /&nbsp;/g;    #To make non-breaking spaces in labels
-		$select_label =~ s/"/&quot;/g
-		  ; # Pisses me off I can't find a way to deal with BOTH ' and " in XHTML forms
-		$statement =
-"SELECT DISTINCT $field_table_aref->[$i][0] FROM $field_table_aref->[$i][1] WHERE $field_table_aref->[$i][0] IS NOT NULL AND $field_table_aref->[$i][0] <> '' ORDER BY $field_table_aref->[$i][0];";
-		my $select_array_ref = $dbh->selectcol_arrayref($statement)
-		  || die $dbh->errstr;
+    );
+    #######################################################################
+    #	loop for pre-chosen fields/tables
+    for my $i ( 0 .. $#$field_table_aref ) {
+        $ucfirst = $field_table_aref->[$i][0];
+        $ucfirst =~ s/_(\w)/ \u$1/g;
+        $ucfirst =~ s/ Id/ ID/;
+        $ucfirst =~ s/ Url/ URL/;
+        $select_label = ucfirst($ucfirst);
+        $select_label
+            =~ s/&/&amp;/g;    #Changed for HTML::Entities --Chris
+        $select_label
+            =~ s/ /&nbsp;/g;    #To make non-breaking spaces in labels
+        $select_label =~ s/"/&quot;/g
+            ; # Pisses me off I can't find a way to deal with BOTH ' and " in XHTML forms
+        $statement
+            = "SELECT DISTINCT $field_table_aref->[$i][0] FROM $field_table_aref->[$i][1] WHERE $field_table_aref->[$i][0] IS NOT NULL AND $field_table_aref->[$i][0] <> '' ORDER BY $field_table_aref->[$i][0];";
+        my $select_array_ref = $dbh->selectcol_arrayref($statement)
+            || die $dbh->errstr;
 
-		if ( ( $i == 2 ) || ( $i == 4 ) || ( $i == 6 ) ) {
-			$r->print(qq{</tr><tr>});
-		}
-		$r->print(
-			    qq{<td><label for="$field_table_aref->[$i][0]}
-			  . qq{_selected">$select_label</label></td>
+        if ( ( $i == 2 ) || ( $i == 4 ) || ( $i == 6 ) ) {
+            $r->print(qq{</tr><tr>});
+        }
+        $r->print(
+                  qq{<td><label for="$field_table_aref->[$i][0]}
+                . qq{_selected">$select_label</label></td>
 		<td><select id="$field_table_aref->[$i][0]}
-			  . qq{_selected" name="$field_table_aref->[$i][0]}
-			  . qq{_selected">
+                . qq{_selected" name="$field_table_aref->[$i][0]}
+                . qq{_selected">
 		<option value="All">All</option>
 		}
-		);
+        );
 
-		foreach my $select (@$select_array_ref) {
-			if ( defined $select ) {
-				$select =~ s/"/&quot;/g
-				  ; # Pisses me off I can't find a way to deal with BOTH ' and " in XHTML forms
-				$r->print(
-					qq{<option value="$select">$select</option>
+        foreach my $select (@$select_array_ref) {
+            if ( defined $select ) {
+                $select =~ s/"/&quot;/g
+                    ; # Pisses me off I can't find a way to deal with BOTH ' and " in XHTML forms
+                $r->print(
+                    qq{<option value="$select">$select</option>
 		}
-				);
-			}
-		}
-		$r->print(qq{</select></td>});
-	}
-	if ($lang =~ /^es/) {
-	$r->print(
-		qq{
+                );
+            }
+        }
+        $r->print(qq{</select></td>});
+    }
+    if ( $lang eq "es" ) {
+        $r->print(
+            qq{
 	<td><label for="itemstoinsert">Numero de unidades en grupo para insertar</label></td><td><select id="itemstoinsert" name="itemstoinsert">
 	<option selected="selected" value="1">1</option>
 	}
-	);
-	} else {
-			$r->print(
-		qq{
+        );
+    }
+    else {
+        $r->print(
+            qq{
 	<td><label for="itemstoinsert">Items to Insert in Group</label></td><td><select id="itemstoinsert" name="itemstoinsert">
 	<option selected="selected" value="1">1</option>
 	}
-	);
-	}
-	for my $i ( 2 .. 36 ) {
-		$r->print(
-			qq{
+        );
+    }
+    for my $i ( 2 .. 36 ) {
+        $r->print(
+            qq{
 		<option value="$i">$i</option>
 		}
-		);
-	}
-	if ($lang =~ /^es/) {
-		$r->print(
-		qq{</select></td>	
+        );
+    }
+    if ( $lang eq "es" ) {
+        $r->print(
+            qq{</select></td>	
 	</tr>
 	<tr>
 	<td><label for="field_selected">Columna</label></td>
@@ -433,10 +461,11 @@ sub SelectTable {
 	</div>
 	</body></html>
 	}
-	);
-	} else {
-	$r->print(
-		qq{</select></td>	
+        );
+    }
+    else {
+        $r->print(
+            qq{</select></td>	
 	</tr>
 	<tr>
 	<td><label for="field_selected">Field</label></td>
@@ -504,8 +533,8 @@ sub SelectTable {
 	</div>
 	</body></html>
 	}
-	);
-	}
+        );
+    }
 }
 
 =pod
@@ -516,7 +545,7 @@ BWCL::SelectTable_B
 
 =head1 VERSION
 
-This documentation refers to BWCL::SelectTable_B version 4.0.11.
+This documentation refers to BWCL::SelectTable_B version 4.1.00.
 
 =head1 SYNOPSIS
 
