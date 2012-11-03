@@ -256,11 +256,11 @@ function checkSelectC(evnt) {
 <body>
 <div>
 <a class="bigblue" href="/index.html" rel="external">Bennett Construction</a><br />
-<a class="biggreen" href="/perl/VPCP/manual.pl" rel="external">MANUAL</a><br />
-<a class="bigblue" href="/perl/VPCP/pg_glpc-B.pl" rel="external">Labor Projects</a><br />
-<a class="bigblue" href="/perl/VPCP/pg_wmod-B.pl" rel="external">Products Vendors Customers Assemblies</a><br />
-<a class="bigblue" href="/perl/VPCP/treez.pl" rel="external">Materials Viewer and Duplicator</a><br />
-<a class="bigblue" href="/perl/VPCP/labbz.pl" rel="external">Labor Viewer and Duplicator</a><br />
+<a class="biggreen" href="/perl/VP/manual.pl" rel="external">MANUAL</a><br />
+<a class="bigblue" href="/perl/VP/gl.pl" rel="external">Labor Projects</a><br />
+<a class="bigblue" href="/perl/VP/pg.pl" rel="external">Products Vendors Customers Assemblies</a><br />
+<a class="bigblue" href="/perl/VP/tr.pl" rel="external">Materials Viewer and Duplicator</a><br />
+<a class="bigblue" href="/perl/VP/lab.pl" rel="external">Labor Viewer and Duplicator</a><br />
 <a class="bigred" href="/logout">Log Off</a>
 </div>
 #
