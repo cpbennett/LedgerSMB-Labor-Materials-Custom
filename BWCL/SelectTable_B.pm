@@ -1,6 +1,6 @@
 package BWCL::SelectTable_B;
 
-our $VERSION = 4.1.00;
+our $VERSION = 4.3.00;
 use warnings;
 use strict;
 
@@ -12,12 +12,14 @@ our @EXPORT_OK = qw(PrepareHead SelectTable);
 ##		Sub PrepareHead
 
 sub PrepareHead {
-    my $r           = shift;
-    my $dbh         = shift;
-    my $program     = shift;
-    my $title       = shift;
-    my $description = shift;
-    my $lang        = shift;
+    my ($arg_ref) = @_;
+    my $r                     = $arg_ref->{r};
+    my $dbh                   = $arg_ref->{dbh};
+    my $program               = $arg_ref->{program};
+    my $title                 = $arg_ref->{title};
+    my $description           = $arg_ref->{description};
+    my $lang                  = $arg_ref->{lang};
+    my $config_hash_ref       = $arg_ref->{config_hash_ref};
 
 #######################################################################
     #	Prepare Javascript in Head
@@ -254,15 +256,7 @@ function checkSelectC(evnt) {
         qq#
 </head>
 <body>
-<div>
-<a class="bigblue" href="/index.html" rel="external">Bennett Construction</a><br />
-<a class="biggreen" href="/perl/VPCP/manual.pl" rel="external">MANUAL</a><br />
-<a class="bigblue" href="/perl/VPCP/pg_glpc-B.pl" rel="external">Labor Projects</a><br />
-<a class="bigblue" href="/perl/VPCP/pg_wmod-B.pl" rel="external">Products Vendors Customers Assemblies</a><br />
-<a class="bigblue" href="/perl/VPCP/treez.pl" rel="external">Materials Viewer and Duplicator</a><br />
-<a class="bigblue" href="/perl/VPCP/labbz.pl" rel="external">Labor Viewer and Duplicator</a><br />
-<a class="bigred" href="/logout">Log Off</a>
-</div>
+$config_hash_ref->{'Top of Page Links'}{'top_of_page_links'}
 #
     );
 
@@ -271,11 +265,13 @@ function checkSelectC(evnt) {
 ##		Sub SelectTable
 
 sub SelectTable {
-    my $r                = shift;
-    my $dbh              = shift;
-    my $program          = shift;
-    my $field_table_aref = shift;
-    my $lang             = shift;
+    my ($arg_ref) = @_;
+    my $r                     = $arg_ref->{r};
+    my $dbh                   = $arg_ref->{dbh};
+    my $program               = $arg_ref->{program};
+    my $field_table_aref      = $arg_ref->{field_table_aref};
+    my $lang                  = $arg_ref->{lang};
+    my $use_delete_duplicates = $arg_ref->{use_delete_duplicates};
     my $select_label;
     my $ucfirst;
     my $tbl       = "";
@@ -407,7 +403,10 @@ sub SelectTable {
 	<td><label for="field_value_selected">RegEx para valor de columna</label></td>
 	<td><input type="text" id="field_value_selected" name="field_value_selected" value="" />
 	<label for="field_value_selected_null">NULL</label>
-	<input type="checkbox" value="NULL" id="field_value_selected_null" name="field_value_selected_null" /></td>
+	<input type="checkbox" value="NULL" id="field_value_selected_null" name="field_value_selected_null" />
+	<label for="field_value_selected_not">NOT</label>
+	<input type="checkbox" value="NOT" id="field_value_selected_not" name="field_value_selected_not" />
+    </td>
 	</tr>
 	<tr>
 	<td><label for="field_selected2">Segunda columna</label></td>
@@ -445,10 +444,19 @@ sub SelectTable {
 	<label class="biggreen" for="ShowColumns">Mostrar columnas (Selecciona una tabla)</label>
 	<br />
 	<br />
-	<input type="radio" value="DeleteDuplicates" id="DeleteDuplicates" name="command" />
+    }
+);
+if ($use_delete_duplicates) {
+	$r->print(
+        qq{<input type="radio" value="DeleteDuplicates" id="DeleteDuplicates" name="command" />
 	<label class="bigred" for="DeleteDuplicates">Borrar Duplicados(Selecciona una tabla, con limitaciones como clase y/o nombre de vendor con products tabla)</label>
 	<br />
 	<br />
+    }
+);
+}
+$r->print(
+    qq{
 	<input type="radio" value="ShowTables" id="ShowTables" name="command" />
 	<label class="biggreen" for="ShowTables">Mostrar Tablas</label>
 	<br />
@@ -476,8 +484,12 @@ sub SelectTable {
 	</script>
 	<noscript><input type="text" id="field_selected" name="field_selected" value="" /></noscript>
 	</td>
-	<td><label for="field_value_selected">Field Value RegEx</label></td>
-	<td><input type="text" id="field_value_selected" name="field_value_selected" value="" />
+	<td>
+    <label for="field_value_selected">Field Value RegEx</label></td>
+	<td>
+    <input type="text" id="field_value_selected" name="field_value_selected" value="" /><br />
+    <label for="field_value_selected_not">NOT</label>
+	<input type="checkbox" value="NOT" id="field_value_selected_not" name="field_value_selected_not" />
 	<label for="field_value_selected_null">NULL</label>
 	<input type="checkbox" value="NULL" id="field_value_selected_null" name="field_value_selected_null" /></td>
 	</tr>
@@ -490,10 +502,15 @@ sub SelectTable {
 	</script>
 	<noscript><input type="text" id="field_selected2" name="field_selected2" value="" /></noscript>
 	</td>
-	<td><label for="field_value_selected2">Second Field Value RegEx</label></td>
-	<td><input type="text" id="field_value_selected2" name="field_value_selected2" value="" />
+	<td>
+    <label for="field_value_selected2">Second Field Value RegEx</label></td>
+	<td>
+    <input type="text" id="field_value_selected2" name="field_value_selected2" value="" /><br />
+    <label for="field_value_selected2_not">NOT</label>
+	<input type="checkbox" value="NOT" id="field_value_selected2_not" name="field_value_selected2_not" />
 	<label for="field_value_selected2_null">NULL</label>
-	<input type="checkbox" value="NULL" id="field_value_selected2_null" name="field_value_selected2_null" /></td>
+	<input type="checkbox" value="NULL" id="field_value_selected2_null" name="field_value_selected2_null" />
+    </td>
 	</tr>
 	</tbody></table>
 	<br />
@@ -517,10 +534,19 @@ sub SelectTable {
 	<label class="biggreen" for="ShowColumns">Show Columns (Select a Table)</label>
 	<br />
 	<br />
-	<input type="radio" value="DeleteDuplicates" id="DeleteDuplicates" name="command" />
+        }
+);
+if ($use_delete_duplicates) {
+	$r->print(
+	qq{<input type="radio" value="DeleteDuplicates" id="DeleteDuplicates" name="command" />
 	<label class="bigred" for="DeleteDuplicates">Delete Duplicates (Select a table, use a limit such as class and/or vendor with products table)</label>
 	<br />
 	<br />
+}
+);
+}
+$r->print(
+    qq{
 	<input type="radio" value="ShowTables" id="ShowTables" name="command" />
 	<label class="biggreen" for="ShowTables">Show Tables</label>
 	<br />
@@ -545,7 +571,7 @@ BWCL::SelectTable_B
 
 =head1 VERSION
 
-This documentation refers to BWCL::SelectTable_B version 4.1.00.
+This documentation refers to BWCL::SelectTable_B version 4.3.00.
 
 =head1 SYNOPSIS
 

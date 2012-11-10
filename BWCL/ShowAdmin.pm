@@ -1,21 +1,45 @@
 package BWCL::ShowAdmin;
 
-our $VERSION = 1.1.00;
+our $VERSION = 1.3.00;
 use warnings;
 use strict;
 
 require Exporter;
 our @ISA       = qw(Exporter);
-our @EXPORT_OK = qw(ShowTables ShowAllTables ShowColumns);
+our @EXPORT_OK = qw(ShowTables ShowAllTables ShowColumns error_message);
+
+
+#######################################################################
+##      Sub error_message
+
+sub error_message {
+    my $r             = shift;
+    my $lang          = shift;
+    my $error_item_es = shift;
+    my $error_item_en = shift;
+
+    if ( $lang eq "es" ) {
+        $r->print(
+            qq{<div class="cent"><p class="error">ERROR!! Por favor, selecciona $error_item_es.</p></div>}
+        );
+    }
+    else {
+        $r->print(
+            qq{<div class="cent"><p class="error">ERROR!! Please select $error_item_en.</p></div>}
+        );
+    }
+    return;
+}
 
 #######################################################################
 ##		Sub ShowTables
 
 sub ShowTables {
-    my $r   = shift;
-    my $dbh = shift;
-    my @vetor;
+    my ($arg_ref) = @_;
+    my $r         = $arg_ref->{r};
+    my $dbh       = $arg_ref->{dbh};
     my $st;
+    my @vetor;
     my $description;
     my $field2;
     my $SQL = "SELECT
@@ -48,7 +72,6 @@ sub ShowTables {
         );
         foreach my $field (@vetor) {
             $field2 = $dbh->quote($field);
-            unless (
                 ($description) = $dbh->selectrow_array(
                     "SELECT
                             obj_description
@@ -61,11 +84,10 @@ sub ShowTables {
                                 ),
                                 'pg_class'
                             );"
-                )
-                )
-            {
-                $description = "";
-            }
+                );
+               unless (defined $description) {
+                   $description = '';
+               }
             $field =~ s/\n/<br \/>/g;
             $r->print(
                 qq{<td align="left">$field</td><td align="left">$description</td>
@@ -95,8 +117,9 @@ sub ShowTables {
 ##		Sub ShowAllTables
 
 sub ShowAllTables {
-    my $r   = shift;
-    my $dbh = shift;
+    my ($arg_ref) = @_;
+    my $r         = $arg_ref->{r};
+    my $dbh       = $arg_ref->{dbh};
     my $SQL = "SELECT
                       table_name
                  FROM information_schema.tables
@@ -133,17 +156,16 @@ sub ShowAllTables {
 ##		Sub ShowColumns
 
 sub ShowColumns {
-    my $r   = shift;
-    my $dbh = shift;
-    my $q   = shift;
-    my $showcolumnstable;
-    my $showcolumnstable2;
+    my ($arg_ref) = @_;
+    my $r         = $arg_ref->{r};
+    my $dbh       = $arg_ref->{dbh};
+    my $q         = $arg_ref->{q};
     my $description;
     my $col_name;
     my $col_name2;
     my $relid;
-    $showcolumnstable  = $q->param("table_selected");
-    $showcolumnstable2 = $dbh->quote($showcolumnstable);
+    my $showcolumnstable  = $arg_ref->{table_selected};
+    my $showcolumnstable2 = $dbh->quote($showcolumnstable);
 
     if ($showcolumnstable) {
         my $statement = "SELECT
@@ -396,8 +418,7 @@ BWCL::ShowAdmin
 
 =head1 VERSION
 
-This documentation refers to BWCL::ShowAdmin version
-1.1.00.
+This documentation refers to BWCL::ShowAdmin version 1.3.00.
 
 =head1 SYNOPSIS
 

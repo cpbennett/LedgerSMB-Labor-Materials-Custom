@@ -1,6 +1,6 @@
 package BWCL::ViewRecords_B;
 
-our $VERSION = 1.3.00;
+our $VERSION = 2.0.00;
 use warnings;
 use strict;
 
@@ -11,336 +11,239 @@ our @EXPORT_OK = qw(ViewRecords ViewUpdatedRecord);
 use HTML::Entities();
 use Encode;
 use BWCL::BWCLFields qw (Selecter);
+use BWCL::ShowAdmin qw(error_message);
 
 #######################################################################
 ##		Sub ViewRecords
 
 sub ViewRecords {
-    my $r   = shift;
-    my $dbh = shift;
-    my $q   = shift;
-    my $table;
-    my $table2;
-    my $field;
-    my $field2;
-    my $field_value;
-    my $field_value_null;
-    my $field_value2;
-    my $field_value2_null;
-    my $num_of_rows;
-    my $class;
-    my $subclass;
-    my $vendor_name;
-    my $sth;
-    my @where_statement = ();
-    my $where_statement;
-    my $where1_statement;
-    my $where2_statement;
-    my $class_where_statement;
-    my $vendor_name_where_statement;
-    my $subclass_where_statement;
-    my $labor_project_list_category_where_statement;
-    my $labor_project_list_subcategory_where_statement;
-    my $labor_project_list_name_where_statement;
-    my $labor_project_name_where_statement;
-    my $labor_project_list_category;
-    my $labor_project_list_subcategory;
-    my $labor_project_name;
-    my $full_assembly_name;
-    my $full_assembly_name_where_statement;
-    my $full_assembly_list_name;
-    $full_assembly_list_name
+    my ($arg_ref) = @_;
+    my $r                  = $arg_ref->{r};
+    my $dbh                = $arg_ref->{dbh};
+    my $q                  = $arg_ref->{q};
+    my $lang               = $arg_ref->{lang};
+    my $table              = $arg_ref->{table_selected};
+    my $table2             = $dbh->quote($table);
+    my $field              = $q->param("field_selected");
+    my $field_value        = $q->param("field_value_selected");
+    my $field_value_null   = $q->param("field_value_selected_null");
+    my $field_value_not    = $q->param("field_value_selected_not");
+    my $field2             = $q->param("field_selected2");
+    my $field_value2       = $q->param("field_value_selected2");
+    my $field_value2_null  = $q->param("field_value_selected2_null");
+    my $field_value2_not   = $q->param("field_value_selected2_not");
+    my $class              = $q->param("class_selected");
+    my $subclass           = $q->param("subclass_selected");
+    my $vendor_name        = $q->param("vendor_name_selected");
+    my $full_assembly_name = $q->param("full_assembly_name_selected");
+    my $labor_project_list_category
+        = $q->param("labor_project_list_category_selected");
+    my $labor_project_list_subcategory
+        = $q->param("labor_project_list_subcategory_selected");
+    my $labor_project_class = $q->param("labor_project_class_selected");
+    my $labor_project_subclass = $q->param("labor_project_subclass_selected");
+    my $full_assembly_list_name
         = $q->param("full_assembly_list_name_selected");
+    my $full_assembly_list_category
+        = $q->param("full_assembly_list_category_selected");
+    my $full_assembly_list_subcategory
+        = $q->param("full_assembly_list_subcategory_selected");
+    my $num_of_rows;
+    my $sth;
+    my $statement;
+    my $rc;
+    my $tbl;
+    my $field2q;
+    my $fieldq;
+    my $fetch_all_href;
+    my $view_array_ref;
+    my @where_statementx = ();
+    my $where_statementx = '';
 
-    if ( defined $full_assembly_list_name ) {
+    if (    ($full_assembly_list_name)
+         && ( $full_assembly_list_name ne 'All' ) )
+    {
         $full_assembly_list_name
             = HTML::Entities::decode($full_assembly_list_name);
         $full_assembly_list_name
             = encode( "utf8", $full_assembly_list_name );
     }
 
-    my $full_assembly_list_category;
-    $full_assembly_list_category
-        = $q->param("full_assembly_list_category_selected");
-    if (   ( defined $full_assembly_list_category )
-        && ( $full_assembly_list_category ne '' ) )
+    if (    ($full_assembly_list_category)
+         && ( $full_assembly_list_category ne 'All' ) )
     {
         $full_assembly_list_category
             = HTML::Entities::decode($full_assembly_list_category);
         $full_assembly_list_category
             = encode( "utf8", $full_assembly_list_category );
     }
-    my $full_assembly_list_category_where_statement;
 
-    my $full_assembly_list_subcategory;
-    $full_assembly_list_subcategory
-        = $q->param("full_assembly_list_subcategory_selected");
-    if (   ( defined $full_assembly_list_subcategory )
-        && ( $full_assembly_list_subcategory ne '' ) )
+    if (    ($full_assembly_list_subcategory)
+         && ( $full_assembly_list_subcategory ne 'All' ) )
     {
         $full_assembly_list_subcategory
             = HTML::Entities::decode($full_assembly_list_subcategory);
         $full_assembly_list_subcategory
             = encode( "utf8", $full_assembly_list_subcategory );
     }
-    my $full_assembly_list_subcategory_where_statement;
 
-    $table             = $q->param("table_selected");
-    $field             = $q->param("field_selected");
-    $field_value       = $q->param("field_value_selected");
-    $field_value_null  = $q->param("field_value_selected_null");
-    $field2            = $q->param("field_selected2");
-    $field_value2      = $q->param("field_value_selected2");
-    $field_value2_null = $q->param("field_value_selected2_null");
-    $class             = $q->param("class_selected");
-    $subclass          = $q->param("subclass_selected");
-    $vendor_name       = $q->param("vendor_name_selected");
-    $labor_project_list_category
-        = $q->param("labor_project_list_category_selected");
-    $labor_project_list_subcategory
-        = $q->param("labor_project_list_subcategory_selected");
-    $labor_project_name = $q->param("labor_project_name_selected");
-
-    if ( defined $labor_project_name ) {
-        $labor_project_name
-            = HTML::Entities::decode($labor_project_name);
-        $labor_project_name = encode( "utf8", $labor_project_name );
+    if ( ($labor_project_class) && ( $labor_project_class ne 'All' ) ) {
+        $labor_project_class
+            = HTML::Entities::decode($labor_project_class);
+        $labor_project_class = encode( "utf8", $labor_project_class );
     }
-    $full_assembly_name = $q->param("full_assembly_name_selected");
-    if ( defined $full_assembly_name ) {
+
+    if ( ($labor_project_subclass) && ( $labor_project_subclass ne 'All' ) ) {
+        $labor_project_subclass
+            = HTML::Entities::decode($labor_project_subclass);
+        $labor_project_subclass = encode( "utf8", $labor_project_subclass );
+    }
+
+    if ( ($full_assembly_name) && ( $full_assembly_name ne 'All' ) ) {
         $full_assembly_name
             = HTML::Entities::decode($full_assembly_name);
         $full_assembly_name = encode( "utf8", $full_assembly_name );
     }
 
-    $table2 = $dbh->quote($table);
+    if ($field2) {
+        $field2q = $dbh->quote($field2);
+    $statement
+        = "SELECT DISTINCT $field2q FROM information_schema.columns WHERE table_name = $table2;";
+    $sth = $dbh->prepare($statement) || die $dbh->errstr;
+    $rc  = $sth->execute             || die $dbh->errstr;
+    $tbl = $sth->fetchrow_arrayref;
+    unless ( $$tbl[0] ) {
+        error_message($r, $lang, "un campo segundo valido", "a valid second field");
+        return;
+    }
+        $field_value2 = $dbh->quote($field_value2);
+        if ($field_value2_null) {
+            push( @where_statementx, "$field2 IS NULL" );
+        }
+        elsif ($field_value2_not) {
+            push( @where_statementx, "(($field2)::text NOT SIMILAR TO ($field_value2)::text)" );
+        }
+        else {
+            push( @where_statementx,
+                  "(($field2)::text SIMILAR TO ($field_value2)::text)"
+                );
+        }
+    }
+    if ($field) {
+        $fieldq = $dbh->quote($field);
+        $statement = "SELECT (SELECT DISTINCT column_name FROM information_schema.columns WHERE table_name = $table2 AND column_name = $fieldq);";
+#    $statement
+#        = "SELECT DISTINCT $fieldq FROM information_schema.columns WHERE table_name = $table2;";
+    $sth = $dbh->prepare($statement) || die $dbh->errstr;
+    $rc  = $sth->execute             || die $dbh->errstr;
+    $tbl = $sth->fetchrow_arrayref;
+    unless ( $$tbl[0] ) {
+        error_message($r, $lang, "un campo primero valido", "a valid first field");
+        return;
+    }
+        $field_value = $dbh->quote($field_value);
+        if ($field_value_null) {
+            push( @where_statementx, "$field IS NULL" );
+        }
+        elsif ($field_value_not) {
+            push( @where_statementx, "(($field)::text NOT SIMILAR TO ($field_value)::text)" );
+        }
+        else {
+            push( @where_statementx,
+                  "(($field)::text SIMILAR TO ($field_value)::text)" );
+        }
+    }
 
-    if (($table)
-        && (   ($field)
-            || ($field2)
-            || ($class)
-            || ($subclass)
-            || ($vendor_name)
-            || ($labor_project_list_category)
-            || ($labor_project_list_subcategory)
-            || ($labor_project_name) )
-        )
+    ######################################################################
+    ##		Verify Whether to keep class subclass vendor_name
+
+    if (    ( $table eq 'products' )
+         || ( $table eq 'vendor_contacts' )
+         || ( $table eq 'vendors' ) )
     {
-        if ($field2) {
-            my $vstatement
-                = "SELECT column_name FROM information_schema.columns WHERE table_name = $table2;";
-            my $vsth = $dbh->prepare($vstatement);
-            my $vrv  = $vsth->execute()
-                or die "can't execute the query: $vsth->errstr";
-            my $vtbl_aref = $vsth->fetchall_arrayref
-                or die "$vsth->errstr\n";
-            my $ok = 0;
-            for my $vi ( 0 .. $#{$vtbl_aref} ) {
-                if ( $field2 eq "$vtbl_aref->[$vi][0]" ) {
-                    $ok = 1;
-                }
-            }
-            unless ($ok) {
-                $r->print(
-                    qq{<div><p class="error">ERROR!! Please select a set of valid second field and table combination.<br />}
+        if ( $vendor_name ne 'All' ) {
+            $vendor_name = $dbh->quote($vendor_name);
+            push( @where_statementx, "vendor_name = $vendor_name" );
+        }
+
+    }
+    if ( $table eq 'products' ) {
+        if ( $class ne 'All' ) {
+            $class = $dbh->quote($class);
+            push( @where_statementx, "class = $class" );
+        }
+        if ( $subclass ne 'All' ) {
+            $subclass = $dbh->quote($subclass);
+            push( @where_statementx, "subclass = $subclass" );
+        }
+    }
+    if ( $table eq 'full_assembly_list' ) {
+        if ( $full_assembly_list_category ne 'All' ) {
+            $full_assembly_list_category
+                = $dbh->quote($full_assembly_list_category);
+            push( @where_statementx,
+                  "full_assembly_list_category = $full_assembly_list_category"
                 );
-                for my $vi ( 0 .. $#{$vtbl_aref} ) {
-                    $r->print(qq{$vtbl_aref->[$vi][0]<br />});
-                }
-                $r->print(qq{</p></div>});
-                return (0);
-            }
-            $field_value2 = $dbh->quote($field_value2);
-            if ($field_value2_null) {
-                $where2_statement = "$field2 IS NULL";
-            }
-            else {
-                $where2_statement
-                    = "(($field2)::text SIMILAR TO ($field_value2)::text)";
-            }
         }
-        if ($field) {
-            my $vstatement2
-                = "SELECT column_name FROM information_schema.columns WHERE table_name = $table2;";
-            my $vsth2 = $dbh->prepare($vstatement2);
-            my $vrv2  = $vsth2->execute()
-                or die "can't execute the query: $vsth2->errstr";
-            my $vtbl2_aref = $vsth2->fetchall_arrayref
-                or die "$vsth2->errstr\n";
-            my $ok2 = 0;
-            for my $vi ( 0 .. $#{$vtbl2_aref} ) {
-                if ( $field eq "$vtbl2_aref->[$vi][0]" ) {
-                    $ok2 = 1;
-                }
-            }
-            unless ($ok2) {
-                $r->print(
-                    qq{<div><p class="error">ERROR!! Please select a set of valid field and table combination.<br />}
+        if ( $full_assembly_list_subcategory ne 'All' ) {
+            $full_assembly_list_subcategory
+                = $dbh->quote($full_assembly_list_subcategory);
+            push( @where_statementx,
+                  "full_assembly_list_subcategory = $full_assembly_list_subcategory"
                 );
-                for my $vi ( 0 .. $#{$vtbl2_aref} ) {
-                    $r->print(qq{$vtbl2_aref->[$vi][0]<br />});
-                }
-                $r->print(qq{</p></div>});
-                return (0);
-            }
-            $field_value = $dbh->quote($field_value);
-            if ($field_value_null) {
-                $where1_statement = "$field IS NULL";
-            }
-            else {
-                $where1_statement
-                    = "(($field)::text SIMILAR TO ($field_value)::text)";
-            }
         }
+    }
+    if ( $table eq 'labor_project_list' ) {
+        if ( $labor_project_list_category ne 'All' ) {
+            $labor_project_list_category
+                = $dbh->quote($labor_project_list_category);
+            push( @where_statementx,
+                  "labor_project_list_category = $labor_project_list_category"
+                );
+        }
+        if ( $labor_project_list_subcategory ne 'All' ) {
+            $labor_project_list_subcategory
+                = $dbh->quote($labor_project_list_subcategory);
+            push( @where_statementx,
+                  "labor_project_list_subcategory = $labor_project_list_subcategory"
+                );
+        }
+    }
+    if ( $table eq 'labor_project' ) {
+        if ( $labor_project_class ne 'All' ) {
+            $labor_project_class = $dbh->quote($labor_project_class);
+            push( @where_statementx,
+                  "labor_project_class = $labor_project_class" );
+        }
+        if ( $labor_project_subclass ne 'All' ) {
+            $labor_project_subclass = $dbh->quote($labor_project_subclass);
+            push( @where_statementx,
+                  "labor_project_subclass = $labor_project_subclass" );
+        }
+    }
 
-        ######################################################################
-        ##		Verify Whether to keep class subclass vendor_name
+    if (@where_statementx) {
+        $where_statementx = " WHERE ";
+        $where_statementx .= join( ' AND ', @where_statementx );
+    }
 
-        if ( $table eq 'products' ) {
-            if ( ( defined $class ) && ( $class ne 'All' ) ) {
-                $class                 = $dbh->quote($class);
-                $class_where_statement = "class = $class";
-            }
-            if ( ( defined $subclass ) && ( $subclass ne 'All' ) ) {
-                $subclass                 = $dbh->quote($subclass);
-                $subclass_where_statement = "subclass = $subclass";
-            }
-            if ( ( defined $vendor_name ) && ( $vendor_name ne 'All' ) )
-            {
-                $vendor_name = $dbh->quote($vendor_name);
-                $vendor_name_where_statement
-                    = "vendor_name = $vendor_name";
-            }
-        }
-        elsif (( $table eq 'vendors' )
-            || ( $table eq 'vendor_contacts' ) )
-        {
-            if ( ( defined $vendor_name ) && ( $vendor_name ne 'All' ) )
-            {
-                $vendor_name = $dbh->quote($vendor_name);
-                $vendor_name_where_statement
-                    = "vendor_name = $vendor_name";
-            }
-        }
-        if (   ( $table eq 'full_assembly' )
-            || ( $table eq 'full_assembly_list' ) )
-        {
-            if (   ( defined $full_assembly_name )
-                && ( $full_assembly_name ne 'All' ) )
-            {
-                $full_assembly_name = $dbh->quote($full_assembly_name);
-                if ( $table eq 'full_assembly' ) {
-                    $full_assembly_name_where_statement
-                        = "full_assembly_name = $full_assembly_name";
-                }
-                else {
-                    $full_assembly_name_where_statement
-                        = "full_assembly_list_name = $full_assembly_name";
-                }
-            }
-        }
-
-        if ( $table eq 'full_assembly_list' ) {
-            if (   ( defined $full_assembly_list_category )
-                && ( $full_assembly_list_category ne 'All' ) )
-            {
-                $full_assembly_list_category
-                    = $dbh->quote($full_assembly_list_category);
-                $full_assembly_list_category_where_statement
-                    = "full_assembly_list_category = $full_assembly_list_category";
-            }
-            if (   ( defined $full_assembly_list_subcategory )
-                && ( $full_assembly_list_subcategory ne 'All' ) )
-            {
-                $full_assembly_list_subcategory
-                    = $dbh->quote($full_assembly_list_subcategory);
-                $full_assembly_list_subcategory_where_statement
-                    = "full_assembly_list_subcategory = $full_assembly_list_subcategory";
-            }
-        }
-
-        if ( $table eq 'labor_project_list' ) {
-            if (   ( defined $labor_project_list_category )
-                && ( $labor_project_list_category ne 'All' ) )
-            {
-                $labor_project_list_category
-                    = $dbh->quote($labor_project_list_category);
-                $labor_project_list_category_where_statement
-                    = "labor_project_list_category = $labor_project_list_category";
-            }
-            if (   ( defined $labor_project_list_subcategory )
-                && ( $labor_project_list_subcategory ne 'All' ) )
-            {
-                $labor_project_list_subcategory
-                    = $dbh->quote($labor_project_list_subcategory);
-                $labor_project_list_subcategory_where_statement
-                    = "labor_project_list_subcategory = $labor_project_list_subcategory";
-            }
-            if (   ( defined $labor_project_name )
-                && ( $labor_project_name ne 'All' ) )
-            {
-                $labor_project_name = $dbh->quote($labor_project_name);
-                $labor_project_list_name_where_statement
-                    = "labor_project_list_name = $labor_project_name";
-            }
-        }
-        if ( $table eq 'labor_project' ) {
-            if (   ( defined $labor_project_name )
-                && ( $labor_project_name ne 'All' ) )
-            {
-                $labor_project_name = $dbh->quote($labor_project_name);
-                $labor_project_name_where_statement
-                    = "labor_project_name = $labor_project_name";
-            }
-        }
-
-        $where_statement = "";
-        @where_statement = (
-            $where1_statement,
-            $where2_statement,
-            $vendor_name_where_statement,
-            $class_where_statement,
-            $subclass_where_statement,
-            $labor_project_list_category_where_statement,
-            $labor_project_list_subcategory_where_statement,
-            $labor_project_name_where_statement,
-            $labor_project_list_name_where_statement,
-            $full_assembly_name_where_statement,
-            $full_assembly_list_category_where_statement,
-            $full_assembly_list_subcategory_where_statement
-        );
-        my $first = 1;
-        foreach my $wstatement (@where_statement) {
-            if ( defined $wstatement ) {
-                if ($first) {
-                    $where_statement = "WHERE $wstatement";
-                    $first           = 0;
-                }
-                else {
-                    $where_statement
-                        = "$where_statement AND $wstatement";
-                }
-            }
-        }
-        $r->print(
-            qq{
+    $r->print(
+        qq{
 	<div><h2>Viewing Records from $table table<br />
-	$where_statement<br />
+	$where_statementx
 	</h2></div>
 	}
-        );
+             );
 
-      #			my ($statement, $fetch_all_href) = SelectDisplayOrder($table);
-        my ( $statement, $fetch_all_href )
-            = Selecter( "ViewTable", $table );
-        $sth = $dbh->prepare(
-            "SELECT $statement FROM $table $where_statement;");
-        $sth->execute();
-        my $view_array_ref
-            = $sth->fetchall_arrayref( { %{$fetch_all_href} } );
-        $sth->finish;
-        view_table( $r, $statement, $view_array_ref, $table, $dbh );
-    }
+    ( $statement, $fetch_all_href )
+        = Selecter( "ViewTable", $table );
+    $sth = $dbh->prepare(
+                    "SELECT $statement FROM $table $where_statementx;");
+    $sth->execute();
+    $view_array_ref
+        = $sth->fetchall_arrayref( { %{$fetch_all_href} } );
+    $sth->finish;
+    view_table( $r, $statement, $view_array_ref, $table, $dbh );
 }
 
 #######################################################################
@@ -354,11 +257,16 @@ sub ViewUpdatedRecord {
     my $field_value_selected   = shift;
     my $column_list;
     my @columns;
+    my $statement;
+    my $sth;
+    my $rc;
+    my $tbl;
+    my @vetor;
     my $viewUpdatedRecordtable2 = $dbh->quote($viewUpdatedRecordtable);
 
-    if (   ($viewUpdatedRecordtable)
-        && ($field_selected)
-        && ($field_value_selected) )
+    if (    ($viewUpdatedRecordtable)
+         && ($field_selected)
+         && ($field_value_selected) )
     {
         $r->print(
             qq{
@@ -369,14 +277,13 @@ sub ViewUpdatedRecord {
 	<thead>
 	    <tr>
 	}
-        );
-        my $statement
+                 );
+        $statement
             = "SELECT column_name FROM information_schema.columns WHERE table_name = $viewUpdatedRecordtable2 ORDER BY ordinal_position DESC;";
-        my $sth = $dbh->prepare($statement) || die $dbh->errstr;
-        my $rc  = $sth->execute             || die $dbh->errstr;
-        my $tbl = $sth->fetchall_arrayref or die "$sth->errstr\n";
-        my ( $i, $j );
-        for $i ( 0 .. $#{$tbl} ) {
+        $sth = $dbh->prepare($statement) || die $dbh->errstr;
+        $rc  = $sth->execute             || die $dbh->errstr;
+        $tbl = $sth->fetchall_arrayref or die "$sth->errstr\n";
+        for my $i ( 0 .. $#{$tbl} ) {
             push( @columns, $tbl->[$i][0] );
             $r->print(qq{<th align="left">$tbl->[$i][0]</th>});
         }
@@ -385,15 +292,16 @@ sub ViewUpdatedRecord {
 	    </tr>
 	</thead>
 	}
-        );
+                 );
         $column_list = join( ', ', @columns );
         $r->print(qq{<tbody>});
-        my @vetor;
+        
         $sth
             = $dbh->prepare(
             "SELECT $column_list FROM $viewUpdatedRecordtable WHERE $field_selected = $field_value_selected;"
             );
         $sth->execute;
+
         while ( @vetor = $sth->fetchrow ) {
             $r->print(qq{<tr>});
             foreach my $field (@vetor) {
@@ -429,28 +337,23 @@ sub view_table {
     my $table_array_ref = shift;
     my $table           = shift;
     my $dbh             = shift;
+    my @columns;
+    my $ucfirst;
     my $num_of_rows     = scalar @$table_array_ref;
     my @address         = ( '', '', '', '', '' );
     my @name1           = ( '', '' );
     my @name2           = ( '', '' );
 
-    #	Capitalize and remove underscores from table name
-    my $ucfirst = $table;
-    $ucfirst =~ s/_(\w)/ \u$1/g;
-    $ucfirst =~ s/ Id/ ID/;
-    $ucfirst =~ s/ Url/ URL/;
-    $ucfirst = ucfirst($ucfirst);
     $r->print(
         qq{
-	<div><h2>Viewing Records from $ucfirst Table<br />
-	Number of Rows = $num_of_rows</h2>
+	<div><h2>Number of Rows = $num_of_rows</h2>
 	<table summary="" border="2" rules="all">
 	<thead>
 	    <tr>}
-    );
+             );
     $table = $dbh->quote($table);
 
-    my @columns = split( /, /, $statement );
+    @columns = split( /, /, $statement );
 
     #	Capitalize and remove underscores from column names
 
@@ -458,6 +361,7 @@ sub view_table {
         $ucfirst = $column;
         if ( $ucfirst =~ /ress2$|addr2$|city|state|zip/ ) { next; }
         if ( $ucfirst =~ /addr$|ress$/ ) {
+
             # Rename field to address only
             $ucfirst = 'address';
         }
@@ -465,10 +369,12 @@ sub view_table {
             $ucfirst = 'country';
         }
         if ( $ucfirst =~ /_fname$/ ) {
+
             # Rename field to name only
             $ucfirst = 'name';
         }
         if ( $ucfirst =~ /_fname2$/ ) {
+
             # Rename field to name2 only
             $ucfirst = 'name2';
         }
@@ -485,12 +391,12 @@ sub view_table {
 	</thead>
 	<tbody>
 	}
-    );
+             );
     foreach my $row (@$table_array_ref) {
         $r->print(
             qq{<tr>
 			}
-        );
+                 );
 
         #	HTML Encode column tuples (for  browser) or make equal to ''
         foreach my $field (@columns) {
@@ -543,7 +449,7 @@ sub view_table {
                 $r->print(
                     qq{<td align="left">$name1[0]$name1[1]</td>
 					}
-                );
+                         );
                 @name1 = ( '', '' );
                 next;
             }
@@ -551,7 +457,7 @@ sub view_table {
                 $r->print(
                     qq{<td align="left">$name2[0]$name2[1]</td>
 					}
-                );
+                         );
                 @name2 = ( '', '' );
                 next;
             }
@@ -559,7 +465,7 @@ sub view_table {
                 $r->print(
                     qq{<td align="left">$address[0]$address[1]$address[2] $address[3] $address[4]</td>
 					}
-                );
+                         );
                 @address = ( '', '', '', '', '' );
                 next;
             }
@@ -567,28 +473,28 @@ sub view_table {
                 $r->print(
                     qq{<td align="left"><a rel="external" href="http://$row->{$field}">$row->{$field}</a></td>
 					}
-                );
+                         );
                 next;
             }
             if ( $field =~ /access$/ ) {
                 $r->print(
                     qq{<td align="left"><a rel="external" href="$row->{$field}">$row->{$field}</a></td>
 				}
-                );
+                         );
                 next;
             }
             if ( $field =~ /email$/ ) {
                 $r->print(
                     qq{<td align="left"><a rel="external" href="mailto:$row->{$field}">$row->{$field}</a></td>
 				}
-                );
+                         );
                 next;
             }
             if ( $field =~ /email2$/ ) {
                 $r->print(
                     qq{<td align="left"><a rel="external" href="mailto:$row->{$field}">$row->{$field}</a></td>
 				}
-                );
+                         );
                 next;
             }
             if ( $field =~ /_lname$/ )                      { next; }
@@ -597,17 +503,17 @@ sub view_table {
             $r->print(
                 qq{<td align="left">$row->{$field}</td>
 			}
-            );
+                     );
         }
         $r->print(
             qq{</tr>
 		}
-        );
+                 );
     }
     $r->print(
         qq{</tbody></table>
 <h2>Number of Rows = $num_of_rows</h2></div>}
-    );
+             );
     return 1;
 }
 
@@ -619,7 +525,7 @@ BWCL::ViewRecords_B
 
 =head1 VERSION
 
-This documentation refers to BWCL::ViewRecords_B version 1.3.00.
+This documentation refers to BWCL::ViewRecords_B version 2.0.00.
 
 =head1 SYNOPSIS
 

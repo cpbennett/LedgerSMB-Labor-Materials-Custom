@@ -1,6 +1,6 @@
 package BWCL::SelectLPL;
 
-our $VERSION = 0.1.00;
+our $VERSION = 1.0.00;
 use warnings;
 use strict;
 
@@ -13,9 +13,10 @@ our @EXPORT_OK = qw(SelectLPLs);
 
 sub SelectLPLs {
 	# version 0.2
-	my $r       = shift;
-	my $dbh     = shift;
-	my $program = shift;
+    my ($arg_ref) = @_;
+    my $r         = $arg_ref->{r};
+    my $dbh       = $arg_ref->{dbh};
+    my $program   = $arg_ref->{program};
 	my $sth;
 	my @labor_project_lists = ();
 	my @currencies          = ();
@@ -114,7 +115,7 @@ BWCL::SelectLPL - Select which tree to examine or duplicate.
 
 =head1 VERSION
 
-This documentation refers to BWCL::SelectLPL version 0.1.00.
+This documentation refers to BWCL::SelectLPL version 1.0.00.
 
 =head1 SYNOPSIS
 

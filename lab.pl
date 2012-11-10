@@ -1,23 +1,30 @@
 #!/usr/bin/perl
 
-our $VERSION = 0.1.00;
+our $VERSION = 1.0.00;
 use warnings;
 use strict;
 
 use Apache::Request();
 use DBI();
-
-use BWC::SelectLPL qw(SelectLPLs);
-use BWC::ViewLPLRecords
+use Config::Std;
+use BWCL::SelectLPL qw(SelectLPLs);
+use BWCL::ViewLPLRecords
     qw(ViewLPLRecords DuplicateFullLPLRecordsForm DuplicateFullLPLRecords);
 
 #######################################################################
 ##		Connect to Database
 
-my $username = 'bencon';
-my $password = 'L59mEq89Pn';
-my $database = 'gl';
-my $hostname = '127.0.0.1';
+my %args;
+my $filename = 'LaborViewerDuplicator.cfg';
+my $config_hash_ref;
+read_config($filename => $config_hash_ref);
+
+my $username       = $config_hash_ref->{'Database Login Values'}{'username'};
+my $password       = $config_hash_ref->{'Database Login Values'}{'password'};
+my $database       = $config_hash_ref->{'Database Login Values'}{'database'};
+my $hostname       = $config_hash_ref->{'Database Login Values'}{'hostname'};
+my $port           = $config_hash_ref->{'Database Login Values'}{'port'};
+my $pg_enable_utf8 = $config_hash_ref->{'Database Login Values'}{'pg_enable_utf8'};
 
 my $r = Apache->request;
 my $q = Apache::Request->new(
@@ -32,7 +39,15 @@ my $dbh
 ## Note: Nonpersistent Database connection in a Persistent Environment is as Follows:
 ##my $dbh = DBI->connect("DBI:Pg:dbname=$database;host=$hostname;port=5432", $username, $password, {'RaiseError' => 1, dbi_connect_method => 'connect'});
 
-my $program = "/perl/VP/lab.pl";
+my $program = $config_hash_ref->{'Program Path and Name'}{'program_path_name'};
+$args{program}               = $program;
+#$args{lang}                  = $lang;
+#$args{title}                 = $title;
+#$args{description}           = $description;
+$args{r}                     = $r;
+$args{dbh}                   = $dbh;
+$args{q}                     = $q;
+$args{database}              = $database;
 
 #######################################################################
 ##		Print Header
@@ -188,20 +203,11 @@ $r->print(
 </script>}
 );
 $r->print(
-    qq{
+    qq#
 </head>
 <body>
-<div>
-<a class="bigblue" href="http://www.bennettconstruction.us/index.html" rel="external">Bennett Construction Home Page</a><br />
-<a class="biggreen" href="/perl/VP/manual.pl?lang=en" rel="external">VIEW USAGE MANUAL</a><br />
-<a class="biggreen" href="/perl/VP/manual.pl?lang=es" rel="external">VER MANUAL DE USAR</a><br />
-<a class="bigblue" href="/perl/VP/gl.pl" rel="external">Labor and Projects</a><br />
-<a class="bigblue" href="/perl/VP/pg.pl" rel="external">Products Vendors Customers Assemblies</a><br />
-<a class="bigblue" href="/perl/VP/tr.pl" rel="external">Materials Viewer and Duplicator</a><br />
-<a class="bigred" href="/logout">Log Off</a>
-</div>
-
-}
+$config_hash_ref->{'Top of Page Links'}{'top_of_page_links'}
+#
 );
 
 #######################################################################
@@ -221,16 +227,16 @@ my $command = $q->param("command") || '';
 $dbh->{AutoCommit} = 0;
 
 if ( $command eq "ViewLPLRecords" ) {
-    ViewLPLRecords( $r, $dbh, $q );
+    ViewLPLRecords( \%args );
 }
 elsif ( $command eq "ViewFullLPLRecords" ) {
-    ViewFullLPLRecords( $r, $dbh, $q );
+    ViewFullLPLRecords( \%args );
 }
 elsif ( $command eq "DuplicateFullLPLRecordsForm" ) {
-    DuplicateFullLPLRecordsForm( $r, $dbh, $q, $program );
+    DuplicateFullLPLRecordsForm( \%args );
 }
 elsif ( $command eq "DuplicateFullLPLRecords" ) {
-    DuplicateFullLPLRecords( $r, $dbh, $q, $database );
+    DuplicateFullLPLRecords( \%args );
 }
 else {
     $r->print(
@@ -243,7 +249,7 @@ $dbh->{AutoCommit} = 1;
 #######################################################################
 ##		Call Select Full Assembly List
 
-SelectLPLs( $r, $dbh, $program );
+SelectLPLs( \%args );
 
 $dbh->disconnect;
 
@@ -251,11 +257,11 @@ $dbh->disconnect;
 
 =head1 NAME
 
-labbz.pl - View and reproduce similar labor project list trees to bottom.
+lab.pl - View and reproduce similar labor project list trees to bottom.
 
 =head1 VERSION
 
-This documentation refers to labbz.pl version 0.1.00.
+This documentation refers to lab.pl version 1.0.00.
 
 =head1 SYNOPSIS
 

@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-package BWCL::BWCLFields;
+package BWCLL::BWCLFields;
 our $VERSION = 1.2.0;
 use warnings;
 use strict;

@@ -1,6 +1,6 @@
 package BWCL::InsertRecord_B;
 
-our $VERSION = 4.3.00;
+our $VERSION = 4.6.00;
 
 use warnings;
 use strict;
@@ -10,6 +10,7 @@ use HTML::Entities();
 
 use BWCL::ViewRecords_B qw(ViewUpdatedRecord);
 use BWCL::BWCLFields qw (Selecter);
+use BWCL::ShowAdmin qw(error_message);
 
 require Exporter;
 our @ISA       = qw(Exporter);
@@ -24,17 +25,21 @@ our @EXPORT_OK = qw(InsertRecordGroup InsertRecordGroupForm);
 ##		Sub InsertRecordGroupForm
 
 sub InsertRecordGroupForm {
-    my $r             = shift;
-    my $dbh           = shift;
-    my $q             = shift;
-    my $database      = shift;
-    my $program       = shift;
-    my $table         = $q->param("table_selected");
-    my $itemstoinsert = $q->param("itemstoinsert");
+    my ($arg_ref) = @_;
+    my $r                     = $arg_ref->{r};
+    my $dbh                   = $arg_ref->{dbh};
+    my $q                     = $arg_ref->{q};
+    my $program               = $arg_ref->{program};
+    my $field_table_aref      = $arg_ref->{field_table_aref};
+    my $lang                  = $arg_ref->{lang};
+    my $use_delete_duplicates = $arg_ref->{use_delete_duplicates};
+    my $database              = $arg_ref->{database};
+    my $table                 = $arg_ref->{table_selected};
+    my $itemstoinsert         = $q->param("itemstoinsert");
     my $ucfirst;
-    my @field_names  = ();
-    my @all_fill     = ();
-    my @notes_fields = ();
+    my @field_names           = ();
+    my @all_fill              = ();
+    my @notes_fields          = ();
     my $field_names;
     my $notes_fields;
 
@@ -67,8 +72,8 @@ sub InsertRecordGroupForm {
 ########################################################################
         #	Main Section Starts
 
-        for my $i ( 0 .. $#field_names ) {
-            $ucfirst = $field_names[$i];
+        for my $field_name ( @field_names ) {
+            $ucfirst = $field_name;
             $ucfirst =~ s/_(\w)/ \u$1/g;
             $ucfirst =~ s/ Id/ ID/;
             $ucfirst =~ s/ Url/ URL/;
@@ -80,13 +85,10 @@ sub InsertRecordGroupForm {
             $ucfirst =~ s/Sku/SKU/;
             $r->print(qq{<tr>});
 
-            unless ( $table eq "method_to_charge"
-                || $table eq "labor_skill"
-                || $table eq "labor_service" )
-            {
+
                 if ( $itemtoi == 3 ) {
                     $r->print(
-                        qq{<td align="left"><label for="$field_names[$i]">All?</label></td><td align="left"><input type="checkbox" value="all" id="$field_names[$i]" name="$field_names[$i]" /></td>}
+                        qq{<td align="left"><label for="$field_name">All?</label></td><td align="left"><input type="checkbox" value="all" id="$field_name" name="$field_name" /></td>}
                     );
                 }
                 else {
@@ -95,44 +97,12 @@ sub InsertRecordGroupForm {
                     );
                 }
                 $r->print(
-                    qq{<td align="left"><strong>$ucfirst</strong></td><td align="left" style="width:80%;"><input type="text" id="$field_names[$i]$itemtoi" name="$field_names[$i]$itemtoi" value="" style="width:99%;" /></td>
+                    qq{<td align="left"><strong>$ucfirst</strong></td><td align="left" style="width:80%;"><input type="text" id="$field_name$itemtoi" name="$field_name$itemtoi" value="" style="width:99%;" /></td>
 	</tr>
 	}
                 );
             }
-        }
-        if ( $table eq "method_to_charge"
-            || $table eq "labor_skill"
-            || $table eq "labor_service" )
-        {
-            $ucfirst = $field_names[0];
-            $ucfirst =~ s/_(\w)/ \u$1/g;
-            $ucfirst =~ s/ Id/ ID/;
-            $ucfirst =~ s/ Url/ URL/;
-            $ucfirst = ucfirst($ucfirst);
-            $r->print(qq{<tr>});
-            if ( $itemtoi == 3 ) {
-                $r->print(
-                    qq{<td align="left"><label for="$field_names[0]">All?</label></td><td align="left"><input type="checkbox" value="All" id="$field_names[0]" name="$field_names[0]" /></td>}
-                );
-            }
-            else {
-                $r->print(
-                    qq{<td align="left"></td><td align="left"></td>});
-            }
 
-            $r->print(
-                qq{<td align="left"><strong>$ucfirst</strong></td><td align="left" style="width:80%;"><input type="text" id="$field_names[0]$itemtoi" name="$field_names[0]$itemtoi" value="" style="width:99%;" /></td>
-	</tr>
-	}
-            );
-
-        }
-
-        unless ( $table eq "method_to_charge"
-            || $table eq "labor_skill"
-            || $table eq "labor_service" )
-        {
             if ( $table eq "vendor_contacts" ) {
                 if ( $itemtoi == 3 ) {
                     push( @all_fill, "ven_contact_country" );
@@ -141,7 +111,7 @@ sub InsertRecordGroupForm {
                     $itemtoi, "Vendor Contact Country",
                     "ven_contact_country" );
             }
-            if ( $table eq "vendors" ) {
+            elsif ( $table eq "vendors" ) {
                 if ( $itemtoi == 3 ) {
                     push( @all_fill,
                         "vendor_country", "vendor_currency" );
@@ -153,7 +123,7 @@ sub InsertRecordGroupForm {
                     $itemtoi, "Vendor Currency",
                     "vendor_currency" );
             }
-            if ( $table eq "products"
+            elsif ( $table eq "products"
                 || $table eq "vendor_contacts" )
             {
                 if ( $itemtoi == 3 ) {
@@ -297,7 +267,7 @@ sub InsertRecordGroupForm {
                 );
             }
 
-            if ( $table eq "assemblies_parts" ) {
+            elsif ( $table eq "assemblies_parts" ) {
                 if ( $itemtoi == 3 ) {
                     push( @all_fill,
                         "assembly_part_assembly_id",
@@ -572,7 +542,6 @@ sub InsertRecordGroupForm {
 		</tr>}
                 );
             }
-        }
         $r->print(
             qq{</tbody></table>
 	</div>}
@@ -606,10 +575,13 @@ sub InsertRecordGroupForm {
 ##		Sub InsertRecordGroup
 
 sub InsertRecordGroup {
-    my $r        = shift;
-    my $dbh      = shift;
-    my $q        = shift;
-    my $database = shift;
+    my ($arg_ref) = @_;
+    my $r                     = $arg_ref->{r};
+    my $dbh                   = $arg_ref->{dbh};
+    my $q                     = $arg_ref->{q};
+    my $program               = $arg_ref->{program};
+    my $lang                  = $arg_ref->{lang};
+    my $database              = $arg_ref->{database};
     my $sql_list;
     my $table         = $q->param("table_selected");
     my $itemstoinsert = $q->param("itemstoinsert");
@@ -670,11 +642,13 @@ sub InsertRecordGroup {
                 }
             }
             if ( $field_names[$i] =~ "currency"
-                && !( defined $results[$i] ) )
+                && ( $results[$i] eq '' || !defined $results[$i] ) )
             {
 
                 #				$results[$i] = "USD";
-                die("Must specify a currency! $!");
+                error_message($r, $lang, "un tipo de moneda", "a type of currency");
+                return;
+                #die("Must specify a currency! $!");
             }
             if ( defined $results[$i] ) {
                 $results[$i] =~ s#\r\n#\n#g;    # For notes
@@ -787,14 +761,14 @@ sub print_option_list {
         $field_to_encode = $tbl[0];
         $field_to_encode = HTML::Entities::encode($field_to_encode);
         $option_row      = qq{<option value="$field_to_encode">};
-        for my $i ( 0 .. $#tbl ) {
-            unless ( defined $tbl[$i] ) { $tbl[$i] = ''; }
-            if ( $tbl[$i] eq "R" || $tbl[$i] eq "P" || $tbl[$i] eq "C" )
+        for my $tbll ( @tbl ) {
+            unless ( defined $tbll ) { $tbll = ''; }
+            if ( $tbll eq "R" || $tbll eq "P" || $tbll eq "C" )
             {
-                $option_row .= qq{($tbl[$i])};
+                $option_row .= qq{($tbll)};
             }
             else {
-                $option_row .= qq{$tbl[$i] };
+                $option_row .= qq{$tbll};
             }
         }
         $option_row .= qq{</option>
@@ -886,10 +860,10 @@ function setupCheckAll(evnt) {
 	var Checks = document.insertform.up_date;
 |
     );
-    for my $t ( 0 .. $#all_fill ) {
+    for my $fill ( @all_fill ) {
         $r->print(
             qq|
-	document.getElementById("insertform").$all_fill[$t].onchange = ChecksCopy;
+	document.getElementById("insertform").$fill.onchange = ChecksCopy;
 |
         );
     }
@@ -899,15 +873,15 @@ function setupCheckAll(evnt) {
 function ChecksCopy (evnt) {
 |
     );
-    for my $t ( 0 .. $#all_fill ) {
+    for my $fillc ( @all_fill ) {
         $r->print(
             qq|
-	if (document.insertform.$all_fill[$t].checked) {
+	if (document.insertform.$fillc.checked) {
 |
         );
         for my $u ( 4 .. ( $itemstoi + 2 ) ) {
             $r->print(
-                qq|document.insertform.$all_fill[$t]$u.value=document.insertform.$all_fill[$t]3.value;
+                qq|document.insertform.$fillc$u.value=document.insertform.$fillc| . qq|3.value;
 |
             );
         }
@@ -937,7 +911,7 @@ BWCL::InsertRecord_B
 
 =head1 VERSION
 
-This documentation refers to BWCL::InsertRecord_B version 4.3.00.
+This documentation refers to BWCL::InsertRecord_B version 4.6.00.
 
 =head1 SYNOPSIS
 

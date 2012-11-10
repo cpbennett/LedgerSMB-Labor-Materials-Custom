@@ -1,6 +1,6 @@
 package BWCL::RecordUpdates_B;
 
-our $VERSION = 4.4.00;
+our $VERSION = 4.7.00;
 
 use warnings;
 use strict;
@@ -13,19 +13,21 @@ use HTML::Entities();
 use Encode;
 
 use BWCL::ViewRecords_B qw(ViewUpdatedRecord);
-use BWCL::BWCLFields qw (Selecter);
+use BWCL::BWCLFields qw(Selecter);
+use BWCL::ShowAdmin qw(error_message);
 
 #######################################################################
 ##		Sub UpdateRecordForm
 
 sub UpdateRecordForm {
-    my $r        = shift;
-    my $dbh      = shift;
-    my $q        = shift;
-    my $database = shift;
-    my $program  = shift;
+    my ($arg_ref) = @_;
+    my $r         = $arg_ref->{r};
+    my $q         = $arg_ref->{q};
+    my $database  = $arg_ref->{database};
+    my $dbh       = $arg_ref->{dbh};
+    my $program   = $arg_ref->{program};
+    my $table     = $arg_ref->{table_selected}; 
     my $tbl;
-    my $table       = $q->param("table_selected") || '';
     my $id_selected = $q->param("id_selected")    || '';
     my $table_id_field;
     my @field_names = ();
@@ -36,6 +38,8 @@ sub UpdateRecordForm {
     my @results      = ();
     my @results_n    = ();
     my @notes_fields = ();
+    my $sth;
+    my $statement3;
 
     ( $field_names, $table_id_field, $notes_fields )
         = Selecter( "RecordUpdatesForm", $table );
@@ -43,11 +47,13 @@ sub UpdateRecordForm {
     $table_id_field = $$table_id_field;
     @notes_fields   = @$notes_fields;
 
-    my $statement = join( ', ', @field_names );
-    my $statement3
-        = "SELECT $statement FROM $table WHERE $table_id_field = $id_selected;";
-    unless ( @results = $dbh->selectrow_array($statement3) ) {
-        die "can't execute the query: $dbh->errstr";
+    my $joinstatement = join( ', ', @field_names );
+    my $statement
+        = "SELECT $joinstatement FROM $table WHERE $table_id_field = $id_selected;";
+    unless ( @results = $dbh->selectrow_array($statement) ) {
+        error_message($r, $arg_ref->{lang}, "un numero de ID existente para esta tabla", "an existing ID number for this table");
+                return;
+    #   die "can't execute the query: $dbh->errstr";
     }
     for ( $i = 0; $i <= $#results; $i++ ) {
         unless ( defined $results[$i] ) { $results[$i] = ''; }
@@ -63,7 +69,7 @@ sub UpdateRecordForm {
 	</caption>
 	<tbody>
 	}
-    );
+             );
 
     #######################################################################
 
@@ -87,113 +93,147 @@ sub UpdateRecordForm {
 	<td align="left"><strong>$ucfirst</strong></td><td align="left" style="width:80%;"><input type="text" id="$field_names[$i]" name="$field_names[$i]" value="$results[$i]" style="width:99%;" /></td>
 	</tr>
 	}
-        );
+                 );
     }
 
     if ( $table eq "labor_project" ) {
-        print_update_option_list(
-            $r,                       $dbh,
-            "labor_project_currency", "labor_project_id",
-            "labor_project",          $id_selected,
-            "currency",               "Currency",
-            "labor_project_currency", "currenciesg"
-        );
-        print_update_option_list(
-            $r,                 $dbh,
-            "method_to_charge", "labor_project_id",
-            "labor_project",    $id_selected,
-            "method_to_charge", "General Labor Method to Charge",
-            "method_to_charge", "method_to_charge"
-        );
+        print_update_option_list( $r,
+                                  $dbh,
+                                  "labor_project_currency",
+                                  "labor_project_id",
+                                  "labor_project",
+                                  $id_selected,
+                                  "currency",
+                                  "Currency",
+                                  "labor_project_currency",
+                                  "currenciesg" );
+        print_update_option_list( $r,
+                                  $dbh,
+                                  "method_to_charge",
+                                  "labor_project_id",
+                                  "labor_project",
+                                  $id_selected,
+                                  "method_to_charge",
+                                  "General Labor Method to Charge",
+                                  "method_to_charge",
+                                  "method_to_charge" );
         my @values = ( "N",  "Y" );
         my @names  = ( "No", "Yes" );
-        specify_options(
-            $r,                                $dbh,
-            "labor_project_is_subcontracted",  "labor_project_id",
-            "labor_project",                   $id_selected,
-            "Labor Project is Subcontracted?", \@values,
-            \@names
-        );
+        specify_options( $r,
+                         $dbh,
+                         "labor_project_is_subcontracted",
+                         "labor_project_id",
+                         "labor_project",
+                         $id_selected,
+                         "Labor Project is Subcontracted?",
+                         \@values,
+                         \@names );
     }
     elsif ( $table eq "labor_project_list" ) {
-        print_update_option_list(
-            $r,                        $dbh,
-            "labor_project_list_name", "labor_project_list_id",
-            "labor_project_list",      $id_selected,
-            "labor_project_name",      "Labor Project List Name",
-            "labor_project_list_name", "labor_project"
-        );
-        print_update_option_list(
-            $r,                            $dbh,
-            "labor_project_list_currency", "labor_project_list_id",
-            "labor_project_list",          $id_selected,
-            "currency",                    "Currency",
-            "labor_project_list_currency", "currenciesg"
-        );
+        print_update_option_list( $r,
+                                  $dbh,
+                                  "labor_project_list_name",
+                                  "labor_project_list_id",
+                                  "labor_project_list",
+                                  $id_selected,
+                                  "labor_project_name",
+                                  "Labor Project List Name",
+                                  "labor_project_list_name",
+                                  "labor_project" );
+        print_update_option_list( $r,
+                                  $dbh,
+                                  "labor_project_list_currency",
+                                  "labor_project_list_id",
+                                  "labor_project_list",
+                                  $id_selected,
+                                  "currency",
+                                  "Currency",
+                                  "labor_project_list_currency",
+                                  "currenciesg" );
     }
     elsif ( $table eq "labor_category" ) {
-        print_update_option_list(
-            $r,                     $dbh,
-            "labor_category_skill", "labor_category_id",
-            "labor_category",       $id_selected,
-            "labor_category_skill", "Labor Category Skill",
-            "labor_category_skill", "labor_category"
-        );
-        print_update_option_list(
-            $r,                       $dbh,
-            "labor_category_service", "labor_category_id",
-            "labor_category",         $id_selected,
-            "labor_category_service", "Labor Category Service",
-            "labor_category_service", "labor_category"
-        );
+        print_update_option_list( $r,
+                                  $dbh,
+                                  "labor_category_skill",
+                                  "labor_category_id",
+                                  "labor_category",
+                                  $id_selected,
+                                  "labor_category_skill",
+                                  "Labor Category Skill",
+                                  "labor_category_skill",
+                                  "labor_category" );
+        print_update_option_list( $r,
+                                  $dbh,
+                                  "labor_category_service",
+                                  "labor_category_id",
+                                  "labor_category",
+                                  $id_selected,
+                                  "labor_category_service",
+                                  "Labor Category Service",
+                                  "labor_category_service",
+                                  "labor_category" );
     }
     elsif ( $table eq "expenses" ) {
-        print_update_option_list(
-            $r,                 $dbh,
-            "expense_currency", "expense_id",
-            "expenses",         $id_selected,
-            "currency",         "Expense Currency",
-            "expense_currency", "currenciesg"
-        );
-        print_update_option_list(
-            $r,          $dbh,         "time_unit", "expense_id",
-            "expenses",  $id_selected, "time_unit", "Time Unit",
-            "time_unit", "time_units"
-        );
+        print_update_option_list( $r,
+                                  $dbh,
+                                  "expense_currency",
+                                  "expense_id",
+                                  "expenses",
+                                  $id_selected,
+                                  "currency",
+                                  "Expense Currency",
+                                  "expense_currency",
+                                  "currenciesg" );
+        print_update_option_list( $r,          $dbh,
+                                  "time_unit", "expense_id",
+                                  "expenses",  $id_selected,
+                                  "time_unit", "Time Unit",
+                                  "time_unit", "time_units" );
     }
     elsif ( $table eq "expenses_total" ) {
-        print_update_option_list(
-            $r,                        $dbh,
-            "expenses_total_currency", "expenses_total_id",
-            "expenses_total",          $id_selected,
-            "currency",                "Expenses Total Currency",
-            "expenses_total_currency", "currenciesg"
-        );
+        print_update_option_list( $r,
+                                  $dbh,
+                                  "expenses_total_currency",
+                                  "expenses_total_id",
+                                  "expenses_total",
+                                  $id_selected,
+                                  "currency",
+                                  "Expenses Total Currency",
+                                  "expenses_total_currency",
+                                  "currenciesg" );
     }
     elsif ( $table eq "general_labor" ) {
-        print_update_option_list(
-            $r,                       $dbh,
-            "general_labor_currency", "general_labor_id",
-            "general_labor",          $id_selected,
-            "currency",               "Currency",
-            "general_labor_currency", "currenciesg"
-        );
-        print_update_option_list(
-            $r,                 $dbh,
-            "method_to_charge", "general_labor_id",
-            "general_labor",    $id_selected,
-            "method_to_charge", "General Labor Method to Charge",
-            "method_to_charge", "method_to_charge"
-        );
+        print_update_option_list( $r,
+                                  $dbh,
+                                  "general_labor_currency",
+                                  "general_labor_id",
+                                  "general_labor",
+                                  $id_selected,
+                                  "currency",
+                                  "Currency",
+                                  "general_labor_currency",
+                                  "currenciesg" );
+        print_update_option_list( $r,
+                                  $dbh,
+                                  "method_to_charge",
+                                  "general_labor_id",
+                                  "general_labor",
+                                  $id_selected,
+                                  "method_to_charge",
+                                  "General Labor Method to Charge",
+                                  "method_to_charge",
+                                  "method_to_charge" );
         my @values = ( "N",  "Y" );
         my @names  = ( "No", "Yes" );
-        specify_options(
-            $r,                                $dbh,
-            "general_labor_is_subcontracted",  "general_labor_id",
-            "general_labor",                   $id_selected,
-            "General Labor is Subcontracted?", \@values,
-            \@names
-        );
+        specify_options( $r,
+                         $dbh,
+                         "general_labor_is_subcontracted",
+                         "general_labor_id",
+                         "general_labor",
+                         $id_selected,
+                         "General Labor is Subcontracted?",
+                         \@values,
+                         \@names );
         my $labor_category_id;
         my $labor_category_category;
         my $labor_category_subcategory;
@@ -206,8 +246,8 @@ sub UpdateRecordForm {
         $state
             = "SELECT labor_category_category, labor_category_subcategory FROM labor_category WHERE labor_category_id = $labor_category_id;";
         unless (
-            ( $labor_category_category, $labor_category_subcategory )
-            = $dbh->selectrow_array($state) )
+               ( $labor_category_category, $labor_category_subcategory )
+               = $dbh->selectrow_array($state) )
         {
             die "can't execute the query: $dbh->errstr";
         }
@@ -217,15 +257,15 @@ sub UpdateRecordForm {
 	<select id="labor_category_id" name="labor_category_id" style="width:99%;">
 	<option selected="selected" value="$labor_category_id" style="width:99%;">$labor_category_category - $labor_category_subcategory</option>
 	}
-        );
+                 );
         my $tblc;
-        my $statementc
+        $statement
             = "SELECT labor_category_id, labor_category_category, labor_category_subcategory FROM labor_category ORDER BY labor_category_id;";
-        my $sthc = $dbh->prepare($statementc) || die $dbh->errstr;
-        my $rcc  = $sthc->execute             || die $dbh->errstr;
+        $sth = $dbh->prepare($statement) || die $dbh->errstr;
+        my $rcc  = $sth->execute             || die $dbh->errstr;
         my $tbl9c;
 
-        while ( $tblc = $sthc->fetchrow_arrayref ) {
+        while ( $tblc = $sth->fetchrow_arrayref ) {
             $$tblc[0] = HTML::Entities::encode( $$tblc[0] );
             $tbl9c
                 = qq{<option value="$$tblc[0]">$$tblc[1] - $$tblc[2]</option>
@@ -238,15 +278,15 @@ sub UpdateRecordForm {
 </td>
 </tr>
 }
-        );
+                 );
     }
     elsif ( $table eq "full_assembly" ) {
         my $full_assembly_assembly_id;
         my $assembly_name;
-        my $statement
+        $statement
             = "SELECT full_assembly_assembly_id FROM full_assembly WHERE full_assembly_id = $id_selected;";
         unless ( ($full_assembly_assembly_id)
-            = $dbh->selectrow_array($statement) )
+                 = $dbh->selectrow_array($statement) )
         {
             die "can't execute the query: $dbh->errstr";
         }
@@ -263,11 +303,11 @@ sub UpdateRecordForm {
 <select id="full_assembly_assembly_id" name="full_assembly_assembly_id" style="width:99%;">
 <option selected="selected" value="$full_assembly_assembly_id" style="width:99%;">$full_assembly_assembly_id - $assembly_name</option>
 }
-        );
+                 );
 
         $statement
             = "SELECT assembly_id, assembly_name FROM assemblies;";
-        my $sth = $dbh->prepare($statement) || die $dbh->errstr;
+        $sth = $dbh->prepare($statement) || die $dbh->errstr;
         my $rc  = $sth->execute             || die $dbh->errstr;
         my $tbl9;
         while ( $tbl = $sth->fetchrow_arrayref ) {
@@ -284,57 +324,72 @@ sub UpdateRecordForm {
 </td>
 </tr>
 }
-        );
+                 );
 
 #			print_update_option_list($r, $dbh, "full_assembly_assembly_name", "full_assembly_id", "full_assembly", $id_selected, "assembly_name", "Full Assembly Assembly Name", "full_assembly_assembly_name", "assemblies");
-        print_update_option_list(
-            $r,                       $dbh,
-            "full_assembly_currency", "full_assembly_id",
-            "full_assembly",          $id_selected,
-            "currency",               "Currency",
-            "full_assembly_currency", "currencies"
-        );
+        print_update_option_list( $r,
+                                  $dbh,
+                                  "full_assembly_currency",
+                                  "full_assembly_id",
+                                  "full_assembly",
+                                  $id_selected,
+                                  "currency",
+                                  "Currency",
+                                  "full_assembly_currency",
+                                  "currencies" );
     }
     elsif ( $table eq "full_assembly_list" ) {
-        print_update_option_list(
-            $r,                        $dbh,
-            "full_assembly_list_name", "full_assembly_list_id",
-            "full_assembly_list",      $id_selected,
-            "full_assembly_name",      "Full Assembly List Name",
-            "full_assembly_list_name", "full_assembly"
-        );
+        print_update_option_list( $r,
+                                  $dbh,
+                                  "full_assembly_list_name",
+                                  "full_assembly_list_id",
+                                  "full_assembly_list",
+                                  $id_selected,
+                                  "full_assembly_name",
+                                  "Full Assembly List Name",
+                                  "full_assembly_list_name",
+                                  "full_assembly" );
 
-        print_update_option_list(
-            $r,                            $dbh,
-            "full_assembly_list_currency", "full_assembly_list_id",
-            "full_assembly_list",          $id_selected,
-            "currency",                    "Currency",
-            "full_assembly_list_currency", "currencies"
-        );
+        print_update_option_list( $r,
+                                  $dbh,
+                                  "full_assembly_list_currency",
+                                  "full_assembly_list_id",
+                                  "full_assembly_list",
+                                  $id_selected,
+                                  "currency",
+                                  "Currency",
+                                  "full_assembly_list_currency",
+                                  "currencies" );
     }
     elsif ( $table eq "assemblies" ) {
-        print_update_option_list(
-            $r,                  $dbh,
-            "assembly_currency", "assembly_id",
-            "assemblies",        $id_selected,
-            "currency",          "Assembly Currency",
-            "assembly_currency", "currencies"
-        );
+        print_update_option_list( $r,
+                                  $dbh,
+                                  "assembly_currency",
+                                  "assembly_id",
+                                  "assemblies",
+                                  $id_selected,
+                                  "currency",
+                                  "Assembly Currency",
+                                  "assembly_currency",
+                                  "currencies" );
     }
     elsif ( $table eq "assemblies_parts" ) {
-        print_update_option_list(
-            $r,                       $dbh,
-            "assembly_part_currency", "assembly_part_id",
-            "assemblies_parts",       $id_selected,
-            "currency",               "Assembly Part Currency",
-            "assembly_part_currency", "currencies"
-        );
+        print_update_option_list( $r,
+                                  $dbh,
+                                  "assembly_part_currency",
+                                  "assembly_part_id",
+                                  "assemblies_parts",
+                                  $id_selected,
+                                  "currency",
+                                  "Assembly Part Currency",
+                                  "assembly_part_currency",
+                                  "currencies" );
         my $assembly_name;
         my $assembly_part_assembly_id;
-        my $statement
+        $statement
             = "SELECT assembly_part_assembly_id FROM assemblies_parts WHERE assembly_part_id = $id_selected;";
         unless ( ($assembly_part_assembly_id)
-            = $dbh->selectrow_array($statement) )
+                 = $dbh->selectrow_array($statement) )
         {
             die "can't execute the query: $dbh->errstr";
         }
@@ -351,10 +406,10 @@ sub UpdateRecordForm {
 	<select id="assembly_part_assembly_id" name="assembly_part_assembly_id" style="width:99%;">
 	<option selected="selected" value="$assembly_part_assembly_id" style="width:99%;">$assembly_part_assembly_id - $assembly_name</option>
 	}
-        );
+                 );
         $statement
             = "SELECT assembly_id, assembly_name FROM assemblies ORDER BY assembly_name;";
-        my $sth = $dbh->prepare($statement) || die $dbh->errstr;
+        $sth = $dbh->prepare($statement) || die $dbh->errstr;
         my $rc  = $sth->execute             || die $dbh->errstr;
         my $tbl9;
         while ( $tbl = $sth->fetchrow_arrayref ) {
@@ -371,36 +426,35 @@ sub UpdateRecordForm {
 	</td>
 	</tr>
 	}
-        );
+                 );
     }
     elsif ( $table eq "customers" ) {
         my @values = ( "R",           "C" );
         my @names  = ( "Residential", "Commercial" );
-        specify_options(
-            $r,                           $dbh,
-            "residential_or_commercial",  "cust_id",
-            "customers",                  $id_selected,
-            "Residential or Commercial?", \@values,
-            \@names
-        );
-        print_update_option_list(
-            $r,                  $dbh,
-            "cust_bill_country", "cust_id",
-            "customers",         $id_selected,
-            "country",           "Customer Bill Country",
-            "cust_bill_country", "countries"
-        );
+        specify_options( $r,                           $dbh,
+                         "residential_or_commercial",  "cust_id",
+                         "customers",                  $id_selected,
+                         "Residential or Commercial?", \@values,
+                         \@names );
+        print_update_option_list( $r,
+                                  $dbh,
+                                  "cust_bill_country",
+                                  "cust_id",
+                                  "customers",
+                                  $id_selected,
+                                  "country",
+                                  "Customer Bill Country",
+                                  "cust_bill_country",
+                                  "countries" );
     }
     elsif ( $table eq "jobsites" ) {
         my @values = ( "R",           "C" );
         my @names  = ( "Residential", "Commercial" );
-        specify_options(
-            $r,                           $dbh,
-            "residential_or_commercial",  "jobsite_id",
-            "jobsites",                   $id_selected,
-            "Residential or Commercial?", \@values,
-            \@names
-        );
+        specify_options( $r,                           $dbh,
+                         "residential_or_commercial",  "jobsite_id",
+                         "jobsites",                   $id_selected,
+                         "Residential or Commercial?", \@values,
+                         \@names );
         my $jobsite_cust_id_selected;
         my $cust_id;
         my $cust_bill_business_name;
@@ -411,19 +465,16 @@ sub UpdateRecordForm {
             = "SELECT cust_id FROM jobsites WHERE jobsite_id = $id_selected;";
 
         unless ( $jobsite_cust_id_selected
-            = $dbh->selectrow_array($id_state) )
+                 = $dbh->selectrow_array($id_state) )
         {
             die "can't execute the query: $dbh->errstr";
         }
         my $state
             = "SELECT cust_id, cust_bill_business_name, residential_or_commercial, cust_bill_fname, cust_bill_lname FROM customers WHERE cust_id = $jobsite_cust_id_selected;";
-        unless (
-            (   $cust_id,                   $cust_bill_business_name,
-                $residential_or_commercial, $cust_bill_fname,
-                $cust_bill_lname
-            )
-            = $dbh->selectrow_array($state)
-            )
+        unless ( ( $cust_id,                   $cust_bill_business_name,
+                   $residential_or_commercial, $cust_bill_fname,
+                   $cust_bill_lname )
+                 = $dbh->selectrow_array($state) )
         {
             die "can't execute the query: $dbh->errstr";
         }
@@ -434,10 +485,9 @@ sub UpdateRecordForm {
 	<select id="cust_id" name="cust_id" style="width:99%;">
 	<option selected="selected" value="$cust_id" style="width:99%;">$cust_bill_business_name ($residential_or_commercial) - $cust_bill_fname $cust_bill_lname</option>
 	}
-        );
+                 );
         my $tblc;
-        my $statementc
-            = "SELECT
+        $statement = "SELECT
                       cust_id,
                       cust_bill_business_name,
                       residential_or_commercial,
@@ -445,11 +495,11 @@ sub UpdateRecordForm {
                       cust_bill_lname
                  FROM customers
              ORDER BY cust_id;";
-        my $sthc = $dbh->prepare($statementc) || die $dbh->errstr;
-        my $rcc  = $sthc->execute             || die $dbh->errstr;
+        $sth = $dbh->prepare($statement) || die $dbh->errstr;
+        my $rcc  = $sth->execute        || die $dbh->errstr;
         my $tbl9c;
 
-        while ( $tblc = $sthc->fetchrow_arrayref ) {
+        while ( $tblc = $sth->fetchrow_arrayref ) {
             unless ( defined $$tblc[0] ) { $$tblc[0] = ''; }
             unless ( defined $$tblc[1] ) { $$tblc[1] = ''; }
             unless ( defined $$tblc[2] ) { $$tblc[2] = ''; }
@@ -467,79 +517,91 @@ sub UpdateRecordForm {
 	</td>
 	</tr>
 	}
-        );
-        print_update_option_list(
-            $r,                $dbh,
-            "jobsite_country", "jobsite_id",
-            "jobsites",        $id_selected,
-            "country",         "Jobsite Country",
-            "jobsite_country", "countries"
-        );
+                 );
+        print_update_option_list( $r,
+                                  $dbh,
+                                  "jobsite_country",
+                                  "jobsite_id",
+                                  "jobsites",
+                                  $id_selected,
+                                  "country",
+                                  "Jobsite Country",
+                                  "jobsite_country",
+                                  "countries" );
     }
     elsif ( $table eq "products" ) {
-        print_update_option_list(
-            $r,             $dbh,
-            "vendor_name ", "product_id",
-            "products",     $id_selected,
-            "vendor_name",  "Vendor Name",
-            "vendor_name",  "vendors"
-        );
-        print_update_option_list(
-            $r,                 $dbh,
-            "product_currency", "product_id",
-            "products",         $id_selected,
-            "currency",         "Currency",
-            "product_currency", "currencies"
-        );
+        print_update_option_list( $r,             $dbh,
+                                  "vendor_name ", "product_id",
+                                  "products",     $id_selected,
+                                  "vendor_name",  "Vendor Name",
+                                  "vendor_name",  "vendors" );
+        print_update_option_list( $r,                 $dbh,
+                                  "product_currency", "product_id",
+                                  "products",         $id_selected,
+                                  "currency",         "Currency",
+                                  "product_currency", "currencies" );
     }
     elsif ( $table eq "vendors" ) {
-        print_update_option_list(
-            $r,               $dbh,
-            "vendor_country", "vendor_id",
-            "vendors",        $id_selected,
-            "country",        "Vendor Country",
-            "vendor_country", "countries"
-        );
-        print_update_option_list(
-            $r,                $dbh,
-            "vendor_currency", "vendor_id",
-            "vendors",         $id_selected,
-            "currency",        "Vendor Currency",
-            "vendor_currency", "currencies"
-        );
+        print_update_option_list( $r,               $dbh,
+                                  "vendor_country", "vendor_id",
+                                  "vendors",        $id_selected,
+                                  "country",        "Vendor Country",
+                                  "vendor_country", "countries" );
+        print_update_option_list( $r,
+                                  $dbh,
+                                  "vendor_currency",
+                                  "vendor_id",
+                                  "vendors",
+                                  $id_selected,
+                                  "currency",
+                                  "Vendor Currency",
+                                  "vendor_currency",
+                                  "currencies" );
     }
     elsif ( $table eq "vendor_contacts" ) {
-        print_update_option_list(
-            $r,                $dbh,
-            "vendor_name ",    "vend_contact_id",
-            "vendor_contacts", $id_selected,
-            "vendor_name",     "Vendor Name",
-            "vendor_name",     "vendors"
-        );
-        print_update_option_list(
-            $r,                    $dbh,
-            "ven_contact_country", "vend_contact_id",
-            "vendor_contacts",     $id_selected,
-            "country",             "Vendor Contact Country",
-            "ven_contact_country", "countries"
-        );
+        print_update_option_list( $r,
+                                  $dbh,
+                                  "vendor_name ",
+                                  "vend_contact_id",
+                                  "vendor_contacts",
+                                  $id_selected,
+                                  "vendor_name",
+                                  "Vendor Name",
+                                  "vendor_name",
+                                  "vendors" );
+        print_update_option_list( $r,
+                                  $dbh,
+                                  "ven_contact_country",
+                                  "vend_contact_id",
+                                  "vendor_contacts",
+                                  $id_selected,
+                                  "country",
+                                  "Vendor Contact Country",
+                                  "ven_contact_country",
+                                  "countries" );
 
     }
     elsif ( $table eq "contractors" ) {
-        print_update_option_list(
-            $r,                   $dbh,
-            "contractor_country", "contractor_id",
-            "contractors",        $id_selected,
-            "country",            "Contractor Country",
-            "contractor_country", "countries"
-        );
-        print_update_option_list(
-            $r,                    $dbh,
-            "contractor_currency", "contractor_id",
-            "contractors",         $id_selected,
-            "currency",            "Contractor Currency",
-            "contractor_currency", "currenciesg"
-        );
+        print_update_option_list( $r,
+                                  $dbh,
+                                  "contractor_country",
+                                  "contractor_id",
+                                  "contractors",
+                                  $id_selected,
+                                  "country",
+                                  "Contractor Country",
+                                  "contractor_country",
+                                  "countries" );
+        print_update_option_list( $r,
+                                  $dbh,
+                                  "contractor_currency",
+                                  "contractor_id",
+                                  "contractors",
+                                  $id_selected,
+                                  "currency",
+                                  "Contractor Currency",
+                                  "contractor_currency",
+                                  "currenciesg" );
     }
 
     #Check to see if any fields in @notes_fields, else skip
@@ -563,7 +625,7 @@ sub UpdateRecordForm {
                 qq{<tr>
 		<td align="left"><strong>$ucfirst</strong></td><td align="left" style="width:80%;"><textarea cols="99" rows="6" id="$notes_fields[$i]" name="$notes_fields[$i]" style="width:99%;">$results_n[$i]</textarea></td>
 		</tr>}
-            );
+                     );
         }
     }
     $r->print(
@@ -583,7 +645,7 @@ sub UpdateRecordForm {
 </div></div></form>
 <hr /><hr />
 }
-    );
+             );
     return 1;
 }
 
@@ -591,17 +653,18 @@ sub UpdateRecordForm {
 ##		Sub UpdateRecord
 
 sub UpdateRecord {
-    my $r        = shift;
-    my $dbh      = shift;
-    my $q        = shift;
-    my $database = shift;
-    my $table;
+    my ($arg_ref) = @_;
+    my $r                     = $arg_ref->{r};
+    my $q                     = $arg_ref->{q};
+    my $database              = $arg_ref->{database};
+    my $dbh                   = $arg_ref->{dbh};
+    my $table                 = $arg_ref->{table_selected};
     my $values_array_string;
     my $names_array_string;
     my $id_selected;
     my $SQL;
     my $table_id_field;
-
+    my $sth;
     #	my $field_names_aref;
     my $field_names;
     my @field_names = ();
@@ -609,7 +672,7 @@ sub UpdateRecord {
 
     open( my $fh, '>>', "../../updates-B_$database.sql" ) or die $!;
 
-    $table       = $q->param("table_selected");
+    
     $id_selected = $q->param("id_selected");
 
 #	my $table2 = $dbh->quote($table);
@@ -646,7 +709,7 @@ sub UpdateRecord {
                 $results[$i] = encode( "utf8", $results[$i] );
             }
             elsif ( $field_names[$i] eq "up_date"
-                && ( $results[$i] eq '' ) )
+                    && ( $results[$i] eq '' ) )
             {
                 $results[$i] = "NOW";
             }
@@ -675,7 +738,8 @@ sub UpdateRecord {
     print $fh $SQL;
     close $fh;
 
-    ViewUpdatedRecord( $r, $dbh, $table, $table_id_field, $id_selected );
+    ViewUpdatedRecord( $r, $dbh, $table, $table_id_field,
+                       $id_selected );
     return 1;
 }
 
@@ -683,21 +747,24 @@ sub UpdateRecord {
 ##		Sub DeleteDuplicates
 
 sub DeleteDuplicates {
-    my $r       = shift;
-    my $dbh     = shift;
-    my $q       = shift;
-    my $table   = shift;
-    my $program = shift;
-    my $table2;
-    $table2 = $dbh->quote($table);
+    my ($arg_ref) = @_;
+    my $table    = $arg_ref->{table};
+    my $r        = $arg_ref->{r};
+    my $q        = $arg_ref->{q};
+    my $database = $arg_ref->{database};
+    my $dbh      = $arg_ref->{dbh};
+    my $program  = $arg_ref->{program};
+    my $statement;
+    my $sth;
+    my $table2 = $dbh->quote($table);
     my $vendor_name_selected = $q->param("vendor_name_selected");
     my $class_selected       = $q->param("class_selected");
     my @d_id                 = $q->param("d_id");
 
     ###################################################################
     ##		Vendor Name Selection Verification
-    if (   ( $vendor_name_selected eq "" )
-        || ( $vendor_name_selected eq "All" ) )
+    if (    ( $vendor_name_selected eq "" )
+         || ( $vendor_name_selected eq "All" ) )
     {
         $r->print(
             qq{<div class="cent"><p class="error">ERROR!! Please select a single Vendor Name.</p></div>}
@@ -710,7 +777,7 @@ sub DeleteDuplicates {
         my $DeleteDuplicates;
         my $delete_list = join( ",", @d_id );
         $r->print(
-            qq{<div><h2>Deleted Records from Table = $table</h2><br />}
+             qq{<div><h2>Deleted Records from Table = $table</h2><br />}
         );
         $SQL = "DELETE FROM $table WHERE product_id IN ($delete_list);";
         $DeleteDuplicates = $dbh->do($SQL);
@@ -725,7 +792,6 @@ sub DeleteDuplicates {
     }
     elsif ( ($table) && ($vendor_name_selected) && ($class_selected) ) {
         my $vendor_name_selected2 = $dbh->quote($vendor_name_selected);
-        my $statement;
         if ( $class_selected ne 'All' ) {
             my $class_selected2 = $dbh->quote($class_selected);
             $statement = "
@@ -758,7 +824,8 @@ sub DeleteDuplicates {
                       ASC;";
         }
         else {
-            my $vendor_name_selected2 = $dbh->quote($vendor_name_selected);
+            my $vendor_name_selected2
+                = $dbh->quote($vendor_name_selected);
             $statement = "
                    SELECT
                           product_id,
@@ -787,7 +854,7 @@ sub DeleteDuplicates {
                 ORDER BY sku, model, up_date, product_description
                      ASC;";
         }
-        my $sth = $dbh->prepare($statement);
+        $sth = $dbh->prepare($statement);
         my $rv  = $sth->execute
             or die "can't execute the query: $sth->errstr\n";
         my @vetor;
@@ -814,15 +881,16 @@ sub DeleteDuplicates {
 	</thead>
 	<tbody>
 	}
-        );
+                 );
         my $ii = $rv;
 
         while ( @vetor = $sth->fetchrow ) {
-            $ii--;
+           # $ii--;
             if ( $ii == 0 ) {
                 $sth->finish;
                 last;
             }
+             $ii--;
             $r->print(qq{<tr>});
             for my $field ( 0 .. $#vetor ) {
                 if ($field) {
@@ -833,7 +901,7 @@ sub DeleteDuplicates {
                         $vetor[$field]
                             = HTML::Entities::encode( $vetor[$field] );
                         $r->print(
-                            qq{<td align="left">$vetor[$field]</td>});
+                              qq{<td align="left">$vetor[$field]</td>});
                     }
                     else {
                         $r->print(qq{<td align="left"></td>});
@@ -844,13 +912,13 @@ sub DeleteDuplicates {
                         $r->print(
                             qq{<td align="left">$vetor[$field]</td>
 						<td align="center"><input type="checkbox" value="$vetor[0]" name="d_id" /></td></tr>}
-                        );
+                                 );
                     }
                     else {
                         $r->print(
                             qq{<td align="left"></td>
 						<td align="center"><input type="checkbox" value="$vetor[0]" name="d_id" /></td></tr>}
-                        );
+                                 );
                     }
                 }
             }
@@ -868,7 +936,7 @@ sub DeleteDuplicates {
 	</div></form>
 	<hr /><hr />
 	}
-        );
+                 );
     }
     return 1;
 }
@@ -922,6 +990,8 @@ sub print_update_option_list {
     my $field_to_encode;
     my $option_row;
     my @results = ();
+    my $sth;
+    my $statement;
     my $state
         = "SELECT $column_string FROM $table WHERE $table_id_column = $id_selected;";
 
@@ -935,18 +1005,18 @@ sub print_update_option_list {
         qq{<tr>
 <td align="left"><strong>$select_label</strong></td><td align="left" style="width:80%;">
 <select id="$select_column" name="$select_column" style="width:99%;">}
-    );
+             );
     $field_to_encode = $results[0];
     $field_to_encode = HTML::Entities::encode($field_to_encode);
     $r->print(
         qq{<option selected="selected" value="$field_to_encode" style="width:99%;">
 		}
-    );
+             );
     foreach my $i ( 0 .. $#results ) {
         unless ( defined $results[$i] ) { $results[$i] = ''; }
-        if (   $results[$i] eq "R"
-            || $results[$i] eq "P"
-            || $results[$i] eq "C" )
+        if (    $results[$i] eq "R"
+             || $results[$i] eq "P"
+             || $results[$i] eq "C" )
         {
             $option_row .= qq{($results[$i]) };
         }
@@ -963,9 +1033,9 @@ sub print_update_option_list {
 
     $field_to_encode = "";
     $option_row      = "";
-    my $statement
+    $statement
         = "SELECT DISTINCT $column_string_2 FROM $table_2 ORDER BY $columns_2[0];";
-    my $sth = $dbh->prepare($statement) || die("$dbh->errstr");
+    $sth = $dbh->prepare($statement) || die("$dbh->errstr");
     my $rc  = $sth->execute             || die("$dbh->errstr");
     while ( @tbl = $sth->fetchrow_array ) {
         $field_to_encode = $tbl[0];
@@ -992,7 +1062,7 @@ sub print_update_option_list {
 </td>
 </tr>
 }
-    );
+             );
 }
 
 ################################################################
@@ -1037,19 +1107,19 @@ sub specify_options {
 <select id="$column_string" name="$column_string" style="width:99%;">
 <option selected="selected" value="$results" style="width:99%;">$results_pretty</option>
 }
-    );
+             );
     for my $i ( 0 .. ( scalar(@$values_aref) - 1 ) ) {
         $r->print(
             qq{<option value="$$values_aref[$i]" style="width:99%;">$$names_aref[$i]</option>
 }
-        );
+                 );
     }
     $r->print(
         qq{</select>
 </td>
 </tr>
 }
-    );
+             );
 }
 
 =pod
@@ -1061,7 +1131,7 @@ BWCL::RecordUpdates_B
 
 =head1 VERSION
 
-This documentation refers to BWCL::RecordUpdates_B version 4.4.00.
+This documentation refers to BWCL::RecordUpdates_B version 4.7.00.
 
 =head1 SYNOPSIS
 

@@ -1,6 +1,6 @@
 package BWCL::ViewLPLRecords;
 
-our $VERSION = 0.2.00;
+our $VERSION = 1.0.00;
 use warnings;
 use strict;
 
@@ -19,10 +19,11 @@ use BWCL::InsertRecord_B qw(InsertRecordGroup);
 sub DuplicateFullLPLRecordsForm {
 
     # version = 0.4
-    my $r       = shift;
-    my $dbh     = shift;
-    my $q       = shift;
-    my $program = shift;
+    my ($arg_ref) = @_;
+    my $r         = $arg_ref->{r};
+    my $dbh       = $arg_ref->{dbh};
+    my $q         = $arg_ref->{q};
+    my $program   = $arg_ref->{program};
     my $labor_project_list_selected;
     my $labor_project_list_selected2;
     my $labor_project_selected;
@@ -480,10 +481,11 @@ function FChecksEmpty (evnt) {
 sub DuplicateFullLPLRecords {
 
     # version = 0.5
-    my $r        = shift;
-    my $dbh      = shift;
-    my $q        = shift;
-    my $database = shift;
+    my ($arg_ref) = @_;
+    my $r         = $arg_ref->{r};
+    my $dbh       = $arg_ref->{dbh};
+    my $q         = $arg_ref->{q};
+    my $database  = $arg_ref->{database};
     my $sth;
     my @labor_project_fields = ();
     my @labor_project_values = ();
@@ -586,9 +588,10 @@ sub DuplicateFullLPLRecords {
 
 sub ViewLPLRecords {
     # version 1.0
-    my $r   = shift;
-    my $dbh = shift;
-    my $q   = shift;
+    my ($arg_ref) = @_;
+    my $r         = $arg_ref->{r};
+    my $dbh       = $arg_ref->{dbh};
+    my $q         = $arg_ref->{q};
     my $labor_project_list_selected
         = $q->param("labor_project_list_selected");
     my $labor_project_list_selected2;
@@ -694,8 +697,8 @@ sub ViewLPLRecords {
 	    <tr>}
         );
 
-        for my $i ( 0 .. $#hash_assemblys ) {
-            $ucfirst = $hash_assemblys[$i];
+        for my $hash_assembly ( @hash_assemblys ) {
+            $ucfirst = $hash_assembly;
             $ucfirst =~ s/,//g;
             $ucfirst =~ s/_(\w)/ \u$1/g;
             $ucfirst =~ s/ Id/ ID/;
@@ -727,11 +730,11 @@ sub ViewLPLRecords {
                     $$assem_part_hash_ref{$assemblyh} = '';
                 }
             }
-            for my $i ( 0 .. $#hash_assemblys ) {
+            for my $hash_assembly ( @hash_assemblys ) {
 
                 $r->print(
                     qq|
-	<td align="left" class="full_assembly">$assem_part_hash_ref->{ $hash_assemblys[$i] }</td>
+	<td align="left" class="full_assembly">$assem_part_hash_ref->{ $hash_assembly }</td>
 	|
                 );
             }
@@ -771,8 +774,8 @@ sub ViewLPLRecords {
 	    }
     );
 
-    for my $i ( 0 .. $#labor_project_list_hash_assemblys ) {
-        $ucfirst = $labor_project_list_hash_assemblys[$i];
+    for my $labor_project_list_hash_assembly ( @labor_project_list_hash_assemblys ) {
+        $ucfirst = $labor_project_list_hash_assembly;
         $ucfirst =~ s/,//g;
         $ucfirst =~ s/_(\w)/ \u$1/g;
         $ucfirst =~ s/ Id/ ID/;
@@ -805,9 +808,9 @@ sub ViewLPLRecords {
                 $$labor_project_list_hash_ref{$assemblyh} = '';
             }
         }
-        for my $i ( 0 .. $#labor_project_list_hash_assemblys ) {
+        for my $labor_project_list_hash_assembly ( @labor_project_list_hash_assemblys ) {
             $r->print(
-                qq|<td align="left" class="full_assembly_list">$labor_project_list_hash_ref->{$labor_project_list_hash_assemblys[$i]}</td>|
+                qq|<td align="left" class="full_assembly_list">$labor_project_list_hash_ref->{$labor_project_list_hash_assembly}</td>|
             );
         }
         $r->print(qq{</tr>});

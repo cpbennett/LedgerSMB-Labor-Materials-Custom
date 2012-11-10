@@ -1,6 +1,6 @@
 package BWCL::ViewFALRecords;
 
-our $VERSION = 1.2.00;
+our $VERSION = 1.5.00;
 use warnings;
 use strict;
 
@@ -17,10 +17,11 @@ use BWCL::InsertRecord_B qw(InsertRecordGroup);
 sub ViewFALRecords {
 
 	# version 1.2
-	my $r   = shift;
-	my $dbh = shift;
-	my $q   = shift;
-	my $full_assembly_list_selected;
+    my ($arg_ref) = @_;
+    my $r         = $arg_ref->{r};
+    my $dbh       = $arg_ref->{dbh};
+    my $q         = $arg_ref->{q};
+    my $full_assembly_list_selected;
 	my $full_assembly_list_selected2;
 	my $assembly_selected;
 	my $assembly_name;
@@ -172,9 +173,10 @@ qq{<td align="left">$assem_part_hash_ref->{assembly_part_quantity}</td>}
 sub ViewFullFALRecords {
 
 	# version 1.2
-	my $r   = shift;
-	my $dbh = shift;
-	my $q   = shift;
+    my ($arg_ref) = @_;
+    my $r         = $arg_ref->{r};
+    my $dbh       = $arg_ref->{dbh};
+    my $q         = $arg_ref->{q};
 	my $full_assembly_list;
 	my $full_assembly_list2;
 	my @assem_hash_assemblys;
@@ -658,10 +660,11 @@ qq{<td align="left" class="full_assembly_list">$full_assembly_list_hash_ref->{fu
 sub DuplicateFullFALRecordsForm {
 
 	# version = 2.3
-	my $r       = shift;
-	my $dbh     = shift;
-	my $q       = shift;
-	my $program = shift;
+    my ($arg_ref) = @_;
+    my $r         = $arg_ref->{r};
+    my $dbh       = $arg_ref->{dbh};
+    my $q         = $arg_ref->{q};
+    my $program   = $arg_ref->{program};
 	my $full_assembly_list_selected;
 	my $full_assembly_list_selected2;
 	my $assembly_selected;
@@ -1549,10 +1552,11 @@ sub DuplicateFullFALRecords {
 
 	# version = 1.4
 	# empties now carry through to end.
-	my $r        = shift;
-	my $dbh      = shift;
-	my $q        = shift;
-	my $database = shift;
+    my ($arg_ref) = @_;
+    my $r         = $arg_ref->{r};
+    my $dbh       = $arg_ref->{dbh};
+    my $q         = $arg_ref->{q};
+    my $database  = $arg_ref->{database};
 	my $query;
 	my $sth;
 	my @assemblies_parts     = ();
@@ -1791,7 +1795,7 @@ similar trees.
 
 =head1 VERSION
 
-This documentation refers to BWCL::ViewFALRecords version 1.2.00.
+This documentation refers to BWCL::ViewFALRecords version 1.5.00.
 
 =head1 SYNOPSIS
 

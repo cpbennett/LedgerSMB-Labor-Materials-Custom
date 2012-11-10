@@ -1,6 +1,6 @@
 package BWCL::SelectFAL;
 
-our $VERSION = 1.1.00;
+our $VERSION = 1.4.00;
 use warnings;
 use strict;
 
@@ -12,9 +12,10 @@ our @EXPORT_OK = qw(SelectFALs);
 ##		Sub SelectFALs
 
 sub SelectFALs {
-    my $r       = shift;
-    my $dbh     = shift;
-    my $program = shift;
+    my ($arg_ref) = @_;
+    my $r         = $arg_ref->{r};
+    my $dbh       = $arg_ref->{dbh};
+    my $program   = $arg_ref->{program};
     my $sth;
     my @full_assembly_lists = ();
     my @currencies          = ();
@@ -119,7 +120,7 @@ BWCL::SelectFAL - Select which tree to examine or duplicate.
 
 =head1 VERSION
 
-This documentation refers to BWCL::SelectFAL version 1.1.00.
+This documentation refers to BWCL::SelectFAL version 1.4.00.
 
 =head1 SYNOPSIS
 
