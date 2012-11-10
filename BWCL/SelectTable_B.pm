@@ -256,7 +256,6 @@ function checkSelectC(evnt) {
         qq#
 </head>
 <body>
-<<<<<<< HEAD
 $config_hash_ref->{'Top of Page Links'}{'top_of_page_links'}
 =======
 <div>
@@ -268,7 +267,6 @@ $config_hash_ref->{'Top of Page Links'}{'top_of_page_links'}
 <a class="bigblue" href="/perl/VP/lab.pl" rel="external">Labor Viewer and Duplicator</a><br />
 <a class="bigred" href="/logout">Log Off</a>
 </div>
->>>>>>> 07c4b5b312b1485a72667b899e8dc76ac2580848
 #
     );
 

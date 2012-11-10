@@ -8,19 +8,13 @@ use Apache::Request();
 use DBI();
 
 #subs Modules
-<<<<<<< HEAD
 use BWCL::ShowAdmin qw(ShowTables ShowColumns error_message);
-=======
 use BWCL::ShowAdmin qw(ShowTables ShowColumns);
->>>>>>> 07c4b5b312b1485a72667b899e8dc76ac2580848
 use BWCL::InsertRecord_B qw(InsertRecordGroup InsertRecordGroupForm);
 use BWCL::SelectTable_B qw(PrepareHead SelectTable);
 use BWCL::RecordUpdates_B qw(UpdateRecordForm UpdateRecord);
 use BWCL::ViewRecords_B qw(ViewRecords);
-<<<<<<< HEAD
 use Config::Std;
-=======
->>>>>>> 07c4b5b312b1485a72667b899e8dc76ac2580848
 
 #######################################################################
 ##		Connect to Database
