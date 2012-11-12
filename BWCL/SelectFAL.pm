@@ -1,6 +1,6 @@
 package BWCL::SelectFAL;
 
-our $VERSION = 1.4.00;
+our $VERSION = 1.4.10;
 use warnings;
 use strict;
 
@@ -15,7 +15,6 @@ sub SelectFALs {
     my ($arg_ref) = @_;
     my $r         = $arg_ref->{r};
     my $dbh       = $arg_ref->{dbh};
-    my $program   = $arg_ref->{program};
     my $sth;
     my @full_assembly_lists = ();
     my @currencies          = ();
@@ -24,7 +23,7 @@ sub SelectFALs {
     $r->print(
         qq{<div>
 	<h2>Please select both an item and an item section to see</h2>
-	<form id="someForm" name="someForm" action="$program" method="post">
+	<form id="someForm" name="someForm" action="$arg_ref->{Program}{program_path_name}" method="post">
 	<div>
 	<table summary="" border="2" rules="all">
 	<tbody>
@@ -120,7 +119,7 @@ BWCL::SelectFAL - Select which tree to examine or duplicate.
 
 =head1 VERSION
 
-This documentation refers to BWCL::SelectFAL version 1.4.00.
+This documentation refers to BWCL::SelectFAL version 1.4.10.
 
 =head1 SYNOPSIS
 

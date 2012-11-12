@@ -1,6 +1,6 @@
 package BWCL::SelectLPL;
 
-our $VERSION = 1.0.00;
+our $VERSION = 1.0.10;
 use warnings;
 use strict;
 
@@ -16,7 +16,7 @@ sub SelectLPLs {
     my ($arg_ref) = @_;
     my $r         = $arg_ref->{r};
     my $dbh       = $arg_ref->{dbh};
-    my $program   = $arg_ref->{program};
+    my $program   = $arg_ref->{Program}{program_path_name};
 	my $sth;
 	my @labor_project_lists = ();
 	my @currencies          = ();
@@ -84,7 +84,6 @@ sub SelectLPLs {
 	$r->print(
 		qq{</select></td>
 	</tr>
-
 	</tbody></table>
 	<br />
 	<label for="command">View Records</label>
@@ -95,7 +94,6 @@ sub SelectLPLs {
 	<input type="radio" value="DuplicateFullLPLRecordsForm" id="DuplicateFullLPLRecordsForm" name="command" />
 	<br />
 	<br />
-
 	<div>
 	<input type="submit" value="Submit" name="submitForm" />
 	<input type="reset" value="Reset" name="reset1" />
@@ -115,7 +113,7 @@ BWCL::SelectLPL - Select which tree to examine or duplicate.
 
 =head1 VERSION
 
-This documentation refers to BWCL::SelectLPL version 1.0.00.
+This documentation refers to BWCL::SelectLPL version 1.0.10.
 
 =head1 SYNOPSIS
 

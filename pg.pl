@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 
-our $VERSION = 3.0.00;
+our $VERSION = 3.1.00;
 use warnings;
 use strict;
 
@@ -22,13 +22,6 @@ my $filename = 'Products.cfg';
 my $config_hash_ref;
 read_config($filename => $config_hash_ref);
 
-my $username       = $config_hash_ref->{'Database Login Values'}{'username'};
-my $password       = $config_hash_ref->{'Database Login Values'}{'password'};
-my $database       = $config_hash_ref->{'Database Login Values'}{'database'};
-my $hostname       = $config_hash_ref->{'Database Login Values'}{'hostname'};
-my $port           = $config_hash_ref->{'Database Login Values'}{'port'};
-my $pg_enable_utf8 = $config_hash_ref->{'Database Login Values'}{'pg_enable_utf8'};
-
 my $r = Apache->request;
 my $q = Apache::Request->new(
     $r,
@@ -37,30 +30,21 @@ my $q = Apache::Request->new(
 );
 
 my $dbh
-    = DBI->connect( "DBI:Pg:dbname=$database;host=$hostname;port=$port",
-    $username, $password, { 'RaiseError' => 1, pg_enable_utf8 => $pg_enable_utf8 } );
-
+    = DBI->connect( "DBI:Pg:dbname=$config_hash_ref->{'Database'}{'database'};host=$config_hash_ref->{'Database'}{'hostname'};port=$config_hash_ref->{'Database'}{'port'}",
+    $config_hash_ref->{'Database'}{'username'}, $config_hash_ref->{'Database'}{'password'}, { 'RaiseError' => 1, pg_enable_utf8 => $config_hash_ref->{'Database'}{'pg_enable_utf8'} } );
+$config_hash_ref->{dbh} = $dbh;
+$config_hash_ref->{r} = $r;
+$config_hash_ref->{q} = $q;
 my $sth;
 my $statement;
 my $rc;
 my $tbl;
-my %args;
+
 ## Note: Nonpersistent Database connection in a Persistent Environment is as Follows:
 ##my $dbh = DBI->connect("DBI:Pg:dbname=$database;host=$hostname;port=5432",
 #$username, $password, {'RaiseError' => 1, dbi_connect_method => 'connect'});
 
-my $program = $config_hash_ref->{'Program Path and Name'}{'program_path_name'};
-my $use_delete_duplicates = $config_hash_ref->{'Misc Information'}{'use_delete_duplicates'};
-my @available_commands
-    = qw(ViewRecords
-         InsertRecordGroupForm
-         UpdateRecordForm
-         InsertRecordGroup
-         UpdateRecord
-         DeleteDuplicates
-         ShowColumns
-         ShowTables
-        );
+my $commands = $config_hash_ref->{'Commands'}{'commands'};
 ##	This gives preset filled select lists for "preferred" fields.
 ##	Is an array of arrays. field,table pairs
 ##	Is designed to works with odd numbers due to table cells.
@@ -84,38 +68,29 @@ my $lang
 
 $lang = substr $lang, 0, 2;
 
+$config_hash_ref->{lang} = $lang;
 my $title = "Product Assembly DB";
 my $description
     = "Database Access
     Vendors Products Customers Jobsites Assemblies Full Assemblies";
+$config_hash_ref->{title} = $title;
+$config_hash_ref->{description} = $description;
+$config_hash_ref->{field_table_aref}      = \@field_select_tables;
 
-$args{program}               = $program;
-$args{lang}                  = $lang;
-$args{title}                 = $title;
-$args{description}           = $description;
-$args{r}                     = $r;
-$args{dbh}                   = $dbh;
-$args{q}                     = $q;
-$args{use_delete_duplicates} = $use_delete_duplicates;
-$args{field_table_aref}      = \@field_select_tables;
-$args{database}              = $database;
-$args{config_hash_ref}       = $config_hash_ref;
-
-PrepareHead( \%args );
+PrepareHead( $config_hash_ref );
 
 #######################################################################
 ##		Get CGI Params
 
 my $command = $q->param("command")
     || goto ERROR_END;
-unless ($command~~@available_commands) {
+unless ($command~~@$commands) {
     error_message($r, $lang, "un comando valido", "a valid command");
     goto ERROR_END;
 }
 my $table_selected = $q->param("table_selected")
     || goto ERROR_END;
-$args{table_selected} = $table_selected;
-
+$config_hash_ref->{table_selected} = $table_selected;
 my $class_selected        = $q->param("class_selected")        || 'All';
 my $subclass_selected     = $q->param("subclass_selected")     || 'All';
 my $vendor_name_selected  = $q->param("vendor_name_selected")  || 'All';
@@ -124,7 +99,7 @@ my $field_selected        = $q->param("field_selected")        || '';
 my $field_value_selected  = $q->param("field_value_selected")  || '';
 my $field_selected2       = $q->param("field_selected2")       || '';
 my $field_value_selected2 = $q->param("field_value_selected2") || '';
-my $itemstoinsert         = $q->param("itemstoinsert")         || '';
+$config_hash_ref->{itemstoinsert}         = $q->param("itemstoinsert")         || '';
 my $full_assembly_list_category_selected
     = $q->param("full_assembly_list_category_selected")        || 'All';
 my $full_assembly_list_subcategory_selected
@@ -132,10 +107,10 @@ my $full_assembly_list_subcategory_selected
 
 #######################################################################
 ##		Table Verification
-my $table_selected2 = $dbh->quote($table_selected);
+$table_selected = $dbh->quote($table_selected);
 $statement
     = "SELECT DISTINCT table_name FROM information_schema.tables WHERE
-    table_name = $table_selected2 AND table_schema = 'public' AND
+    table_name = $table_selected AND table_schema = 'public' AND
     table_type='BASE TABLE';";
 $sth = $dbh->prepare($statement) || die $dbh->errstr;
 $rc  = $sth->execute             || die $dbh->errstr;
@@ -234,7 +209,7 @@ if ( $command eq "UpdateRecordForm" && $id_selected !~ /^\d+$/ ) {
 }
 #######################################################################
 ##		Items to Insert Verification
-if ( $command eq "InsertRecordForm" && $itemstoinsert !~ /^\d+$/ ) {
+if ( $command eq "InsertRecordForm" && $config_hash_ref->{itemstoinsert} !~ /^\d+$/ ) {
     error_message($r, $lang, "un numero de unidades para insertar",
         "a number of items to insert");
     goto ERROR_END;
@@ -244,7 +219,7 @@ if ( $command eq "InsertRecordForm" && $itemstoinsert !~ /^\d+$/ ) {
     if ($field_selected) {
        $field_selected
         = $dbh->quote($field_selected);
-        $statement = "SELECT (SELECT DISTINCT column_name FROM information_schema.columns WHERE table_name = $table_selected2 AND column_name = $field_selected);";
+        $statement = "SELECT (SELECT DISTINCT column_name FROM information_schema.columns WHERE table_name = $table_selected AND column_name = $field_selected);";
     $sth = $dbh->prepare($statement) || die $dbh->errstr;
     $rc  = $sth->execute             || die $dbh->errstr;
     $tbl = $sth->fetchrow_arrayref;
@@ -259,7 +234,7 @@ if ( $command eq "InsertRecordForm" && $itemstoinsert !~ /^\d+$/ ) {
 if ($field_selected2) {
        $field_selected2
         = $dbh->quote($field_selected2);
-        $statement = "SELECT (SELECT DISTINCT column_name FROM information_schema.columns WHERE table_name = $table_selected2 AND column_name = $field_selected2);";
+        $statement = "SELECT (SELECT DISTINCT column_name FROM information_schema.columns WHERE table_name = $table_selected AND column_name = $field_selected2);";
     $sth = $dbh->prepare($statement) || die $dbh->errstr;
     $rc  = $sth->execute             || die $dbh->errstr;
     $tbl = $sth->fetchrow_arrayref;
@@ -281,14 +256,14 @@ if ( $command eq "DeleteDuplicates" && $table_selected ne "products" ) {
 
     $dbh->{AutoCommit} = 0;
     my $sub = \&{"$command"};
-    &$sub( \%args );
+    &$sub( $config_hash_ref );
     $dbh->commit();
     $dbh->{AutoCommit} = 1;
 
 #######################################################################
 ##		Call SelectTable
 ERROR_END:
-SelectTable( \%args );
+SelectTable( $config_hash_ref );
 $dbh->disconnect;
 
 
@@ -300,7 +275,7 @@ pg.pl
 
 =head1 VERSION
 
-This documentation refers to pg.pl version 3.0.00.
+This documentation refers to pg.pl version 3.1.00.
 
 =head1 SYNOPSIS
 

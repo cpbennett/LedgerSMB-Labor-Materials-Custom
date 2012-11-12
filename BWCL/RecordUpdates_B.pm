@@ -1,6 +1,6 @@
 package BWCL::RecordUpdates_B;
 
-our $VERSION = 4.7.00;
+our $VERSION = 4.8.00;
 
 use warnings;
 use strict;
@@ -14,7 +14,7 @@ use Encode;
 
 use BWCL::ViewRecords_B qw(ViewUpdatedRecord);
 use BWCL::BWCLFields qw(Selecter);
-use BWCL::ShowAdmin qw(error_message);
+use BWCL::ShowAdmin qw(error_message specified_error_message);
 
 #######################################################################
 ##		Sub UpdateRecordForm
@@ -25,8 +25,8 @@ sub UpdateRecordForm {
     my $q         = $arg_ref->{q};
     my $database  = $arg_ref->{database};
     my $dbh       = $arg_ref->{dbh};
-    my $program   = $arg_ref->{program};
-    my $table     = $arg_ref->{table_selected}; 
+    my $lang      = $arg_ref->{lang};
+    my $table     = $arg_ref->{table_selected};
     my $tbl;
     my $id_selected = $q->param("id_selected")    || '';
     my $table_id_field;
@@ -51,21 +51,46 @@ sub UpdateRecordForm {
     my $statement
         = "SELECT $joinstatement FROM $table WHERE $table_id_field = $id_selected;";
     unless ( @results = $dbh->selectrow_array($statement) ) {
-        error_message($r, $arg_ref->{lang}, "un numero de ID existente para esta tabla", "an existing ID number for this table");
+        error_message($r, $arg_ref->{lang}, "un numero de ID existente para esta tabla $table", "an existing ID number for this table $table");
                 return;
-    #   die "can't execute the query: $dbh->errstr";
     }
     for ( $i = 0; $i <= $#results; $i++ ) {
         unless ( defined $results[$i] ) { $results[$i] = ''; }
         $results[$i] = HTML::Entities::encode( $results[$i] );
     }
-    $r->print(qq{<h2>Columns from Table = $table</h2>});
-    $r->print(qq{<form action="$program" method="post"><div>});
-
-    $r->print(
-        qq{<table class="cent" summary="Form to update records" rules="groups" cellspacing="0" cellpadding="2">
-	<caption class="tiheadbig">Record to Update from $table<br />
-	WHERE $table_id_field = $id_selected<br /><br />
+ if ($arg_ref->{lang} eq "es") {
+            $r->print(
+            qq{<h2>Columnas de tabla=$table:
+            }
+        );
+        }
+        else {
+            $r->print(
+            qq{<h2>Columns from Table=$table:
+            }
+        );
+        }
+        $r->print(
+        qq{
+    <form action="$arg_ref->{Program}{program_path_name}" method="post"><div>
+    <table class="cent" summary="Form to update records" rules="groups" cellspacing="0" cellpadding="2">
+    }
+    );
+     if ($arg_ref->{lang} eq "es") {
+            $r->print(
+            qq{<caption class="tiheadbig">Registro para actualizar de $table<br />
+            }
+        );
+        }
+        else {
+            $r->print(
+            qq{<caption class="tiheadbig">Record to Update from $table<br />
+            }
+        );
+        }
+	
+	$r->print(
+    qq{WHERE $table_id_field = $id_selected<br /><br />
 	</caption>
 	<tbody>
 	}
@@ -241,7 +266,8 @@ sub UpdateRecordForm {
             = "SELECT labor_category_id FROM general_labor WHERE general_labor_id = $id_selected;";
 
         unless ( $labor_category_id = $dbh->selectrow_array($state) ) {
-            die "can't execute the query: $dbh->errstr";
+            error_message($r, $lang, "un numero de ID valido para tabla $table", "a valid ID number for table $table");
+            return;
         }
         $state
             = "SELECT labor_category_category, labor_category_subcategory FROM labor_category WHERE labor_category_id = $labor_category_id;";
@@ -249,7 +275,9 @@ sub UpdateRecordForm {
                ( $labor_category_category, $labor_category_subcategory )
                = $dbh->selectrow_array($state) )
         {
-            die "can't execute the query: $dbh->errstr";
+            error_message($r, $lang, "un numero de ID valido para tabla labor_category", "a valid ID number for table labor_category");
+            return;
+
         }
         $r->print(
             qq{<tr>
@@ -261,8 +289,8 @@ sub UpdateRecordForm {
         my $tblc;
         $statement
             = "SELECT labor_category_id, labor_category_category, labor_category_subcategory FROM labor_category ORDER BY labor_category_id;";
-        $sth = $dbh->prepare($statement) || die $dbh->errstr;
-        my $rcc  = $sth->execute             || die $dbh->errstr;
+        $sth = $dbh->prepare($statement) or die $sth->errstr;
+        my $rcc  = $sth->execute         or die $sth->errstr;
         my $tbl9c;
 
         while ( $tblc = $sth->fetchrow_arrayref ) {
@@ -288,13 +316,15 @@ sub UpdateRecordForm {
         unless ( ($full_assembly_assembly_id)
                  = $dbh->selectrow_array($statement) )
         {
-            die "can't execute the query: $dbh->errstr";
+        error_message($r, $arg_ref->{lang}, "un numero de ID existente para esta tabla $table", "an existing ID number for this table $table");
+                return;
         }
         $statement
             = "SELECT assembly_name FROM assemblies WHERE assembly_id = $full_assembly_assembly_id;";
         unless ( ($assembly_name) = $dbh->selectrow_array($statement) )
         {
-            die "can't execute the query: $dbh->errstr";
+        error_message($r, $arg_ref->{lang}, "un numero de ID existente para esta tabla assemblies", "an existing ID number for this table assemblies");
+                return;
         }
 
         $r->print(
@@ -307,8 +337,8 @@ sub UpdateRecordForm {
 
         $statement
             = "SELECT assembly_id, assembly_name FROM assemblies;";
-        $sth = $dbh->prepare($statement) || die $dbh->errstr;
-        my $rc  = $sth->execute             || die $dbh->errstr;
+        $sth = $dbh->prepare($statement) or die $dbh->errstr;
+        my $rc  = $sth->execute          or die $dbh->errstr;
         my $tbl9;
         while ( $tbl = $sth->fetchrow_arrayref ) {
             $$tbl[0] = HTML::Entities::encode( $$tbl[0] );
@@ -391,13 +421,15 @@ sub UpdateRecordForm {
         unless ( ($assembly_part_assembly_id)
                  = $dbh->selectrow_array($statement) )
         {
-            die "can't execute the query: $dbh->errstr";
+        error_message($r, $arg_ref->{lang}, "un numero de ID existente para esta tabla assemblies_parts", "an existing ID number for this table assemblies_parts");
+                return;
         }
         $statement
             = "SELECT assembly_name FROM assemblies WHERE assembly_id = $assembly_part_assembly_id;";
         unless ( ($assembly_name) = $dbh->selectrow_array($statement) )
         {
-            die "can't execute the query: $dbh->errstr";
+        error_message($r, $arg_ref->{lang}, "un numero de ID existente para esta tabla assemblies", "an existing ID number for this table assemblies");
+                return;
         }
 
         $r->print(
@@ -409,8 +441,8 @@ sub UpdateRecordForm {
                  );
         $statement
             = "SELECT assembly_id, assembly_name FROM assemblies ORDER BY assembly_name;";
-        $sth = $dbh->prepare($statement) || die $dbh->errstr;
-        my $rc  = $sth->execute             || die $dbh->errstr;
+        $sth = $dbh->prepare($statement) or die $dbh->errstr;
+        my $rc  = $sth->execute          or die $dbh->errstr;
         my $tbl9;
         while ( $tbl = $sth->fetchrow_arrayref ) {
             $$tbl[0] = HTML::Entities::encode( $$tbl[0] );
@@ -467,7 +499,8 @@ sub UpdateRecordForm {
         unless ( $jobsite_cust_id_selected
                  = $dbh->selectrow_array($id_state) )
         {
-            die "can't execute the query: $dbh->errstr";
+        error_message($r, $arg_ref->{lang}, "un numero de ID existente para la tabla $table", "an existing ID number for the table $table");
+                return;
         }
         my $state
             = "SELECT cust_id, cust_bill_business_name, residential_or_commercial, cust_bill_fname, cust_bill_lname FROM customers WHERE cust_id = $jobsite_cust_id_selected;";
@@ -476,7 +509,8 @@ sub UpdateRecordForm {
                    $cust_bill_lname )
                  = $dbh->selectrow_array($state) )
         {
-            die "can't execute the query: $dbh->errstr";
+            error_message($r, $arg_ref->{lang}, "un numero de ID existente para la tabla customers", "an existing ID number for the table customers");
+            return;
         }
 
         $r->print(
@@ -495,8 +529,8 @@ sub UpdateRecordForm {
                       cust_bill_lname
                  FROM customers
              ORDER BY cust_id;";
-        $sth = $dbh->prepare($statement) || die $dbh->errstr;
-        my $rcc  = $sth->execute        || die $dbh->errstr;
+        $sth = $dbh->prepare($statement) or die $dbh->errstr;
+        my $rcc  = $sth->execute         or die $dbh->errstr;
         my $tbl9c;
 
         while ( $tblc = $sth->fetchrow_arrayref ) {
@@ -610,13 +644,16 @@ sub UpdateRecordForm {
         $statement3
             = "SELECT $statement FROM $table WHERE $table_id_field = $id_selected;";
         unless ( @results_n = $dbh->selectrow_array($statement3) ) {
-            die "can't execute the query: $dbh->errstr";
+            error_message($r, $arg_ref->{lang}, "un numero de ID existente para la tabla $table", "an existing ID number for the table $table");
+            return;
         }
         for ( $i = 0; $i <= $#results_n; $i++ ) {
             $ucfirst = $notes_fields[$i];
             $ucfirst =~ s/_(\w)/ \u$1/g;
             $ucfirst = ucfirst($ucfirst);
-            unless ( defined $results_n[$i] ) { $results_n[$i] = ''; }
+            if (!defined $results_n[$i] || $results_n[$i] eq '') {
+                $results_n[$i] = '';
+            }
 
 # Pisses me off I can't find a way to deal with BOTH ' and " in XHTML forms
             $results_n[$i] =~ s/"/ In./g;
@@ -636,9 +673,25 @@ sub UpdateRecordForm {
 <div>
 <br />
 <br />
-<br />
-<input type="submit" value="Continue" name="submitForm" />
+<br />}
+);
+ if ($arg_ref->{lang} eq "es") {
+            $r->print(
+            qq{
+            <input type="submit" value="Continuar" name="submitForm" />
+<input type="reset" value="Borrar" name="reset1" />            }
+        );
+        }
+        else {
+            $r->print(
+            qq{
+            <input type="submit" value="Continue" name="submitForm" />
 <input type="reset" value="Reset" name="reset1" />
+          }
+        );
+        }
+        $r->print(
+        qq{
 <br />
 <br />
 <br />
@@ -654,11 +707,10 @@ sub UpdateRecordForm {
 
 sub UpdateRecord {
     my ($arg_ref) = @_;
-    my $r                     = $arg_ref->{r};
-    my $q                     = $arg_ref->{q};
-    my $database              = $arg_ref->{database};
-    my $dbh                   = $arg_ref->{dbh};
-    my $table                 = $arg_ref->{table_selected};
+    my $r        = $arg_ref->{r};
+    my $q        = $arg_ref->{q};
+    my $dbh      = $arg_ref->{dbh};
+    my $table    = $arg_ref->{table_selected};
     my $values_array_string;
     my $names_array_string;
     my $id_selected;
@@ -670,7 +722,7 @@ sub UpdateRecord {
     my @field_names = ();
     my @results     = ();
 
-    open( my $fh, '>>', "../../updates-B_$database.sql" ) or die $!;
+    open( my $fh, '>>', "../../updates-B_$arg_ref->{Database}{database}.sql" ) or die $!;
 
     
     $id_selected = $q->param("id_selected");
@@ -714,12 +766,20 @@ sub UpdateRecord {
                 $results[$i] = "NOW";
             }
         }
-        if ( defined $results[$i] ) {
+        if ($results[$i] eq '') {
+            $results[$i] = undef;
+        }
+        elsif ( !defined $results[$i] ) {
+            $results[$i] = undef;
+        }
+        else {
             $results[$i] =~ s#\r\n#\n#g;    # For notes
         }
     }
     for ( my $i = 0; $i <= $#results; $i++ ) {
-        $results[$i] = HTML::Entities::decode( $results[$i] );
+        if (defined $results[$i]) {
+            $results[$i] = HTML::Entities::decode( $results[$i] );
+        }
         $results[$i] = $dbh->quote( $results[$i] );
     }
     $names_array_string  = join( ',', @field_names );
@@ -748,12 +808,11 @@ sub UpdateRecord {
 
 sub DeleteDuplicates {
     my ($arg_ref) = @_;
-    my $table    = $arg_ref->{table};
+    my $table    = $arg_ref->{table_selected};
     my $r        = $arg_ref->{r};
     my $q        = $arg_ref->{q};
-    my $database = $arg_ref->{database};
     my $dbh      = $arg_ref->{dbh};
-    my $program  = $arg_ref->{program};
+    my $lang     = $arg_ref->{lang};
     my $statement;
     my $sth;
     my $table2 = $dbh->quote($table);
@@ -766,10 +825,8 @@ sub DeleteDuplicates {
     if (    ( $vendor_name_selected eq "" )
          || ( $vendor_name_selected eq "All" ) )
     {
-        $r->print(
-            qq{<div class="cent"><p class="error">ERROR!! Please select a single Vendor Name.</p></div>}
-        );
-        return (0);
+        error_message($r, $lang, "un solo nombre de vendor.", "a single vendor name.");
+        return;
     }
     if ( ($table) && (@d_id) ) {
         my $price;
@@ -777,17 +834,28 @@ sub DeleteDuplicates {
         my $DeleteDuplicates;
         my $delete_list = join( ",", @d_id );
         $r->print(
-             qq{<div><h2>Deleted Records from Table = $table</h2><br />}
-        );
+             qq{<div>
+             <h2>Deleted Records from Table = $table</h2>
+             <br />
+             }
+                );
         $SQL = "DELETE FROM $table WHERE product_id IN ($delete_list);";
         $DeleteDuplicates = $dbh->do($SQL);
         if ($DeleteDuplicates) {
             $r->print(
-                qq{<div><h1>Success!<br />Deleted $DeleteDuplicates Records</h1></div>}
+                qq{<div>
+                <h1>Success!<br />Deleted $DeleteDuplicates Records</h1>
+                </div>
+                }
             );
         }
         else {
-            $r->print(qq{<div><h1>Failure -- $DBI::errstr</h1></div>});
+            $r->print(
+                qq{<div>
+                <h1>Failure -- $DBI::errstr</h1>
+                </div>
+                }
+                    );
         }
     }
     elsif ( ($table) && ($vendor_name_selected) && ($class_selected) ) {
@@ -858,34 +926,45 @@ sub DeleteDuplicates {
         my $rv  = $sth->execute
             or die "can't execute the query: $sth->errstr\n";
         my @vetor;
-        $r->print(
-            qq{<h2>Columns from Table=$table:<br />From Vendor:$vendor_name_selected</h2>}
+        if ($arg_ref->{lang} eq "es") {
+            $r->print(
+            qq{<h2>Columnas de tabla=$table:
+            de vendor:$vendor_name_selected</h2>
+            }
         );
+        }
+        else {
+            $r->print(
+            qq{<h2>Columns from Table=$table:
+            From Vendor:$vendor_name_selected</h2>
+            }
+        );
+        }
         $r->print(
-            qq{
-	<form id="vendor_products" action="$program" method="post"><div>
-	<table summary="" border="2" rules="all">
-	<thead>
-	    <tr>
-	    <th align="left"><strong>Product ID</strong></th>
-	    <th align="left"><strong>Class</strong></th>
-	    <th align="left"><strong>SubClass</strong></th>
-	    <th align="left"><strong>Product URL</strong></th>
-	    <th align="left"><strong>Product Description</strong></th>
-	    <th align="left"><strong>Date</strong></th>
-	    <th align="left"><strong>SKU</strong></th>
-	    <th align="left"><strong>Model</strong></th>
-	    <th align="left"><strong>Price</strong></th>
-	    <th align="left"><strong>Delete?</strong></th>
-	     </tr>
-	</thead>
-	<tbody>
-	}
+            qq{<br />
+            form id="vendor_products" action="$arg_ref->{Program}{program_path_name}" method="post">
+            <div>
+        	<table summary="" border="2" rules="all">
+        	<thead>
+            <tr>
+            <th align="left"><strong>Product ID</strong></th>
+            <th align="left"><strong>Class</strong></th>
+            <th align="left"><strong>SubClass</strong></th>
+            <th align="left"><strong>Product URL</strong></th>
+            <th align="left"><strong>Product Description</strong></th>
+            <th align="left"><strong>Date</strong></th>
+            <th align="left"><strong>SKU</strong></th>
+            <th align="left"><strong>Model</strong></th>
+            <th align="left"><strong>Price</strong></th>
+            <th align="left"><strong>Delete?</strong></th>
+            </tr>
+            </thead>
+            <tbody>
+        	}
                  );
         my $ii = $rv;
 
         while ( @vetor = $sth->fetchrow ) {
-           # $ii--;
             if ( $ii == 0 ) {
                 $sth->finish;
                 last;
@@ -911,31 +990,40 @@ sub DeleteDuplicates {
                     if ( $vetor[$field] ) {
                         $r->print(
                             qq{<td align="left">$vetor[$field]</td>
-						<td align="center"><input type="checkbox" value="$vetor[0]" name="d_id" /></td></tr>}
+					    	<td align="center">
+                            <input type="checkbox" value="$vetor[0]" name="d_id" />
+                            </td>
+                            </tr>
+                            }
                                  );
                     }
                     else {
                         $r->print(
                             qq{<td align="left"></td>
-						<td align="center"><input type="checkbox" value="$vetor[0]" name="d_id" /></td></tr>}
+					    	<td align="center"> <input type="checkbox" value="$vetor[0]" name="d_id" />
+                            </td>
+                            </tr>
+                            }
                                  );
                     }
                 }
             }
         }
         $r->print(
-            qq{
-	</tbody></table>
-	<br />
-	<br />
-	<input type="hidden" name="table_selected" value="$table" />
-	<input type="hidden" value="DeleteDuplicates" name="command" />
-	<input type="hidden" value="$vendor_name_selected" name="vendor_name_selected">
-	<input id="submitForm" type="submit" value="Continue" name="submitForm" />
-	<input id="resetForm" type="reset" value="Reset" name="reset1" />
-	</div></form>
-	<hr /><hr />
-	}
+            qq{</tbody>
+            </table>
+            <br />
+            <br />
+            <input type="hidden" name="table_selected" value="$table" />
+            <input type="hidden" value="DeleteDuplicates" name="command" />
+            <input type="hidden" value="$vendor_name_selected" name="vendor_name_selected">
+            <input id="submitForm" type="submit" value="Continue" name="submitForm" />
+            <input id="resetForm" type="reset" value="Reset" name="reset1" />
+            </div>
+            </form>
+            <hr />
+            <hr />
+        	}
                  );
     }
     return 1;
@@ -996,15 +1084,26 @@ sub print_update_option_list {
         = "SELECT $column_string FROM $table WHERE $table_id_column = $id_selected;";
 
     unless ( @results = $dbh->selectrow_array($state) ) {
-        die "can't execute the query: $dbh->errstr";
+#        specified_error_message($r, $arg_ref->{lang}, "No se puede hacer: SELECT $column_string FROM $table WHERE $table_id_column = $id_selected;", "can't execute the query: SELECT $column_string FROM $table WHERE $table_id_column = $id_selected;");
+#        return;
+#        die ("$dbh->errstr");
     }
     foreach my $j ( 0 .. $#results ) {
-        unless ( defined $results[$j] ) { $results[$j] = ''; }
+        if ($results[$j] eq '') {
+            $results[$j] = undef;
+        }
+        elsif (!defined $results[$j] ) {
+            $results[$j] = undef;
+        }
     }
     $r->print(
         qq{<tr>
-<td align="left"><strong>$select_label</strong></td><td align="left" style="width:80%;">
-<select id="$select_column" name="$select_column" style="width:99%;">}
+        <td align="left">
+        <strong>$select_label</strong>
+        </td>
+        <td align="left" style="width:80%;">
+        <select id="$select_column" name="$select_column" style="width:99%;">
+        }
              );
     $field_to_encode = $results[0];
     $field_to_encode = HTML::Entities::encode($field_to_encode);
@@ -1013,19 +1112,27 @@ sub print_update_option_list {
 		}
              );
     foreach my $i ( 0 .. $#results ) {
-        unless ( defined $results[$i] ) { $results[$i] = ''; }
+        if ($results[$i] eq '') {
+            $results[$i] = undef;
+        }
+        elsif (!defined $results[$i] ) {
+            $results[$i] = undef;
+        }
+        #XXX Something is wrong here
         if (    $results[$i] eq "R"
              || $results[$i] eq "P"
              || $results[$i] eq "C" )
         {
-            $option_row .= qq{($results[$i]) };
+            $option_row .= qq{($results[$i])
+                           };
         }
         else {
-            $option_row .= qq{$results[$i] };
+            $option_row .= qq{$results[$i]
+                           };
         }
     }
     $option_row .= qq{</option>
-};
+                   };
     $r->print($option_row);
 
     ################################################################
@@ -1035,33 +1142,39 @@ sub print_update_option_list {
     $option_row      = "";
     $statement
         = "SELECT DISTINCT $column_string_2 FROM $table_2 ORDER BY $columns_2[0];";
-    $sth = $dbh->prepare($statement) || die("$dbh->errstr");
-    my $rc  = $sth->execute             || die("$dbh->errstr");
+    $sth = $dbh->prepare($statement) or die("$dbh->errstr");
+    my $rc  = $sth->execute             or die("$dbh->errstr");
     while ( @tbl = $sth->fetchrow_array ) {
         $field_to_encode = $tbl[0];
         $field_to_encode = HTML::Entities::encode($field_to_encode);
         $option_row      = qq{<option value="$field_to_encode">
 		};
         for my $i ( 0 .. $#tbl ) {
-            unless ( defined $tbl[$i] ) { $tbl[$i] = ''; }
+            if ($tbl[$i] eq '') {
+            $tbl[$i] = undef;
+        }
+            elsif (!defined $tbl[$i] ) {
+        }
+        #XXX Something is wrong here
             if ( $tbl[$i] eq "R" || $tbl[$i] eq "P" || $tbl[$i] eq "C" )
             {
-                $option_row .= qq{($tbl[$i]) };
+                $option_row .= qq{($tbl[$i])
+                               };
             }
             else {
-                $option_row .= qq{$tbl[$i] };
+                $option_row .= qq{$tbl[$i]
+                               };
             }
         }
         $option_row .= qq{</option>
-};
+                       };
         $r->print($option_row);
     }
     $r->print(
-        qq{
-</select>
-</td>
-</tr>
-}
+        qq{</select>
+        </td>
+        </tr>
+        }
              );
 }
 
@@ -1093,7 +1206,9 @@ sub specify_options {
         = "SELECT $column_string FROM $table WHERE $table_id_column = $id_selected;";
 
     unless ( $results = $dbh->selectrow_array($state) ) {
-        die "can't execute the query: $dbh->errstr";
+#        specified_error_message($r, $arg_ref->{lang}, "No se puede hacer: SELECT $column_string FROM $table WHERE $table_id_column = $id_selected;", "can't execute the query: SELECT $column_string FROM $table WHERE $table_id_column = $id_selected;");
+#        return;
+        die("$dbh->errstr");
     }
     unless ( defined $results ) { $results = ''; }
     for my $i ( 0 .. ( scalar(@$values_aref) - 1 ) ) {
@@ -1103,10 +1218,13 @@ sub specify_options {
     }
     $r->print(
         qq{<tr>
-<td align="left"><strong>$select_label</strong></td><td align="left" style="width:80%;">
-<select id="$column_string" name="$column_string" style="width:99%;">
-<option selected="selected" value="$results" style="width:99%;">$results_pretty</option>
-}
+        <td align="left">
+        <strong>$select_label</strong>
+        </td>
+        <td align="left" style="width:80%;">
+        <select id="$column_string" name="$column_string" style="width:99%;">
+        <option selected="selected" value="$results" style="width:99%;">$results_pretty</option>
+        }
              );
     for my $i ( 0 .. ( scalar(@$values_aref) - 1 ) ) {
         $r->print(
@@ -1116,9 +1234,9 @@ sub specify_options {
     }
     $r->print(
         qq{</select>
-</td>
-</tr>
-}
+        </td>
+        </tr>
+        }
              );
 }
 
@@ -1131,7 +1249,7 @@ BWCL::RecordUpdates_B
 
 =head1 VERSION
 
-This documentation refers to BWCL::RecordUpdates_B version 4.7.00.
+This documentation refers to BWCL::RecordUpdates_B version 4.8.00.
 
 =head1 SYNOPSIS
 

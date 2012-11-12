@@ -1,6 +1,6 @@
 package BWCL::SelectTable_B;
 
-our $VERSION = 4.3.00;
+our $VERSION = 4.4.10;
 use warnings;
 use strict;
 
@@ -15,11 +15,6 @@ sub PrepareHead {
     my ($arg_ref) = @_;
     my $r                     = $arg_ref->{r};
     my $dbh                   = $arg_ref->{dbh};
-    my $program               = $arg_ref->{program};
-    my $title                 = $arg_ref->{title};
-    my $description           = $arg_ref->{description};
-    my $lang                  = $arg_ref->{lang};
-    my $config_hash_ref       = $arg_ref->{config_hash_ref};
 
 #######################################################################
     #	Prepare Javascript in Head
@@ -72,60 +67,112 @@ field_selected2[field_selected2.length] = new Option("$tbl->[$i][0]", "$tbl->[$i
         $case_string .= qq{break;
 };
     }
-    unless ( $program =~ /gl/ ) {
-        my $all_subclasses_aref
-            = $dbh->selectcol_arrayref(
-            "SELECT DISTINCT subclass FROM products ORDER BY subclass;"
-            );
-        for my $subclass (@$all_subclasses_aref) {
-            if ( defined $subclass ) {
-                $option_stringc .= qq{
-					subclass_selected[subclass_selected.length] = new Option("$subclass", "$subclass");
-					};
-            }
-        }
-        my $statement
-            = "SELECT distinct class from products ORDER BY class;";
+    my $array;
+    unless ( $arg_ref->{'Program'}{'program_path_name'} =~ /gl/ ) {
+        
+
+#######################################################################
+#       This section successfully creates javascript variable cat
+        my @all_subclasses_aref;
+        my $statement = "SELECT DISTINCT (class, subclass) FROM products WHERE class IS NOT NULL;";
         $sth = $dbh->prepare($statement);
-        my $rv = $sth->execute()
-            or die "can't execute the query: $sth->errstr";
-        my $classes_aref = $dbh->selectcol_arrayref($statement)
-            ;    # or die "$sth->errstr\n";
-        $case_stringc .= qq{
-		case 'All' :
-					subclass_selected.length = 0;
-					subclass_selected[subclass_selected.length] = new Option("All", "All");
-					$option_stringc
-					break;
-};
-
-        for my $i ( 0 .. ( $#{$classes_aref} - 1 ) ) {
-            $$classes_aref[$i] = $dbh->quote( $$classes_aref[$i] );
-            $statement
-                = "SELECT DISTINCT subclass FROM products WHERE class = $$classes_aref[$i] ORDER BY subclass;";
-
-            $case_stringc .= qq|
-		case $$classes_aref[$i] :
-					subclass_selected.length = 0;
-					subclass_selected[subclass_selected.length] = new Option("All", "All");
-				|;
-            my $subclass_href
-                = $dbh->selectall_hashref( $statement, 'subclass' );
-            for my $keys ( sort keys %$subclass_href ) {
-                for my $keys2 ( sort keys %{ $$subclass_href{$keys} } )
-                {
-                    if ( defined $$subclass_href{$keys}{$keys2} ) {
-                        $case_stringc .= qq|
-					subclass_selected[subclass_selected.length] = new Option("$$subclass_href{$keys}{$keys2}", "$$subclass_href{$keys}{$keys2}");
+        my $rv1 = $sth->execute();
+        my $classsuball;
+        my @class_sub;
+        my $old_class = '';
+        my $class;
+        my $subclass;
+        #######################################################################
+        #   This sections works perfect
+        #   BEGIN
+        $array = qq|var cat={
 |;
-
-                    }
+        CASE:
+        while  (@all_subclasses_aref   = $sth->fetchrow_array()) {
+            $classsuball = $all_subclasses_aref[0];
+            $classsuball =~ s/\(//g;
+            $classsuball =~ s/\)//g;
+            $classsuball =~ s/"//g;
+            @class_sub = split /,/, $classsuball;
+            $class = $class_sub[0];
+            $subclass = $class_sub[1] || '';
+            if ($class eq $old_class) {
+                if ($subclass ne '') {
+                    $array .= qq{, '$subclass'};
                 }
+                next CASE;
+            } elsif ($old_class ne '') {
+                $array .= qq{],
+};
+                $array .= qq{'$class':['All', '$subclass'};
+            }
+            else {
+                $array .= qq{'$class':['All', '$subclass'};
+            }
+            $old_class = $class;
+        }
+        $array .= "]
+        }";
+        $array =~ s/, ''//g;
+        #######################################################################
+        #   END
+
+        $statement = "SELECT DISTINCT subclass FROM products ORDER BY subclass;";
+        $sth = $dbh->prepare($statement);
+        my $rv  = $sth->execute()
+            or die "can't execute the query: $sth->errstr";
+
+        my $all_subclasses_aref
+            = $sth->fetchall_arrayref or die "$sth->errstr\n";
+        for my $i ( 0 .. $#{$all_subclasses_aref} ) {
+            if (defined $all_subclasses_aref->[$i][0]) {
+                $option_stringc .= qq{    subclass_selected[subclass_selected.length] = new Option("$all_subclasses_aref->[$i][0]", "$all_subclasses_aref->[$i][0]");
+};
+#            warn(qq{subclass_selected[subclass_selected.length] = new Option("$all_subclasses_aref->[$i][0]", "$all_subclasses_aref->[$i][0]");});
 
             }
-            $case_stringc .= qq{break;
-};
         }
+my $subclass_aref;
+        $case_stringc .= qq{
+case 'All' :
+    subclass_selected.length = 0;
+    subclass_selected[subclass_selected.length] = new Option("All", "All");
+$option_stringc
+};
+#######################################################################
+#   All good above
+        $statement
+            = "SELECT distinct class, subclass from products ORDER BY class, subclass;";
+        $sth = $dbh->prepare($statement);
+        $rv = $sth->execute()
+            or die "can't execute the query: $sth->errstr";
+        my $classes_aref = $sth->fetchall_arrayref or die "$sth->errstr\n";
+        $old_class = '';
+        for my $i ( 0 .. $#{$classes_aref} ) {
+            $class = $classes_aref->[$i][0];
+            if (!defined $class) {
+                next;
+            }
+            if ($class ne $old_class) {
+                $case_stringc .= qq{break;
+            };
+                $case_stringc .= qq|
+case '$classes_aref->[$i][0]' :
+    subclass_selected.length = 0;
+    subclass_selected[subclass_selected.length] = new Option("All", "All");
+|;
+            }
+ for my $j ( 1 .. $#{ $classes_aref->[$i] } ) {
+     if ( defined $classes_aref->[$i][$j]) {
+               $case_stringc .= qq|    subclass_selected[subclass_selected.length] = new Option("$classes_aref->[$i][$j]", "$classes_aref->[$i][$j]");
+|;
+    }
+                }
+                $old_class = $class;
+
+}
+                $case_stringc .= qq{break;
+            };
     }
 #######################################################################
 ##		Print Page Head
@@ -133,14 +180,14 @@ field_selected2[field_selected2.length] = new Option("$tbl->[$i][0]", "$tbl->[$i
     $r->print(
         qq#<?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="$lang" lang="$lang">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="$arg_ref->{lang}" lang="$arg_ref->{lang}">
 <head>
-<title>$title</title>
+<title>$arg_ref->{title}</title>
 <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-<meta http-equiv="Content-language" content="$lang" />
+<meta http-equiv="Content-language" content="$arg_ref->{lang}" />
 <meta name="robots" content="noindex,nofollow" />
 <meta http-equiv="Content-Script-Type" content="text/javascript" />
-<meta name="description" content=$description" />
+<meta name="description" content=$arg_ref->{description}" />
 <meta name="author" content="Chris Bennett" />
 <link rel="shortcut icon" href="/favicon.ico" />
 <link href="/db.css" type="text/css" rel="stylesheet" media="screen" />
@@ -190,18 +237,18 @@ function checkscript() {
 #
     );
 
-    if ( $lang eq "es" ) {
+    if ( $arg_ref->{lang} eq "es" ) {
         $r->print(
-            qq#
+            qq{
 alert("Por favor, selecciona un comando");
-#
+}
         );
     }
     else {
         $r->print(
-            qq#
+            qq{
 alert("Please Select a Command");
-#
+}
         );
     }
     $r->print(
@@ -213,7 +260,7 @@ return false;
 #
     );
 
-    unless ( $program =~ /gl/ ) {
+    unless ( $arg_ref->{'Program'}{'program_path_name'} =~ /gl/ ) {
         $r->print(
             qq#<script type="text/javascript">
 //<![CDATA[
@@ -224,15 +271,19 @@ if (window.addEventListener) {
 } else {
 	window.onload=setupEventsC;
 }
+$array
 
 function setupEventsC(evnt) {
 	var opts = document.getElementById("someForm").class_selected.options;
 	var subclass_selected = document.getElementById("someForm").subclass_selected.options;
+      document.getElementById("someForm").subclass_selected.options.length=1;
+  for (var i=0,l=cat.length;i<l;i++)
+    getElementById("someForm").subclass_selected.options[i+1]=new Option(cat[i],cat[i]);
 					subclass_selected[subclass_selected.length] = new Option("All", "All");
-	$option_stringc
 	document.getElementById("someForm").class_selected.onchange = checkSelectC;
 	
 }
+
 
 function checkSelectC(evnt) {
 	var opts = document.getElementById("someForm").class_selected.options;
@@ -248,25 +299,15 @@ function checkSelectC(evnt) {
 
 	return false;
 }
-</script>
+ </script>
 #
         );
     }
-    $r->print(
+   $r->print(
         qq#
 </head>
 <body>
-$config_hash_ref->{'Top of Page Links'}{'top_of_page_links'}
-=======
-<div>
-<a class="bigblue" href="/index.html" rel="external">Bennett Construction</a><br />
-<a class="biggreen" href="/perl/VP/manual.pl" rel="external">MANUAL</a><br />
-<a class="bigblue" href="/perl/VP/gl.pl" rel="external">Labor Projects</a><br />
-<a class="bigblue" href="/perl/VP/pg.pl" rel="external">Products Vendors Customers Assemblies</a><br />
-<a class="bigblue" href="/perl/VP/tr.pl" rel="external">Materials Viewer and Duplicator</a><br />
-<a class="bigblue" href="/perl/VP/lab.pl" rel="external">Labor Viewer and Duplicator</a><br />
-<a class="bigred" href="/logout">Log Off</a>
-</div>
+$arg_ref->{'Top of Page Links'}{'top_of_page_links'}
 #
     );
 
@@ -278,10 +319,8 @@ sub SelectTable {
     my ($arg_ref) = @_;
     my $r                     = $arg_ref->{r};
     my $dbh                   = $arg_ref->{dbh};
-    my $program               = $arg_ref->{program};
     my $field_table_aref      = $arg_ref->{field_table_aref};
     my $lang                  = $arg_ref->{lang};
-    my $use_delete_duplicates = $arg_ref->{use_delete_duplicates};
     my $select_label;
     my $ucfirst;
     my $tbl       = "";
@@ -291,7 +330,7 @@ sub SelectTable {
         $r->print(
             qq{<div>
 	<h2>Favor de seleccionar un comando y tabla para usar</h2>
-	<form id="someForm" name="someForm" action="$program" method="post">
+	<form id="someForm" name="someForm" action="$arg_ref->{'Program'}{'program_path_name'}" method="post">
 	<div>
 	<table summary="" border="2" rules="all">
 	<tbody>
@@ -305,7 +344,7 @@ sub SelectTable {
         $r->print(
             qq{<div>
 	<h2>Please select a command and a table to use</h2>
-	<form id="someForm" name="someForm" action="$program" method="post">
+	<form id="someForm" name="someForm" action="$arg_ref->{'Program'}{'program_path_name'}" method="post">
 	<div>
 	<table summary="" border="2" rules="all">
 	<tbody>
@@ -430,7 +469,9 @@ sub SelectTable {
 	<td><label for="field_value_selected2">RegEx para valor de segunda columna</label></td>
 	<td><input type="text" id="field_value_selected2" name="field_value_selected2" value="" />
 	<label for="field_value_selected2_null">NULL</label>
-	<input type="checkbox" value="NULL" id="field_value_selected2_null" name="field_value_selected2_null" /></td>
+	<input type="checkbox" value="NULL" id="field_value_selected2_null" name="field_value_selected2_null" />
+    <label for="field_value_selected2_not">NOT</label>
+	<input type="checkbox" value="NOT" id="field_value_selected2_not" name="field_value_selected2_not" /></td>
 	</tr>
 	</tbody></table>
 	<br />
@@ -456,7 +497,7 @@ sub SelectTable {
 	<br />
     }
 );
-if ($use_delete_duplicates) {
+if (@{$arg_ref->{available_commands}} ~~ /DeleteDuplicates/) {
 	$r->print(
         qq{<input type="radio" value="DeleteDuplicates" id="DeleteDuplicates" name="command" />
 	<label class="bigred" for="DeleteDuplicates">Borrar Duplicados(Selecciona una tabla, con limitaciones como clase y/o nombre de vendor con products tabla)</label>
@@ -546,7 +587,7 @@ $r->print(
 	<br />
         }
 );
-if ($use_delete_duplicates) {
+if (@{$arg_ref->{available_commands}} ~~ /DeleteDuplicates/) {
 	$r->print(
 	qq{<input type="radio" value="DeleteDuplicates" id="DeleteDuplicates" name="command" />
 	<label class="bigred" for="DeleteDuplicates">Delete Duplicates (Select a table, use a limit such as class and/or vendor with products table)</label>
@@ -581,7 +622,7 @@ BWCL::SelectTable_B
 
 =head1 VERSION
 
-This documentation refers to BWCL::SelectTable_B version 4.3.00.
+This documentation refers to BWCL::SelectTable_B version 4.4.10.
 
 =head1 SYNOPSIS
 

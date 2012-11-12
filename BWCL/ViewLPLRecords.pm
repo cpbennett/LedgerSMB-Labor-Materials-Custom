@@ -1,6 +1,6 @@
 package BWCL::ViewLPLRecords;
 
-our $VERSION = 1.0.00;
+our $VERSION = 1.0.10;
 use warnings;
 use strict;
 
@@ -23,12 +23,12 @@ sub DuplicateFullLPLRecordsForm {
     my $r         = $arg_ref->{r};
     my $dbh       = $arg_ref->{dbh};
     my $q         = $arg_ref->{q};
-    my $program   = $arg_ref->{program};
-    my $labor_project_list_selected;
-    my $labor_project_list_selected2;
-    my $labor_project_selected;
-    my $currency_selected;
-    my $currency_selected2;
+    my $program   = $arg_ref->{Program}{program_path_name};
+    my $labor_project_list_selected = $q->param("labor_project_list_selected");
+    my $labor_project_list_selected2 = $dbh->quote($labor_project_list_selected);
+    my $labor_project_selected = $q->param("labor_project_selected");
+    my $currency_selected  = $q->param("currency_selected");
+    my $currency_selected2 = $dbh->quote($currency_selected);
     my $statement;
     my $sth;
     my $labor_project_name_aref;
@@ -47,29 +47,24 @@ sub DuplicateFullLPLRecordsForm {
     my @vetor              = ();
     my $l_p_c              = 1;    # labor_project_count
     my $l_p_l_c            = 1;    # labor_project_list_count
-    $labor_project_list_selected
-        = $q->param("labor_project_list_selected");
     $labor_project_list_selected =~ s/''/"/g;
 
 # This substitution reverses substitution done in form which allows javascript to function
-    $labor_project_selected = $q->param("labor_project_selected");
     $labor_project_selected =~ s/''/"/g;
 
 # This substitution reverses substitution done in form which allows javascript to function
-    $labor_project_list_selected2
-        = $dbh->quote($labor_project_list_selected);
     $labor_project_list_selected
         = HTML::Entities::encode($labor_project_list_selected);
-    $currency_selected  = $q->param("currency_selected");
-    $currency_selected2 = $dbh->quote($currency_selected);
     my $labor_project_hash_ref;
     my @labor_project_hash_assemblys = (
         'labor_project_name',             'labor_project_section',
         'labor_project_class',            'labor_project_subclass',
-        'labor_project_is_subcontracted', 'labor_project_received_in',
-        'labor_project_pay_out_rate',     'method_to_charge',
-        'units_charged',                  'labor_project_currency',
-        'labor_project_notes',            'labor_project_unit_notes',
+        'labor_project_is_subcontracted', 'labor_project_days',
+        'labor_project_received_in',      'labor_project_pay_out_rate',
+        'method_to_charge',               'units_charged',
+        'labor_project_currency',         'labor_project_notes',
+        'labor_project_unit_notes',
+        
     );
     my $labor_project_list_hash_ref;
     my @labor_project_list_hash_assemblys = (
@@ -594,8 +589,7 @@ sub ViewLPLRecords {
     my $q         = $arg_ref->{q};
     my $labor_project_list_selected
         = $q->param("labor_project_list_selected");
-    my $labor_project_list_selected2;
-    my $labor_project_selected = $q->param("labor_project_selected");
+        my $labor_project_selected = $q->param("labor_project_selected");
     my $labor_project_name;
     my $labor_project_name_aref;
     my $assem_part_hash_ref;
@@ -607,13 +601,12 @@ sub ViewLPLRecords {
     my @vetor              = ();
     my $ucfirst            = '';
     $labor_project_list_selected =~ s/''/"/g;
+    my $labor_project_list_selected2 = $dbh->quote($labor_project_list_selected);
 
 # This substitution reverses substitution done in form which allows javascript to function
     $labor_project_selected =~ s/''/"/g;
 
 # This substitution reverses substitution done in form which allows javascript to function
-    $labor_project_list_selected2
-        = $dbh->quote($labor_project_list_selected);
 
     if ( $labor_project_selected eq 'All' ) {
         my $sth = $dbh->prepare(

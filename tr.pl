@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 
-our $VERSION = 2.0.00;
+our $VERSION = 2.1.00;
 use warnings;
 use strict;
 
@@ -10,21 +10,14 @@ use Config::Std;
 use BWCL::SelectFAL qw(SelectFALs);
 use BWCL::ViewFALRecords
     qw(ViewFALRecords ViewFullFALRecords DuplicateFullFALRecordsForm DuplicateFullFALRecords);
+use BWCL::ShowAdmin qw(error_message);
 
 #######################################################################
 ##		Connect to Database
 
-my %args;
 my $filename = 'ProductsViewerDuplicator.cfg';
 my $config_hash_ref;
 read_config($filename => $config_hash_ref);
-
-my $username       = $config_hash_ref->{'Database Login Values'}{'username'};
-my $password       = $config_hash_ref->{'Database Login Values'}{'password'};
-my $database       = $config_hash_ref->{'Database Login Values'}{'database'};
-my $hostname       = $config_hash_ref->{'Database Login Values'}{'hostname'};
-my $port           = $config_hash_ref->{'Database Login Values'}{'port'};
-my $pg_enable_utf8 = $config_hash_ref->{'Database Login Values'}{'pg_enable_utf8'};
 
 my $r = Apache->request;
 my $q = Apache::Request->new(
@@ -34,26 +27,29 @@ my $q = Apache::Request->new(
 );
 
 my $dbh
-    = DBI->connect( "DBI:Pg:dbname=$database;host=$hostname;port=5432",
-    $username, $password, { 'RaiseError' => 1, pg_enable_utf8 => 1 } );
+    = DBI->connect( "DBI:Pg:dbname=$config_hash_ref->{'Database'}{'database'};host=$config_hash_ref->{'Database'}{'hostname'};port=$config_hash_ref->{'Database'}{'port'}",
+    $config_hash_ref->{'Database'}{'username'}, $config_hash_ref->{'Database'}{'password'}, { 'RaiseError' => 1, pg_enable_utf8 => $config_hash_ref->{'Database'}{'pg_enable_utf8'} } );
+$config_hash_ref->{dbh} = $dbh;
+$config_hash_ref->{r} = $r;
+$config_hash_ref->{q} = $q;
 ## Note: Nonpersistent Database connection in a Persistent Environment is as Follows:
 ##my $dbh = DBI->connect("DBI:Pg:dbname=$database;host=$hostname;port=5432", $username, $password, {'RaiseError' => 1, dbi_connect_method => 'connect'});
 
-my $program = $config_hash_ref->{'Program Path and Name'}{'program_path_name'};
-$args{program}               = $program;
-#$args{lang}                  = $lang;
-#$args{title}                 = $title;
-#$args{description}           = $description;
-$args{r}                     = $r;
-$args{dbh}                   = $dbh;
-$args{q}                     = $q;
-$args{database}              = $database;
+my $program = $config_hash_ref->{'Program'}{'program_path_name'};
 
 #######################################################################
 ##		Print Header
 
 $r->content_type("text/html");
 $r->send_http_header;
+my $lang 
+    = $q->param("lang")
+    || $r->headers_in->get('Accept-Language')
+    || "en";
+
+$lang = substr $lang, 0, 2;
+
+$config_hash_ref->{lang} = $lang;
 
 #######################################################################
 #	Prepare Javascript in Head
@@ -75,8 +71,7 @@ my $sth;
 my $statement;
 my $rv;
 
-$sth
-    = $dbh->prepare(
+$sth = $dbh->prepare(
     "SELECT
             full_assembly_list_name
        FROM full_assembly_list
@@ -104,8 +99,7 @@ foreach my $chosen (@full_assembly_lists) {
 
 };
     $chosen2 = $dbh->quote($chosen);
-    $statement
-        = "SELECT
+    $statement = "SELECT
                   full_assembly_assembly_id
              FROM full_assembly
             WHERE full_assembly_name = $chosen2
@@ -212,6 +206,8 @@ $config_hash_ref->{'Top of Page Links'}{'top_of_page_links'}
 #
 );
 
+my $commands = $config_hash_ref->{'Commands'}{'commands'};
+
 #######################################################################
 ##		Get CGI Params
 
@@ -222,35 +218,40 @@ my $assembly_name               = '';
 $full_assembly_list_selected = $q->param("full_assembly_list_selected")
     || '';
 $assembly_selected = $q->param("assembly_selected") || '';
-my $command = $q->param("command") || '';
+my $command = $q->param("command")
+    || goto ERROR_END;
+unless ($command~~@$commands) {
+    error_message($r, $lang, "un comando valido", "a valid command");
+    goto ERROR_END;
+}
 
 #######################################################################
 ##		Select a Sub
 $dbh->{AutoCommit} = 0;
 
 if ( $command eq "ViewFALRecords" ) {
-    ViewFALRecords( \%args );
+    ViewFALRecords( $config_hash_ref );
 }
 elsif ( $command eq "ViewFullFALRecords" ) {
-    ViewFullFALRecords( \%args );
+    ViewFullFALRecords( $config_hash_ref );
 }
 elsif ( $command eq "DuplicateFullFALRecordsForm" ) {
-    DuplicateFullFALRecordsForm( \%args );
+    DuplicateFullFALRecordsForm( $config_hash_ref );
 }
 elsif ( $command eq "DuplicateFullFALRecords" ) {
-    DuplicateFullFALRecords( \%args );
+    DuplicateFullFALRecords( $config_hash_ref );
 }
 else {
     $r->print(
-        qq{<div class="cent"><p class="error">New Search?</p></div>});
+        qq{<div class="cent"><p class="error">Please make a selection.</p></div>});
 }
 
 $dbh->commit();
 $dbh->{AutoCommit} = 1;
 #######################################################################
 ##		Call Select Full Assembly List
-
-SelectFALs( \%args );
+ERROR_END:
+SelectFALs( $config_hash_ref );
 
 $dbh->disconnect;
 
@@ -262,7 +263,7 @@ tr.pl - View and reproduce similar full assembly list trees to bottom.
 
 =head1 VERSION
 
-This documentation refers to tr.pl version 2.0.00.
+This documentation refers to tr.pl version 2.1.00.
 
 =head1 SYNOPSIS
 

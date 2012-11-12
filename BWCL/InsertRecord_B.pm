@@ -1,6 +1,6 @@
 package BWCL::InsertRecord_B;
 
-our $VERSION = 4.6.00;
+our $VERSION = 4.5.00;
 
 use warnings;
 use strict;
@@ -25,54 +25,62 @@ our @EXPORT_OK = qw(InsertRecordGroup InsertRecordGroupForm);
 ##		Sub InsertRecordGroupForm
 
 sub InsertRecordGroupForm {
-    my ($arg_ref) = @_;
+    my ($arg_ref)             = @_;
     my $r                     = $arg_ref->{r};
     my $dbh                   = $arg_ref->{dbh};
     my $q                     = $arg_ref->{q};
-    my $program               = $arg_ref->{program};
     my $field_table_aref      = $arg_ref->{field_table_aref};
-    my $lang                  = $arg_ref->{lang};
-    my $use_delete_duplicates = $arg_ref->{use_delete_duplicates};
-    my $database              = $arg_ref->{database};
     my $table                 = $arg_ref->{table_selected};
-    my $itemstoinsert         = $q->param("itemstoinsert");
     my $ucfirst;
-    my @field_names           = ();
-    my @all_fill              = ();
-    my @notes_fields          = ();
-    my $field_names;
-    my $notes_fields;
+    my @all_fill = ();
+    my $field_names_aref;
+    my $notes_fields_aref;
+    my $select_fields_aref;
+    my $specialty_fields_aref;
 
-    ( $field_names, $notes_fields )
-        = Selecter( "InsertRecordForm", $table );
-    @field_names  = @$field_names;
-    @notes_fields = @$notes_fields;
+    (  $field_names_aref,   $notes_fields_aref,
+       $select_fields_aref, $specialty_fields_aref
+    ) = Selecter( "InsertRecordForm", $table );
+    push( @all_fill, @$field_names_aref );
+    push( @all_fill, @$notes_fields_aref );
+    push( @all_fill, @$select_fields_aref );
+    push( @all_fill, @$specialty_fields_aref );
 
-    push( @all_fill, @field_names );
-    push( @all_fill, @notes_fields );
-
-    $r->print(
-        qq{<h2 class="tiheadbig">Insert New Record Group into $table</h2>
-	<form id="insertform" name="insertform" action="$program" method="post">}
-    );
+     if ($arg_ref->{lang} eq "es") {
+            $r->print(
+            qq{<h2 class="tiheadbig">Insertar nuevo grupo de registros para $table</h2>
+            }
+        );
+        }
+        else {
+            $r->print(
+            qq{<h2 class="tiheadbig">Insert New Group of Records into $table</h2>
+            }
+        );
+        }
+	
+	$r->print(
+    qq{    	<form id="insertform" name="insertform" action="$arg_ref->{Program}{program_path_name}" method="post">
+        }
+             );
     if ( $table eq "full_assembly_list" ) {
         $r->print(
             qq{<h3 class="cent">NOTE&nbsp;WELL:&nbsp;You&nbsp;must&nbsp;have&nbsp;appropriate&nbsp;full_assembly&nbsp;entries&nbsp;first!</h3>
-}
-        );
+            }
+                 );
     }
-    for my $itemtoi ( 3 .. ( $itemstoinsert + 2 ) ) {
+    for my $itemtoi ( 3 .. ( $arg_ref->{itemstoinsert} + 2 ) ) {
         $r->print(
             qq{<div>
-	<table class="cent" summary="" rules="groups" cellspacing="0" cellpadding="2">
-	<tbody>
-	}
-        );
+	        <table class="cent" summary="" rules="groups" cellspacing="0" cellpadding="2">
+            <tbody>
+	        }
+                 );
 
 ########################################################################
         #	Main Section Starts
 
-        for my $field_name ( @field_names ) {
+        for my $field_name (@$field_names_aref) {
             $ucfirst = $field_name;
             $ucfirst =~ s/_(\w)/ \u$1/g;
             $ucfirst =~ s/ Id/ ID/;
@@ -85,489 +93,545 @@ sub InsertRecordGroupForm {
             $ucfirst =~ s/Sku/SKU/;
             $r->print(qq{<tr>});
 
-
-                if ( $itemtoi == 3 ) {
-                    $r->print(
-                        qq{<td align="left"><label for="$field_name">All?</label></td><td align="left"><input type="checkbox" value="all" id="$field_name" name="$field_name" /></td>}
-                    );
-                }
-                else {
-                    $r->print(
-                        qq{<td align="left"></td><td align="left"></td>}
-                    );
-                }
+            if ( $itemtoi == 3 ) {
                 $r->print(
-                    qq{<td align="left"><strong>$ucfirst</strong></td><td align="left" style="width:80%;"><input type="text" id="$field_name$itemtoi" name="$field_name$itemtoi" value="" style="width:99%;" /></td>
-	</tr>
-	}
-                );
+                    qq{<td align="left">
+                    <label for="$field_name">All?</label>
+                    </td>
+                    <td align="left">
+                    <input type="checkbox" value="all" id="$field_name" name="$field_name" />
+                    </td>
+                    }
+                         );
             }
-
-            if ( $table eq "vendor_contacts" ) {
-                if ( $itemtoi == 3 ) {
-                    push( @all_fill, "ven_contact_country" );
-                }
-                print_option_list( $r, $dbh, "country", "countries",
-                    $itemtoi, "Vendor Contact Country",
-                    "ven_contact_country" );
-            }
-            elsif ( $table eq "vendors" ) {
-                if ( $itemtoi == 3 ) {
-                    push( @all_fill,
-                        "vendor_country", "vendor_currency" );
-                }
-                print_option_list( $r, $dbh, "country", "countries",
-                    $itemtoi, "Vendor Country",
-                    "vendor_country" );
-                print_option_list( $r, $dbh, "currency", "currencies",
-                    $itemtoi, "Vendor Currency",
-                    "vendor_currency" );
-            }
-            elsif ( $table eq "products"
-                || $table eq "vendor_contacts" )
-            {
-                if ( $itemtoi == 3 ) {
-                    push( @all_fill, "vendor_name" );
-                }
-                print_option_list( $r, $dbh, "vendor_name", "vendors",
-                    $itemtoi, "Vendor Name", "vendor_name" );
-            }
-            elsif ( $table eq "labor_project" ) {
-                if ( $itemtoi == 3 ) {
-                    push( @all_fill,
-                        "method_to_charge",
-                        "labor_project_currency",
-                        "labor_project_is_subcontracted" );
-                }
-                print_option_list( $r, $dbh, "method_to_charge",
-                    "method_to_charge", $itemtoi, "Method to Charge",
-                    "method_to_charge" );
-                print_option_list( $r, $dbh, "currency", "currenciesg",
-                    $itemtoi, "Labor Project Currency",
-                    "labor_project_currency" );
-                my @values = ( "N",  "Y" );
-                my @names  = ( "No", "Yes" );
-                specify_insert_options(
-                    $r,
-                    "labor_project_is_subcontracted",
-                    "Labor Project is Subcontracted?",
-                    $itemtoi,
-                    \@values,
-                    \@names
-                );
-            }
-            elsif ( $table eq "labor_project_list" ) {
-                if ( $itemtoi == 3 ) {
-                    push( @all_fill,
-                        "labor_project_list_name",
-                        "labor_project_list_currency" );
-                }
-                print_option_list(
-                    $r,
-                    $dbh,
-                    "labor_project_name",
-                    "labor_project",
-                    $itemtoi,
-                    "Labor Project List Name",
-                    "labor_project_list_name",
-                    "WHERE labor_project_name NOT IN (SELECT labor_project_list_name FROM labor_project_list)"
-                );
-                print_option_list(
-                    $r,
-                    $dbh,
-                    "currency",
-                    "currenciesg",
-                    $itemtoi,
-                    "Labor Project List Currency",
-                    "labor_project_list_currency"
-                );
-            }
-            elsif ( $table eq "labor_category" ) {
-                if ( $itemtoi == 3 ) {
-                    push( @all_fill,
-                        "labor_category_skill",
-                        "labor_category_service" );
-                }
-                print_option_list( $r, $dbh, "labor_skill",
-                    "labor_skill", $itemtoi, "Labor Skill",
-                    "labor_category_skill" );
-                print_option_list( $r, $dbh, "labor_service",
-                    "labor_service", $itemtoi, "Labor Service",
-                    "labor_category_service" );
-            }
-            elsif ( $table eq "assemblies" ) {
-                if ( $itemtoi == 3 ) {
-                    push( @all_fill, "assembly_currency" );
-                }
-                print_option_list( $r, $dbh, "currency", "currencies",
-                    $itemtoi, "Assembly Currency",
-                    "assembly_currency" );
-            }
-            elsif ( $table eq "expenses" ) {
-                if ( $itemtoi == 3 ) {
-                    push( @all_fill, "expense_currency" );
-                }
-                print_option_list( $r, $dbh, "currency", "currenciesg",
-                    $itemtoi, "Expense Currency",
-                    "expense_currency" );
-                if ( $itemtoi == 3 ) { push( @all_fill, "time_unit" ); }
-                print_option_list( $r, $dbh, "time_unit", "time_units",
-                    $itemtoi, "Time Unit", "time_unit" );
-            }
-            elsif ( $table eq "expenses_total" ) {
-                if ( $itemtoi == 3 ) {
-                    push( @all_fill, "expenses_total_currency" );
-                }
-                print_option_list(
-                    $r,
-                    $dbh,
-                    "currency",
-                    "currenciesg",
-                    $itemtoi,
-                    "Expenses Total Currency",
-                    "expenses_total_currency"
-                );
-            }
-
-            elsif ( $table eq "general_labor" ) {
-                if ( $itemtoi == 3 ) {
-                    push( @all_fill,
-                        "method_to_charge",
-                        "general_labor_is_subcontracted",
-                        "general_labor_is_project",
-                        "labor_category_id",
-                        "labor_project_name" );
-                }
-                print_option_list( $r, $dbh, "method_to_charge",
-                    "method_to_charge", $itemtoi, "Method to Charge",
-                    "method_to_charge" );
-                print_option_list( $r, $dbh, "currency", "currenciesg",
-                    $itemtoi, "General Labor Currency",
-                    "general_labor_currency" );
-                my @values = ( "N",  "Y" );
-                my @names  = ( "No", "Yes" );
-                specify_insert_options(
-                    $r,
-                    "general_labor_is_subcontracted",
-                    "General Labor Is Subcontracted?",
-                    $itemtoi,
-                    \@values,
-                    \@names
-                );
-                @values = ( "N",  "Y" );
-                @names  = ( "No", "Yes" );
-                print_option_list(
-                    $r,
-                    $dbh,
-                    "labor_category_id, labor_category_category, labor_category_subcategory",
-                    "labor_category",
-                    $itemtoi,
-                    "Labor Category",
-                    "labor_category_id"
-                );
-            }
-
-            elsif ( $table eq "assemblies_parts" ) {
-                if ( $itemtoi == 3 ) {
-                    push( @all_fill,
-                        "assembly_part_assembly_id",
-                        "assembly_part_currency" );
-                }
-                if ( $itemtoi == 3 ) {
-                    $r->print(
-                        qq{<tr><td align="left"><label for="assembly_part_assembly_id">All?</label></td>
-						<td align="left"><input type="checkbox" value="all" id="assembly_part_assembly_id" name="assembly_part_assembly_id" /></td>
-						}
-                    );
-                }
-                else {
-                    $r->print(
-                        qq{<tr><td align="left"></td>
-						<td align="left"></td>
-						}
-                    );
-                }
+            else {
                 $r->print(
-                    qq{
-	<td align="left"><label for="assembly_part_assembly_id"><strong>Assembly Part Assembly ID</strong></label></td>
-	<td align="left"><select id="assembly_part_assembly_id$itemtoi" name="assembly_part_assembly_id$itemtoi" style="width:99%;">
-	}
-                );
-                my $tbl;
-                my $statement
-                    = "SELECT assembly_id, assembly_name FROM assemblies ORDER BY assembly_name;";
-                my $sth = $dbh->prepare($statement) || die $dbh->errstr;
-                my $rc  = $sth->execute             || die $dbh->errstr;
-                my $tbl9;
+                    qq{<td align="left">
+                     </td>
+                     <td align="left">
+                     </td>
+                     }
+                         );
+            }
+            $r->print(
+                qq{<td align="left">
+                <strong>$ucfirst</strong>
+                </td>
+                <td align="left" style="width:80%;">
+                <input type="text" id="$field_name$itemtoi" name="$field_name$itemtoi" value="" style="width:99%;" />
+                </td>
+            	</tr>
+            	}
+                     );
+        }
 
-                while ( $tbl = $sth->fetchrow_arrayref ) {
-                    $$tbl[0] = HTML::Entities::encode( $$tbl[0] );
-                    $$tbl[1] = HTML::Entities::encode( $$tbl[1] );
-                    $tbl9
-                        = qq{<option value="$$tbl[0]">$$tbl[1]  --$$tbl[0]--</option>
+        if ( $table eq "vendor_contacts" ) {
+            print_option_list( $r,
+                               $dbh,
+                               "country",
+                               "countries",
+                               $itemtoi,
+                               "Vendor Contact Country",
+                               "ven_contact_country" );
+            print_option_list( $r, $dbh, "vendor_name", "vendors",
+                               $itemtoi, "Vendor Name", "vendor_name" );
+        }
+        elsif ( $table eq "vendors" ) {
+            print_option_list( $r,        $dbh,
+                               "country", "countries",
+                               $itemtoi,  "Vendor Country",
+                               "vendor_country" );
+            print_option_list( $r,         $dbh,
+                               "currency", "currencies",
+                               $itemtoi,   "Vendor Currency",
+                               "vendor_currency" );
+        }
+        elsif ( $table eq "labor_project" ) {
+            print_option_list( $r,                 $dbh,
+                               "method_to_charge", "method_to_charge",
+                               $itemtoi,           "Method to Charge",
+                               "method_to_charge" );
+            print_option_list( $r,
+                               $dbh,
+                               "currency",
+                               "currenciesg",
+                               $itemtoi,
+                               "Labor Project Currency",
+                               "labor_project_currency" );
+            my @values = ( "N",  "Y" );
+            my @names  = ( "No", "Yes" );
+            specify_insert_options( $r,
+                                    "labor_project_is_subcontracted",
+                                    "Labor Project is Subcontracted?",
+                                    $itemtoi,
+                                    \@values,
+                                    \@names );
+        }
+        elsif ( $table eq "labor_project_list" ) {
+            print_option_list(
+                $r,
+                $dbh,
+                "labor_project_name",
+                "labor_project",
+                $itemtoi,
+                "Labor Project List Name",
+                "labor_project_list_name",
+                "WHERE labor_project_name NOT IN (SELECT labor_project_list_name FROM labor_project_list)"
+            );
+            print_option_list( $r,
+                               $dbh,
+                               "currency",
+                               "currenciesg",
+                               $itemtoi,
+                               "Labor Project List Currency",
+                               "labor_project_list_currency" );
+        }
+        elsif ( $table eq "labor_category" ) {
+            print_option_list( $r,            $dbh,
+                               "labor_skill", "labor_skill",
+                               $itemtoi,      "Labor Skill",
+                               "labor_category_skill" );
+            print_option_list( $r,
+                               $dbh,
+                               "labor_service",
+                               "labor_service",
+                               $itemtoi,
+                               "Labor Service",
+                               "labor_category_service" );
+        }
+        elsif ( $table eq "assemblies" ) {
+            print_option_list( $r,
+                               $dbh,
+                               "currency",
+                               "currencies",
+                               $itemtoi,
+                               "Assembly Currency",
+                               "assembly_currency" );
+        }
+        elsif ( $table eq "expenses" ) {
+            print_option_list( $r,         $dbh,
+                               "currency", "currenciesg",
+                               $itemtoi,   "Expense Currency",
+                               "expense_currency" );
+            print_option_list( $r, $dbh, "time_unit", "time_units",
+                               $itemtoi, "Time Unit", "time_unit" );
+        }
+        elsif ( $table eq "expenses_total" ) {
+            print_option_list( $r,
+                               $dbh,
+                               "currency",
+                               "currenciesg",
+                               $itemtoi,
+                               "Expenses Total Currency",
+                               "expenses_total_currency" );
+        }
+        elsif ( $table eq "general_labor" ) {
+            print_option_list( $r,                 $dbh,
+                               "method_to_charge", "method_to_charge",
+                               $itemtoi,           "Method to Charge",
+                               "method_to_charge" );
+            print_option_list( $r,
+                               $dbh,
+                               "currency",
+                               "currenciesg",
+                               $itemtoi,
+                               "General Labor Currency",
+                               "general_labor_currency" );
+            my @values = ( "N",  "Y" );
+            my @names  = ( "No", "Yes" );
+            specify_insert_options( $r,
+                                    "general_labor_is_subcontracted",
+                                    "General Labor Is Subcontracted?",
+                                    $itemtoi,
+                                    \@values,
+                                    \@names );
+            @values = ( "N",  "Y" );
+            @names  = ( "No", "Yes" );
+            print_option_list(
+                $r,
+                $dbh,
+                "labor_category_id, labor_category_category, labor_category_subcategory",
+                "labor_category",
+                $itemtoi,
+                "Labor Category",
+                "labor_category_id" );
+        }
+        elsif ( $table eq "assemblies_parts" ) {
+            if ( $itemtoi == 3 ) {
+                $r->print(
+                    qq{<tr>
+                    <td align="left">
+                    <label for="assembly_part_assembly_id">All?</label>
+                    </td>
+				    <td align="left">
+                    <input type="checkbox" value="all" id="assembly_part_assembly_id" name="assembly_part_assembly_id" />
+                    </td>
+					}
+                         );
+            }
+            else {
+                $r->print(
+                    qq{<tr><td align="left">
+                    </td>
+					<td align="left">
+                    </td>
+					}
+                         );
+            }
+            $r->print(
+                qq{<td align="left">
+                <label for="assembly_part_assembly_id">
+                <strong>Assembly Part Assembly ID</strong>
+                </label>
+                </td>
+            	<td align="left">
+                <select id="assembly_part_assembly_id$itemtoi" name="assembly_part_assembly_id$itemtoi" style="width:99%;">
+            	}
+                     );
+            my $tbl;
+            my $statement
+                = "SELECT assembly_id, assembly_name FROM assemblies ORDER BY assembly_name;";
+            my $sth = $dbh->prepare($statement) || die $dbh->errstr;
+            my $rc  = $sth->execute             || die $dbh->errstr;
+            my $tbl9;
+
+            while ( $tbl = $sth->fetchrow_arrayref ) {
+                $$tbl[0] = HTML::Entities::encode( $$tbl[0] );
+                $$tbl[1] = HTML::Entities::encode( $$tbl[1] );
+                $tbl9
+                    = qq{<option value="$$tbl[0]">$$tbl[1]  --$$tbl[0]--</option>
 				};
-                    $r->print(qq{$tbl9});
-                }
+                $r->print(qq{$tbl9});
+            }
+            $r->print(
+                qq{</select>
+            	</td>
+            	</tr>
+            	}
+                     );
+
+            print_option_list( $r,
+                               $dbh,
+                               "currency",
+                               "currencies",
+                               $itemtoi,
+                               "Assembly Part Currency",
+                               "assembly_part_currency" );
+        }
+        elsif ( $table eq "customers" ) {
+            my @values = ( "R",           "C" );
+            my @names  = ( "Residential", "Commercial" );
+            specify_insert_options( $r,
+                                    "residential_or_commercial",
+                                    "Residential or Commercial?",
+                                    $itemtoi,
+                                    \@values,
+                                    \@names );
+            print_option_list( $r,
+                               $dbh,
+                               "country",
+                               "countries",
+                               $itemtoi,
+                               "Customer Bill Country",
+                               "cust_bill_country" );
+
+        }
+        elsif ( $table eq "jobsites" ) {
+            my @values = ( "R",           "C" );
+            my @names  = ( "Residential", "Commercial" );
+            specify_insert_options( $r,
+                                    "residential_or_commercial",
+                                    "Residential or Commercial?",
+                                    $itemtoi,
+                                    \@values,
+                                    \@names );
+            print_option_list(
+                $r,
+                $dbh,
+                "cust_id, cust_bill_business_name, residential_or_commercial, cust_bill_fname, cust_bill_lname",
+                "customers",
+                $itemtoi,
+                "Customer",
+                "cust_id" );
+            print_option_list( $r,        $dbh,
+                               "country", "countries",
+                               $itemtoi,  "Jobsite Country",
+                               "jobsite_country" );
+        }
+        elsif ( $table eq "products" ) {
+            $r->print(qq{<tr>
+                      }
+                     );
+            if ( $itemtoi == 3 ) {
                 $r->print(
-                    qq{
-	</select>
-	</td>
-	</tr>
-	}
-                );
+                    qq{<td align="left">
+                    <label for="up_date">All?</label>
+                    </td>
+                    <td align="left">
+                    <input type="checkbox" value="All" id="up_date" name="up_date" />
+                    </td>
+                    }
+                         );
+            }
+            else {
+                $r->print(
+                    qq{<td align="left">
+                     </td><td align="left">
+                     </td>
+                    }
+                         );
+            }
+            $r->print(
+                qq{<td align="left">
+                <strong>Update</strong>
+                </td>
+                <td align="left" style="width:80%;">
+                <input type="text" id="up_date$itemtoi" name="up_date$itemtoi" value="NOW" style="width:99%;" />
+                </td>
+	        	</tr>
+        		}
+                     );
+            my $tbl;
+            my $statement
+                = "SELECT column_default FROM information_schema.columns WHERE table_name = 'products' AND column_name = 'check_days';";
+            my $sth = $dbh->prepare($statement) || die $dbh->errstr;
+            my $rc  = $sth->execute             || die $dbh->errstr;
+            my $def = '';
 
-                print_option_list( $r, $dbh, "currency", "currencies",
-                    $itemtoi, "Assembly Part Currency",
-                    "assembly_part_currency" );
-            }
-            elsif ( $table eq "customers" ) {
-                my @values = ( "R",           "C" );
-                my @names  = ( "Residential", "Commercial" );
-                if ( $itemtoi == 3 ) {
-                    push( @all_fill,
-                        "residential_or_commercial",
-                        "cust_bill_country" );
-                }
-                specify_insert_options( $r, "residential_or_commercial",
-                    "Residential or Commercial?",
-                    $itemtoi, \@values, \@names );
-                print_option_list( $r, $dbh, "country", "countries",
-                    $itemtoi, "Customer Bill Country",
-                    "cust_bill_country" );
-
-            }
-            elsif ( $table eq "jobsites" ) {
-                my @values = ( "R",           "C" );
-                my @names  = ( "Residential", "Commercial" );
-                if ( $itemtoi == 3 ) {
-                    push( @all_fill,
-                        "residential_or_commercial", "cust_id",
-                        "jobsite_country" );
-                }
-                specify_insert_options( $r, "residential_or_commercial",
-                    "Residential or Commercial?",
-                    $itemtoi, \@values, \@names );
-                print_option_list(
-                    $r,
-                    $dbh,
-                    "cust_id, cust_bill_business_name, residential_or_commercial, cust_bill_fname, cust_bill_lname",
-                    "customers",
-                    $itemtoi,
-                    "Customer",
-                    "cust_id"
-                );
-                print_option_list( $r, $dbh, "country", "countries",
-                    $itemtoi, "Jobsite Country",
-                    "jobsite_country" );
-            }
-            elsif ( $table eq "products" ) {
+            while ( $tbl = $sth->fetchrow_arrayref ) {
+                $def = $$tbl[0];
+                $def =~ m/'([\d:]*)'::text/;
+                $def = $1;
                 $r->print(qq{<tr>});
                 if ( $itemtoi == 3 ) {
-                    if ( $itemtoi == 3 ) {
-                        push( @all_fill, "up_date",
-                            "product_currency" );
-                    }
                     $r->print(
-                        qq{<td align="left"><label for="up_date">All?</label></td><td align="left"><input type="checkbox" value="All" id="up_date" name="up_date" /></td>}
-                    );
-                }
-                else {
-                    $r->print(
-                        qq{<td align="left"></td><td align="left"></td>}
-                    );
-                }
-                $r->print(
-                    qq{<td align="left"><strong>Update</strong></td><td align="left" style="width:80%;"><input type="text" id="up_date$itemtoi" name="up_date$itemtoi" value="NOW" style="width:99%;" /></td>
-		</tr>
-		}
-                );
-                my $tbl;
-                my $statement
-                    = "SELECT column_default FROM information_schema.columns WHERE table_name = 'products' AND column_name = 'check_days';";
-                my $sth = $dbh->prepare($statement) || die $dbh->errstr;
-                my $rc  = $sth->execute             || die $dbh->errstr;
-                my $def = '';
-
-                while ( $tbl = $sth->fetchrow_arrayref ) {
-                    $def = $$tbl[0];
-                    $def =~ m/'([\d:]*)'::text/;
-                    $def = $1;
-                    $r->print(qq{<tr>});
-                    if ( $itemtoi == 3 ) {
-                        if ( $itemtoi == 3 ) {
-                            push( @all_fill, "check_days" );
+                        qq{<td align="left">
+                        <label for="check_days">All?</label>
+                        </td>
+                        <td align="left">
+                        <input type="checkbox" value="All" id="check_days" name="check_days" />
+                        </td>
                         }
-                        $r->print(
-                            qq{<td align="left"><label for="check_days">All?</label></td><td align="left"><input type="checkbox" value="All" id="check_days" name="check_days" /></td>}
-                        );
-                    }
-                    else {
-                        $r->print(
-                            qq{<td align="left"></td><td align="left"></td>}
-                        );
-                    }
-
+                             );
+                }
+                else {
                     $r->print(
-                        qq{
-		<td align="left"><strong>Check Days</strong></td><td align="left" style="width:80%;"><input type="text" id="check_days$itemtoi" name="check_days$itemtoi" value="$def" style="width:99%;" /></td>
+                        qq{<td align="left"></td>
+                        <td align="left"></td>
+                        }
+                             );
+                }
+
+                $r->print(
+                    qq{<td align="left">
+        <strong>Check Days</strong>
+        </td>
+        <td align="left" style="width:80%;">
+        <input type="text" id="check_days$itemtoi" name="check_days$itemtoi" value="$def" style="width:99%;" />
+        </td>
 		</tr>
-		}
-                    );
-                }
-                if ( $itemtoi == 3 ) {
-                    push( @all_fill, "product_currency" );
-                    print_option_list( $r, $dbh, "currency",
-                        "currencies", $itemtoi, "Product Currency",
-                        "product_currency" );
-                }
-                else {
-                    print_option_list( $r, $dbh, "currency",
-                        "currencies", $itemtoi, "Product Currency",
-                        "product_currency" );
-                }
+	            	}
+                         );
             }
-            elsif ( $table eq "full_assembly_list" ) {
-                if ( $itemtoi == 3 ) {
-                    push( @all_fill,
-                        "full_assembly_list_name",
-                        "full_assembly_list_currency" );
-                }
-                print_option_list(
-                    $r,
-                    $dbh,
-                    "full_assembly_name",
-                    "full_assembly",
-                    $itemtoi,
-                    "Full Assembly List Name",
-                    "full_assembly_list_name",
-                    "WHERE full_assembly_name NOT IN (SELECT full_assembly_list_name FROM full_assembly_list)"
-                );
-                print_option_list(
-                    $r,
-                    $dbh,
-                    "currency",
-                    "currencies",
-                    $itemtoi,
-                    "Full Assembly List Currency",
-                    "full_assembly_list_currency"
-                );
-            }
-            elsif ( $table eq "full_assembly" ) {
-                if ( $itemtoi == 3 ) {
-                    push( @all_fill,
-                        "full_assembly_assembly_id",
-                        "full_assembly_currency" );
-                }
-                if ( $itemtoi == 3 ) {
-                    $r->print(
-                        qq{<tr><td align="left"><label for="full_assembly_assembly_id">All?</label></td>
-						<td align="left"><input type="checkbox" value="all" id="full_assembly_assembly_id" name="full_assembly_assembly_id" /></td>
-						}
-                    );
-                }
-                else {
-                    $r->print(
-                        qq{<tr><td align="left"></td>
-						<td align="left"></td>
-						}
-                    );
-                }
+            print_option_list( $r,         $dbh,
+                               "currency", "currencies",
+                               $itemtoi,   "Product Currency",
+                               "product_currency" );
+            print_option_list( $r, $dbh, "vendor_name", "vendors",
+                               $itemtoi, "Vendor Name", "vendor_name" );
+        }
+        elsif ( $table eq "full_assembly_list" ) {
+            print_option_list(
+                $r,
+                $dbh,
+                "full_assembly_name",
+                "full_assembly",
+                $itemtoi,
+                "Full Assembly List Name",
+                "full_assembly_list_name",
+                "WHERE full_assembly_name NOT IN (SELECT full_assembly_list_name FROM full_assembly_list)"
+            );
+            print_option_list( $r,
+                               $dbh,
+                               "currency",
+                               "currencies",
+                               $itemtoi,
+                               "Full Assembly List Currency",
+                               "full_assembly_list_currency" );
+        }
+        elsif ( $table eq "full_assembly" ) {
+            if ( $itemtoi == 3 ) {
                 $r->print(
-                    qq{
-	<td align="left"><label for="full_assembly_assembly_id"><strong>Full Assembly Assembly ID</strong></label></td>
-	<td align="left"><select id="full_assembly_assembly_id$itemtoi" name="full_assembly_assembly_id$itemtoi" style="width:99%;">
-	}
-                );
-                my $tbl;
-                my $statement
-                    = "SELECT assembly_id, assembly_name FROM assemblies ORDER BY assembly_name;";
-                my $sth = $dbh->prepare($statement) || die $dbh->errstr;
-                my $rc  = $sth->execute             || die $dbh->errstr;
-                my $tbl9;
+                    qq{<tr>
+                    <td align="left">
+                    <label for="full_assembly_assembly_id">All?</label>
+                    </td>
+					<td align="left">
+                    <input type="checkbox" value="all" id="full_assembly_assembly_id" name="full_assembly_assembly_id" />
+                    </td>
+					}
+                         );
+            }
+            else {
+                $r->print(
+                    qq{<tr>
+                    <td align="left">
+                    </td>
+					<td align="left">
+                    </td>
+					}
+                         );
+            }
+            $r->print(
+                qq{<td align="left">
+    <label for="full_assembly_assembly_id">
+    <strong>Full Assembly Assembly ID</strong>
+    </label>
+    </td>
+	<td align="left">
+    <select id="full_assembly_assembly_id$itemtoi" name="full_assembly_assembly_id$itemtoi" style="width:99%;">
+               	}
+                     );
+            my $tbl;
+            my $statement
+                = "SELECT assembly_id, assembly_name FROM assemblies ORDER BY assembly_name;";
+            my $sth = $dbh->prepare($statement) || die $dbh->errstr;
+            my $rc  = $sth->execute             || die $dbh->errstr;
+            my $tbl9;
 
-                while ( $tbl = $sth->fetchrow_arrayref ) {
-                    $$tbl[0] = HTML::Entities::encode( $$tbl[0] );
-                    $$tbl[1] = HTML::Entities::encode( $$tbl[1] );
-                    $tbl9
-                        = qq{<option value="$$tbl[0]">$$tbl[1]  --$$tbl[0]--</option>
+            while ( $tbl = $sth->fetchrow_arrayref ) {
+                $$tbl[0] = HTML::Entities::encode( $$tbl[0] );
+                $$tbl[1] = HTML::Entities::encode( $$tbl[1] );
+                $tbl9
+                    = qq{<option value="$$tbl[0]">$$tbl[1]  --$$tbl[0]--</option>
 				};
-                    $r->print(qq{$tbl9});
-                }
+                $r->print(qq{$tbl9});
+            }
+            $r->print(
+                qq{
+            	</select>
+	            </td>
+            	</tr>
+	            }
+                     );
+
+            print_option_list( $r,
+                               $dbh,
+                               "currency",
+                               "currencies",
+                               $itemtoi,
+                               "Full Assembly Currency",
+                               "full_assembly_currency" );
+        }
+        elsif ( $table eq "contractors" ) {
+            print_option_list( $r,
+                               $dbh,
+                               "country",
+                               "countries",
+                               $itemtoi,
+                               "Contractor Country",
+                               "contractor_country" );
+            print_option_list( $r,
+                               $dbh,
+                               "currency",
+                               "currenciesg",
+                               $itemtoi,
+                               "Contractor Currency",
+                               "contractor_currency" );
+        }
+
+        foreach my $note_field (@$notes_fields_aref) {
+            $ucfirst = $note_field;
+            $ucfirst =~ s/_(\w)/ \u$1/g;
+            $ucfirst =~ s/ Id/ ID/;
+            $ucfirst =~ s/ Url/ URL/;
+            $ucfirst =~ s/cust /customer /;
+            $ucfirst =~ s/ven /vendor /;
+            $ucfirst =~ s/Fname/First Name/;
+            $ucfirst =~ s/Lname/Last Name/;
+            $ucfirst =~ s/Sku/SKU/;
+            $ucfirst = ucfirst($ucfirst);
+
+            if ( $itemtoi == 3 ) {
                 $r->print(
-                    qq{
-	</select>
-	</td>
-	</tr>
-	}
-                );
-
-                print_option_list( $r, $dbh, "currency", "currencies",
-                    $itemtoi, "Full Assembly Currency",
-                    "full_assembly_currency" );
+                    qq{<td align="left">
+                    <label for="$note_field">All?</label>
+                    </td>
+                    <td align="left">
+                    <input type="checkbox" value="all" id="$note_field" name="$note_field" />
+                    </td>
+                    }
+                         );
             }
-            elsif ( $table eq "contractors" ) {
-                print_option_list( $r, $dbh, "country", "countries",
-                    $itemtoi, "Contractor Country",
-                    "contractor_country" );
-                print_option_list( $r, $dbh, "currency", "currenciesg",
-                    $itemtoi, "Contractor Currency",
-                    "contractor_currency" );
-            }
-
-            foreach my $note_field (@notes_fields) {
-                $ucfirst = $note_field;
-                $ucfirst =~ s/_(\w)/ \u$1/g;
-                $ucfirst =~ s/ Id/ ID/;
-                $ucfirst =~ s/ Url/ URL/;
-                $ucfirst =~ s/cust /customer /;
-                $ucfirst =~ s/ven /vendor /;
-                $ucfirst =~ s/Fname/First Name/;
-                $ucfirst =~ s/Lname/Last Name/;
-                $ucfirst =~ s/Sku/SKU/;
-                $ucfirst = ucfirst($ucfirst);
-
-                if ( $itemtoi == 3 ) {
-                    $r->print(
-                        qq{<td align="left"><label for="$note_field">All?</label></td><td align="left"><input type="checkbox" value="all" id="$note_field" name="$note_field" /></td>}
-                    );
-                }
-                else {
-                    $r->print(
-                        qq{<td align="left"></td><td align="left"></td>}
-                    );
-                }
+            else {
                 $r->print(
-                    qq{
-		<td align="left"><strong>$ucfirst</strong></td><td align="left" style="width:80%;"><textarea cols="99" rows="6" id="$note_field$itemtoi" name="$note_field$itemtoi" style="width:99%;"></textarea></td>
-		</tr>}
-                );
+                    qq{<td align="left">
+                     </td>
+                     <td align="left">
+                     </td>
+                     }
+                         );
             }
+            $r->print(
+                qq{
+		<td align="left">
+        <strong>$ucfirst</strong>
+        </td>
+        <td align="left" style="width:80%;">
+        <textarea cols="99" rows="6" id="$note_field$itemtoi" name="$note_field$itemtoi" style="width:99%;">
+        </textarea>
+        </td>
+		</tr>
+                }
+                     );
+        }
         $r->print(
-            qq{</tbody></table>
-	</div>}
-        );
+            qq{</tbody>
+            </table>
+	        </div>
+            }
+                 );
     }
 
     $r->print(
-        qq{
-<input type="hidden" name="itemstoinsert" value="$itemstoinsert" />
-<input type="hidden" name="table_selected" value="$table" />
-<input type="hidden" value="InsertRecordGroup" name="command" />
-<div>
-<br />
-<br />
-<br />
-<input type="submit" value="Continue" name="submitForm" />
+        qq{<input type="hidden" name="itemstoinsert" value="$arg_ref->{itemstoinsert}" />
+        <input type="hidden" name="table_selected" value="$table" />
+        <input type="hidden" value="InsertRecordGroup" name="command" />
+        <div>
+        <br />
+        <br />
+        <br />
+        }
+        );
+ if ($arg_ref->{lang} eq "es") {
+            $r->print(
+            qq{
+            <input type="submit" value="Continuar" name="submitForm" />
+<input type="reset" value="Borrar" name="reset1" />
+            }
+        );
+        }
+        else {
+            $r->print(
+            qq{
+            <input type="submit" value="Continue" name="submitForm" />
 <input type="reset" value="Reset" name="reset1" />
-<br />
-<br />
-<br />
-</div></div></form>
-<hr /><hr />
-}
-    );
+          }
+        );
+        }
+        $r->print(
+        qq{        <br />
+        <br />
+        <br />
+        </div>
+        </div>
+        </form>
+        <hr />
+        <hr />
+        }
+             );
 
-    all_fill_jscript( $r, \@all_fill, $itemstoinsert );
+    all_fill_jscript( $r, \@all_fill, $arg_ref->{itemstoinsert} );
     return 1;
 }
 
@@ -576,15 +640,12 @@ sub InsertRecordGroupForm {
 
 sub InsertRecordGroup {
     my ($arg_ref) = @_;
-    my $r                     = $arg_ref->{r};
-    my $dbh                   = $arg_ref->{dbh};
-    my $q                     = $arg_ref->{q};
-    my $program               = $arg_ref->{program};
-    my $lang                  = $arg_ref->{lang};
-    my $database              = $arg_ref->{database};
+    my $r         = $arg_ref->{r};
+    my $dbh       = $arg_ref->{dbh};
+    my $q         = $arg_ref->{q};
+    my $database  = $arg_ref->{database};
     my $sql_list;
-    my $table         = $q->param("table_selected");
-    my $itemstoinsert = $q->param("itemstoinsert");
+    my $table         = $arg_ref->{table_selected};
     my $values_array_string;
     my $names_array_string;
     my $SQL;
@@ -598,13 +659,14 @@ sub InsertRecordGroup {
     my @results          = ();
     my @no_quote_fields  = ();
     my @no_quote_results = ();
-    open( my $fh, '>>', "../../inserts-B_$database.sql" ) or die $!;
+    open( my $fh, '>>', "../../inserts-B_$arg_ref->{Database}{database}.sql" ) or die $!;
 
     my $table2 = $dbh->quote($table);
 
-#	This method will not work as is if there are two or more primary keys in a table.
-#	But it can be adapted since an array is returned.
-#	($table_id_field) = $dbh->primary_key(undef, "public", $table);
+    #	This method will not work as-is
+    #	if there are two or more primary keys in a table.
+    #	But it can be adapted since an array is returned.
+    #	($table_id_field) = $dbh->primary_key(undef, "public", $table);
 
     ( $field_names, $no_quote_fields, $table_id_field_aref )
         = Selecter( "InsertRecord", $table );
@@ -612,12 +674,48 @@ sub InsertRecordGroup {
     @no_quote_fields = @$no_quote_fields;
     $table_id_field  = $$table_id_field_aref;
 
+    # XXX this fixes a subtle error for groups of insertions
+    # where some insertions work # before rest fail.
+    # Best to stop whole process before any insertions!
+    # Should work these two into just one go-round by caching data?
     $table_id_field2 = $dbh->quote($table_id_field);
-
-    for my $itemtoi ( 3 .. ( $itemstoinsert + 2 ) ) {
+    for my $itemtoi ( 3 .. ( $arg_ref->{itemstoinsert} + 2 ) ) {
+    CURRENCY_CHECKER:
         for my $i ( 0 .. $#field_names ) {
             $results[$i] = $q->param("$field_names[$i]$itemtoi");
-            $results[$i] = HTML::Entities::decode( $results[$i] );
+            if (    ( defined $results[$i] )
+                 && ( $field_names[$i] =~ "currency" ) )
+            {
+                $results[$i] = HTML::Entities::decode( $results[$i] );
+                if ( $results[$i] eq '' ) {
+                    error_message( $r, $arg_ref->{lang},
+                                   "un tipo de moneda",
+                                   "a type of currency" );
+                    return;
+                }
+
+            }
+            else {
+                next CURRENCY_CHECKER;
+            }
+        }
+    }
+
+    for my $itemtoi ( 3 .. ( $arg_ref->{itemstoinsert} + 2 ) ) {
+    PULL_RESULTS_FROM_FIELDS:
+        for my $i ( 0 .. $#field_names ) {
+            $results[$i] = $q->param("$field_names[$i]$itemtoi");
+            if (!defined $results[$i] || $results[$i] eq '') {
+                $results[$i] = undef;
+                $results[$i] = $dbh->quote($results[$i]);
+                next PULL_RESULTS_FROM_FIELDS;
+            }
+            elsif ( defined $results[$i] ) {
+                $results[$i] = HTML::Entities::decode( $results[$i] );
+            }
+            else {
+                next PULL_RESULTS_FROM_FIELDS;
+            }
             if ( $table eq "products" ) {
                 if ( $field_names[$i] eq "product_description" ) {
                     $results[$i] =~ s/´/'/g;
@@ -636,55 +734,74 @@ sub InsertRecordGroup {
                     $results[$i] = encode( "utf8", $results[$i] );
                 }
                 elsif ( $field_names[$i] eq "up_date"
-                    && !( defined $results[$i] ) )
+                        && (!defined $results[$i]) )
                 {
                     $results[$i] = "NOW";
                 }
             }
-            if ( $field_names[$i] =~ "currency"
-                && ( $results[$i] eq '' || !defined $results[$i] ) )
-            {
-
-                #				$results[$i] = "USD";
-                error_message($r, $lang, "un tipo de moneda", "a type of currency");
-                return;
-                #die("Must specify a currency! $!");
+            if ( defined $results[$i] &&  $results[$i] ne '') {
+                $results[$i]
+                    =~ s#\r\n#\n#g;    # For notes or other text areas
+                    $results[$i] = $dbh->quote( $results[$i] );
             }
-            if ( defined $results[$i] ) {
-                $results[$i] =~ s#\r\n#\n#g;    # For notes
+            else {
+                $results[$i] = undef;
+                $results[$i] = $dbh->quote( $results[$i] );
             }
-            $results[$i] = $dbh->quote( $results[$i] );
         }
 
         $names_array_string  = join( ',', @field_names );
         $values_array_string = join( ',', @results );
 
         for ( my $i = 0; $i <= $#no_quote_fields; $i++ ) {
+  
             $no_quote_results[$i]
                 = $q->param("$no_quote_fields[$i]$itemtoi");
+            if (defined $no_quote_results[$i] && $no_quote_results[$i] ne '') {
             $no_quote_results[$i]
                 = HTML::Entities::decode( $no_quote_results[$i] );
             $names_array_string  .= ",$no_quote_fields[$i]";
             $values_array_string .= ",$no_quote_results[$i]";
         }
+        else {
+            $no_quote_results[$i] = undef;
+            $no_quote_results[$i] = $dbh->quote($no_quote_results[$i]);
+            $names_array_string  .= ",$no_quote_fields[$i]";
+            $values_array_string .= ",$no_quote_results[$i]";
+        }
+        }
         $r->print(
-            qq{<p>$names_array_string<br />$values_array_string</p>});
+            qq{<p>$names_array_string
+              <br />
+              $values_array_string
+              </p>
+              }
+                 );
         $SQL
             = "INSERT INTO $table ($names_array_string) VALUES ($values_array_string);";
         $sql_list .= "$SQL\n";
         $r->print(
-            qq{
-			$SQL
+            qq{<p>$SQL</p>
 			}
-        );
+                 );
         print $fh $sql_list;
         my $ir = $dbh->do($SQL);
 
         if ($ir) {
-            $r->print(qq{<div><h1>Success</h1></div>});
+            $r->print(
+                qq{<div>
+                <h1>Success</h1>
+                </div>
+                }
+                     );
         }
         else {
-            $r->print(qq{<div><h1>Failure -- $DBI::errstr</h1></div>});
+            $r->print(
+                qq{<div>
+                <h1>Failure -- $DBI::errstr</h1>
+                </div>
+                }
+                     );
         }
         $new_id
             = $dbh->last_insert_id( undef, "public", $table, undef );
@@ -702,24 +819,25 @@ sub InsertRecordGroup {
 #	sub print_option_list
 
 #	Used to produce an XHTML select option list, using database results
-#	Uses column(s) $column_string and table $table, results ordered by first column listed in column string
-#	Separately, uses a specified label $select_label and a select id/name $select_column
+#	Uses column(s) $column_string and table $table,
+#	results ordered by first column listed in column string
+#	Separately, uses a specified label $select_label and
+#	a select id/name $select_column
 
 sub print_option_list {
 
     # version 0.3
     my $r             = shift;
     my $dbh           = shift;
-    my $column_string = shift;   		# Columns to SELECT FROM $table
+    my $column_string = shift;    # Columns to SELECT FROM $table
     my $table         = shift;
     my $itemtoi       = shift;
-    my $select_label  = shift;    		# Label for XHTML select field
-    my $select_column = shift;    		# id and name for XHTML select field
-    my $where_clause  = shift || '';    # Extra conditions needed
-		# Used for ORDER BY $columns[0] below
-    my @columns
-        = split( /,/, $column_string );
-    my @tbl = ();
+    my $select_label  = shift;    # Label for XHTML select field
+    my $select_column = shift;    # id and name for XHTML select field
+    my $where_clause = shift || '';    # Extra conditions needed
+         # Used for ORDER BY $columns[0] below
+    my @columns = split( /,/, $column_string );
+    my $tbl;
     my $field_to_encode;
     my $option_row;
     $select_label =~ s/_(\w)/ \u$1/g;
@@ -735,36 +853,45 @@ sub print_option_list {
     $r->print(qq{<tr>});
     if ( $itemtoi == 3 ) {
         $r->print(
-            qq{<td align="left"><label for="$select_column">All?</label></td><td align="left"><input type="checkbox" value="All" id="$select_column" name="$select_column" /></td>
+            qq{<td align="left">
+            <label for="$select_column">All?</label>
+            </td>
+            <td align="left">
+            <input type="checkbox" value="All" id="$select_column" name="$select_column" />
+            </td>
 			}
-        );
+                 );
     }
     else {
         $r->print(
-            qq{<td align="left"></td>
-			<td align="left"></td>
+            qq{<td align="left">
+            </td>
+			<td align="left">
+            </td>
 			}
-        );
+                 );
     }
     $r->print(
-        qq{<td align="left"><strong>$select_label</strong>
-	</td><td align="left" style="width:80%;">
-	<select id="$select_column$itemtoi" name="$select_column$itemtoi" style="width:99%;">
-<option selected="selected" value="" style="width:99%;"></option>
-}
-    );
+        qq{<td align="left">
+        <strong>$select_label</strong>
+    	</td>
+        <td align="left" style="width:80%;">
+    	<select id="$select_column$itemtoi" name="$select_column$itemtoi" style="width:99%;">
+        <option selected="selected" value="" style="width:99%;">
+        </option>
+        }
+             );
     my $statement
         = "SELECT DISTINCT $column_string FROM $table $where_clause ORDER BY $columns[0];";
     my $sth = $dbh->prepare($statement) || die("$dbh->errstr");
     my $rc  = $sth->execute             || die("$dbh->errstr");
-    while ( @tbl = $sth->fetchrow_array ) {
-        $field_to_encode = $tbl[0];
+    while ( $tbl = $sth->fetchrow_arrayref ) {
+        $field_to_encode = $$tbl[0];
         $field_to_encode = HTML::Entities::encode($field_to_encode);
         $option_row      = qq{<option value="$field_to_encode">};
-        for my $tbll ( @tbl ) {
+        for my $tbll (@$tbl) {
             unless ( defined $tbll ) { $tbll = ''; }
-            if ( $tbll eq "R" || $tbll eq "P" || $tbll eq "C" )
-            {
+            if ( $tbll eq "R" || $tbll eq "P" || $tbll eq "C" ) {
                 $option_row .= qq{($tbll)};
             }
             else {
@@ -776,12 +903,11 @@ sub print_option_list {
         $r->print($option_row);
     }
     $r->print(
-        qq{
-</select>
-</td>
-</tr>
-}
-    );
+        qq{</select>
+        </td>
+        </tr>
+        }
+             );
 }
 
 ################################################################
@@ -803,47 +929,58 @@ sub specify_insert_options {
     $r->print(qq{<tr>});
     if ( $itemtoi == 3 ) {
         $r->print(
-            qq{
-<td align="left"><label for="$column_string">All?</label></td><td align="left"><input type="checkbox" value="All" id="$column_string" name="$column_string" /></td>
-}
-        );
+            qq{<td align="left">
+            <label for="$column_string">All?</label>
+            </td>
+            <td align="left">
+            <input type="checkbox" value="All" id="$column_string" name="$column_string" />
+            </td>
+            }
+                 );
     }
     else {
         $r->print(
-            qq{<td align="left"></td><td align="left"></td>
+            qq{<td align="left">
+            </td>
+            <td align="left">
+            </td>
 			}
-        );
+                 );
     }
     $r->print(
-        qq{<td align="left"><strong>$select_label</strong></td>
-	<td align="left" style="width:80%;"><select id="$column_string$itemtoi" name="$column_string$itemtoi" style="width:99%;">
-<option selected="selected" value="" style="width:99%;"></option>
-}
-    );
+        qq{<td align="left">
+        <strong>$select_label</strong>
+        </td>
+	    <td align="left" style="width:80%;">
+        <select id="$column_string$itemtoi" name="$column_string$itemtoi" style="width:99%;">
+        <option selected="selected" value="" style="width:99%;">
+        </option>
+        }
+             );
     for my $i ( 0 .. ( scalar(@$values_aref) - 1 ) ) {
         $r->print(
             qq{<option value="$$values_aref[$i]" style="width:99%;">$$names_aref[$i]</option>
-}
-        );
+            }
+                 );
     }
     $r->print(
         qq{</select>
-</td>
-</tr>
-}
-    );
+        </td>
+        </tr>
+        }
+             );
 }
 
 ################################################################
 #	sub all_fill_jscript
 
-#	Produces javascript needed so that All? checkbox duplicates existing field values down full group of same insert field
+#	Produces javascript needed so that All? checkbox duplicates
+#	existing field values down full group of same insert field
 
 sub all_fill_jscript {
     my $r             = shift;
     my $all_fill_aref = shift;
     my $itemstoi      = shift;
-    my @all_fill      = @$all_fill_aref;
 
     $r->print(
         qq|<script type="text/javascript">
@@ -859,29 +996,30 @@ if (window.addEventListener) {
 function setupCheckAll(evnt) {
 	var Checks = document.insertform.up_date;
 |
-    );
-    for my $fill ( @all_fill ) {
+             );
+    for my $fill (@$all_fill_aref) {
         $r->print(
             qq|
 	document.getElementById("insertform").$fill.onchange = ChecksCopy;
 |
-        );
+                 );
     }
     $r->print(
         qq|
 }
 function ChecksCopy (evnt) {
 |
-    );
-    for my $fillc ( @all_fill ) {
+             );
+    for my $fillc (@$all_fill_aref) {
         $r->print(
             qq|
 	if (document.insertform.$fillc.checked) {
 |
-        );
+                 );
         for my $u ( 4 .. ( $itemstoi + 2 ) ) {
             $r->print(
-                qq|document.insertform.$fillc$u.value=document.insertform.$fillc| . qq|3.value;
+                qq|document.insertform.$fillc$u.value=document.insertform.$fillc|
+                    . qq|3.value;
 |
             );
         }
@@ -891,7 +1029,7 @@ function ChecksCopy (evnt) {
 }
 
 |
-        );
+                 );
     }
     $r->print(
         qq|
@@ -899,7 +1037,7 @@ function ChecksCopy (evnt) {
 //]]>
 </script>
 |
-    );
+             );
 
 }
 
@@ -911,7 +1049,7 @@ BWCL::InsertRecord_B
 
 =head1 VERSION
 
-This documentation refers to BWCL::InsertRecord_B version 4.6.00.
+This documentation refers to BWCL::InsertRecord_B version 4.5.00.
 
 =head1 SYNOPSIS
 

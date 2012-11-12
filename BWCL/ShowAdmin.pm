@@ -1,12 +1,12 @@
 package BWCL::ShowAdmin;
 
-our $VERSION = 1.3.00;
+our $VERSION = 1.4.10;
 use warnings;
 use strict;
 
 require Exporter;
 our @ISA       = qw(Exporter);
-our @EXPORT_OK = qw(ShowTables ShowAllTables ShowColumns error_message);
+our @EXPORT_OK = qw(ShowTables ShowAllTables ShowColumns error_message specified_error_message);
 
 
 #######################################################################
@@ -26,6 +26,28 @@ sub error_message {
     else {
         $r->print(
             qq{<div class="cent"><p class="error">ERROR!! Please select $error_item_en.</p></div>}
+        );
+    }
+    return;
+}
+
+#######################################################################
+##      Sub error_message
+
+sub specified_error_message {
+    my $r                       = shift;
+    my $lang                    = shift;
+    my $specified_error_item_es = shift;
+    my $specified_error_item_en = shift;
+
+    if ( $lang eq "es" ) {
+        $r->print(
+            qq{<div class="cent"><p class="error">$specified_error_item_es</p></div>}
+        );
+    }
+    else {
+        $r->print(
+            qq{<div class="cent"><p class="error">$specified_error_item_en</p></div>}
         );
     }
     return;
@@ -303,10 +325,7 @@ sub ShowColumns {
             }
             $r->print(
                 qq{</tr>
-	}
-            );
-            $r->print(
-                qq{</tbody>
+    </tbody>
 	</table>
 	</div>
 	}
@@ -348,19 +367,19 @@ sub ShowColumns {
                 );
                 $r->print(
                     qq{<td><strong>$tbl->[$i][1]</strong></td>
-	}
+            	}
                 );
                 $r->print(
                     qq{</tr>
-	}
+            	}
                 );
             }
             $r->print(
                 qq{</tbody>
-	</table>
-	<br /><br />
-	</div>
-	}
+            </table>
+            <br /><br />
+            </div>
+            }
             );
             $rc = $sth->finish;
             $r->print(
@@ -418,7 +437,7 @@ BWCL::ShowAdmin
 
 =head1 VERSION
 
-This documentation refers to BWCL::ShowAdmin version 1.3.00.
+This documentation refers to BWCL::ShowAdmin version 1.4.10.
 
 =head1 SYNOPSIS
 

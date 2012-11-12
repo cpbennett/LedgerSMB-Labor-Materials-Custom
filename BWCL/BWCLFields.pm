@@ -1,6 +1,6 @@
 #!/usr/bin/perl
-package BWCLL::BWCLFields;
-our $VERSION = 1.2.0;
+package BWCL::BWCLFields;
+our $VERSION = 1.2.1;
 use warnings;
 use strict;
 
@@ -232,8 +232,9 @@ sub Selecter {
         @view_only       = qw(assembly_subtotal);
     }
     elsif ( $table eq "assemblies_parts" ) {
+        @specialty_fields = qw(assembly_part_assembly_id);
         @select_fields
-            = qw(assembly_part_assembly_id assembly_part_currency);
+            = qw(assembly_part_currency);
         @field_names = qw(
             assembly_part_name
             assembly_part_class
@@ -248,8 +249,9 @@ sub Selecter {
             = qw(assembly_part_subtotal assembly_part_description);
     }
     elsif ( $table eq "full_assembly" ) {
+        @specialty_fields = qw(full_assembly_assembly_id);
         @select_fields
-            = qw(full_assembly_assembly_id full_assembly_currency);
+            = qw(full_assembly_currency);
         @field_names = qw(
             full_assembly_name
             full_assembly_assembly_quantity
@@ -410,7 +412,7 @@ sub Selecter {
     if ( $sub eq "InsertRecordForm" ) {
         my @order;
         push( @order, @field_names, @no_quote_fields );
-        return ( \@order, \@notes_fields );
+        return ( \@order, \@notes_fields, \@select_fields, \@specialty_fields );
 
     }
 
@@ -432,7 +434,7 @@ BWCL::BWCLFields
 
 =head1 VERSION
 
-This documentation refers to BWCL::BWCLFields version 1.2.0.
+This documentation refers to BWCL::BWCLFields version 1.2.1.
 
 =head1 SYNOPSIS
 
