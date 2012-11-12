@@ -8,11 +8,11 @@ use Apache::Request();
 use DBI();
 
 #subs Modules
-use BWCL::ShowAdmin qw(ShowTables ShowColumns error_message);
-use BWCL::InsertRecord_B qw(InsertRecordGroup InsertRecordGroupForm);
-use BWCL::SelectTable_B qw(PrepareHead SelectTable);
-use BWCL::RecordUpdates_B qw(UpdateRecordForm UpdateRecord DeleteDuplicates);
-use BWCL::ViewRecords_B qw(ViewRecords);
+use BWC::ShowAdmin qw(ShowTables ShowColumns error_message);
+use BWC::InsertRecord_B qw(InsertRecordGroup InsertRecordGroupForm);
+use BWC::SelectTable_B qw(PrepareHead SelectTable);
+use BWC::RecordUpdates_B qw(UpdateRecordForm UpdateRecord DeleteDuplicates);
+use BWC::ViewRecords_B qw(ViewRecords);
 use Config::Std;
 
 #######################################################################
@@ -296,11 +296,11 @@ $dbh->disconnect;
 
 =head1 NAME
 
-pg.pl
+pg_wmod-B.pl
 
 =head1 VERSION
 
-This documentation refers to pg.pl version 3.0.00.
+This documentation refers to pg_wmod-B.pl version 3.0.00.
 
 =head1 SYNOPSIS
 

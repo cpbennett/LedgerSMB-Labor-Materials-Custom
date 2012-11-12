@@ -8,12 +8,11 @@ use Apache::Request();
 use DBI();
 
 #subs Modules
-use BWCL::ShowAdmin qw(ShowTables ShowColumns error_message);
-use BWCL::ShowAdmin qw(ShowTables ShowColumns);
-use BWCL::InsertRecord_B qw(InsertRecordGroup InsertRecordGroupForm);
-use BWCL::SelectTable_B qw(PrepareHead SelectTable);
-use BWCL::RecordUpdates_B qw(UpdateRecordForm UpdateRecord);
-use BWCL::ViewRecords_B qw(ViewRecords);
+use BWC::ShowAdmin qw(ShowTables ShowColumns error_message);
+use BWC::InsertRecord_B qw(InsertRecordGroup InsertRecordGroupForm);
+use BWC::SelectTable_B qw(PrepareHead SelectTable);
+use BWC::RecordUpdates_B qw(UpdateRecordForm UpdateRecord);
+use BWC::ViewRecords_B qw(ViewRecords);
 use Config::Std;
 
 #######################################################################
@@ -69,7 +68,7 @@ my @field_select_tables = (
     [ "labor_project_list_subcategory" => "labor_project_list" ],
     [ "labor_project_class"            => "labor_project" ],
     [ "labor_project_subclass"         => "labor_project" ],
-    [ "labor_project_section "         => "labor_project" ],
+    [ "labor_project_section"          => "labor_project" ],
 );
 #######################################################################
 ##		Print Header
@@ -288,11 +287,11 @@ $dbh->disconnect;
 
 =head1 NAME
 
-gl.pl
+pg_glpc-B.pl
 
 =head1 VERSION
 
-This documentation refers to gl.pl version 3.0.00.
+This documentation refers to pg_glpc-B.pl version 3.0.00.
 
 =head1 SYNOPSIS
 

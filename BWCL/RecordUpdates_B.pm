@@ -748,7 +748,7 @@ sub UpdateRecord {
 
 sub DeleteDuplicates {
     my ($arg_ref) = @_;
-    my $table    = $arg_ref->{table};
+    my $table    = $arg_ref->{table_selected};
     my $r        = $arg_ref->{r};
     my $q        = $arg_ref->{q};
     my $database = $arg_ref->{database};
@@ -767,8 +767,11 @@ sub DeleteDuplicates {
          || ( $vendor_name_selected eq "All" ) )
     {
         $r->print(
-            qq{<div class="cent"><p class="error">ERROR!! Please select a single Vendor Name.</p></div>}
-        );
+            qq{<div class="cent">
+            <p class="error">ERROR!! Please select a single Vendor Name.</p>
+            </div>
+            }
+                );
         return (0);
     }
     if ( ($table) && (@d_id) ) {
@@ -777,17 +780,28 @@ sub DeleteDuplicates {
         my $DeleteDuplicates;
         my $delete_list = join( ",", @d_id );
         $r->print(
-             qq{<div><h2>Deleted Records from Table = $table</h2><br />}
-        );
+             qq{<div>
+             <h2>Deleted Records from Table = $table</h2>
+             <br />
+             }
+                );
         $SQL = "DELETE FROM $table WHERE product_id IN ($delete_list);";
         $DeleteDuplicates = $dbh->do($SQL);
         if ($DeleteDuplicates) {
             $r->print(
-                qq{<div><h1>Success!<br />Deleted $DeleteDuplicates Records</h1></div>}
+                qq{<div>
+                <h1>Success!<br />Deleted $DeleteDuplicates Records</h1>
+                </div>
+                }
             );
         }
         else {
-            $r->print(qq{<div><h1>Failure -- $DBI::errstr</h1></div>});
+            $r->print(
+                qq{<div>
+                <h1>Failure -- $DBI::errstr</h1>
+                </div>
+                }
+                    );
         }
     }
     elsif ( ($table) && ($vendor_name_selected) && ($class_selected) ) {
@@ -859,28 +873,31 @@ sub DeleteDuplicates {
             or die "can't execute the query: $sth->errstr\n";
         my @vetor;
         $r->print(
-            qq{<h2>Columns from Table=$table:<br />From Vendor:$vendor_name_selected</h2>}
-        );
+            qq{<h2>Columns from Table=$table:
+            <br />
+            From Vendor:$vendor_name_selected</h2>
+            }
+                );
         $r->print(
-            qq{
-	<form id="vendor_products" action="$program" method="post"><div>
-	<table summary="" border="2" rules="all">
-	<thead>
-	    <tr>
-	    <th align="left"><strong>Product ID</strong></th>
-	    <th align="left"><strong>Class</strong></th>
-	    <th align="left"><strong>SubClass</strong></th>
-	    <th align="left"><strong>Product URL</strong></th>
-	    <th align="left"><strong>Product Description</strong></th>
-	    <th align="left"><strong>Date</strong></th>
-	    <th align="left"><strong>SKU</strong></th>
-	    <th align="left"><strong>Model</strong></th>
-	    <th align="left"><strong>Price</strong></th>
-	    <th align="left"><strong>Delete?</strong></th>
-	     </tr>
-	</thead>
-	<tbody>
-	}
+            qq{ <form id="vendor_products" action="$program" method="post">
+            <div>
+        	<table summary="" border="2" rules="all">
+        	<thead>
+            <tr>
+            <th align="left"><strong>Product ID</strong></th>
+            <th align="left"><strong>Class</strong></th>
+            <th align="left"><strong>SubClass</strong></th>
+            <th align="left"><strong>Product URL</strong></th>
+            <th align="left"><strong>Product Description</strong></th>
+            <th align="left"><strong>Date</strong></th>
+            <th align="left"><strong>SKU</strong></th>
+            <th align="left"><strong>Model</strong></th>
+            <th align="left"><strong>Price</strong></th>
+            <th align="left"><strong>Delete?</strong></th>
+            </tr>
+            </thead>
+            <tbody>
+        	}
                  );
         my $ii = $rv;
 
@@ -911,31 +928,40 @@ sub DeleteDuplicates {
                     if ( $vetor[$field] ) {
                         $r->print(
                             qq{<td align="left">$vetor[$field]</td>
-						<td align="center"><input type="checkbox" value="$vetor[0]" name="d_id" /></td></tr>}
+					    	<td align="center">
+                            <input type="checkbox" value="$vetor[0]" name="d_id" />
+                            </td>
+                            </tr>
+                            }
                                  );
                     }
                     else {
                         $r->print(
                             qq{<td align="left"></td>
-						<td align="center"><input type="checkbox" value="$vetor[0]" name="d_id" /></td></tr>}
+					    	<td align="center"> <input type="checkbox" value="$vetor[0]" name="d_id" />
+                            </td>
+                            </tr>
+                            }
                                  );
                     }
                 }
             }
         }
         $r->print(
-            qq{
-	</tbody></table>
-	<br />
-	<br />
-	<input type="hidden" name="table_selected" value="$table" />
-	<input type="hidden" value="DeleteDuplicates" name="command" />
-	<input type="hidden" value="$vendor_name_selected" name="vendor_name_selected">
-	<input id="submitForm" type="submit" value="Continue" name="submitForm" />
-	<input id="resetForm" type="reset" value="Reset" name="reset1" />
-	</div></form>
-	<hr /><hr />
-	}
+            qq{</tbody>
+            </table>
+            <br />
+            <br />
+            <input type="hidden" name="table_selected" value="$table" />
+            <input type="hidden" value="DeleteDuplicates" name="command" />
+            <input type="hidden" value="$vendor_name_selected" name="vendor_name_selected">
+            <input id="submitForm" type="submit" value="Continue" name="submitForm" />
+            <input id="resetForm" type="reset" value="Reset" name="reset1" />
+            </div>
+            </form>
+            <hr />
+            <hr />
+        	}
                  );
     }
     return 1;
@@ -1003,8 +1029,12 @@ sub print_update_option_list {
     }
     $r->print(
         qq{<tr>
-<td align="left"><strong>$select_label</strong></td><td align="left" style="width:80%;">
-<select id="$select_column" name="$select_column" style="width:99%;">}
+        <td align="left">
+        <strong>$select_label</strong>
+        </td>
+        <td align="left" style="width:80%;">
+        <select id="$select_column" name="$select_column" style="width:99%;">
+        }
              );
     $field_to_encode = $results[0];
     $field_to_encode = HTML::Entities::encode($field_to_encode);
@@ -1018,14 +1048,16 @@ sub print_update_option_list {
              || $results[$i] eq "P"
              || $results[$i] eq "C" )
         {
-            $option_row .= qq{($results[$i]) };
+            $option_row .= qq{($results[$i])
+                           };
         }
         else {
-            $option_row .= qq{$results[$i] };
+            $option_row .= qq{$results[$i]
+                           };
         }
     }
     $option_row .= qq{</option>
-};
+                   };
     $r->print($option_row);
 
     ################################################################
@@ -1046,22 +1078,23 @@ sub print_update_option_list {
             unless ( defined $tbl[$i] ) { $tbl[$i] = ''; }
             if ( $tbl[$i] eq "R" || $tbl[$i] eq "P" || $tbl[$i] eq "C" )
             {
-                $option_row .= qq{($tbl[$i]) };
+                $option_row .= qq{($tbl[$i])
+                               };
             }
             else {
-                $option_row .= qq{$tbl[$i] };
+                $option_row .= qq{$tbl[$i]
+                               };
             }
         }
         $option_row .= qq{</option>
-};
+                       };
         $r->print($option_row);
     }
     $r->print(
-        qq{
-</select>
-</td>
-</tr>
-}
+        qq{</select>
+        </td>
+        </tr>
+        }
              );
 }
 
@@ -1103,10 +1136,13 @@ sub specify_options {
     }
     $r->print(
         qq{<tr>
-<td align="left"><strong>$select_label</strong></td><td align="left" style="width:80%;">
-<select id="$column_string" name="$column_string" style="width:99%;">
-<option selected="selected" value="$results" style="width:99%;">$results_pretty</option>
-}
+        <td align="left">
+        <strong>$select_label</strong>
+        </td>
+        <td align="left" style="width:80%;">
+        <select id="$column_string" name="$column_string" style="width:99%;">
+        <option selected="selected" value="$results" style="width:99%;">$results_pretty</option>
+        }
              );
     for my $i ( 0 .. ( scalar(@$values_aref) - 1 ) ) {
         $r->print(
@@ -1116,9 +1152,9 @@ sub specify_options {
     }
     $r->print(
         qq{</select>
-</td>
-</tr>
-}
+        </td>
+        </tr>
+        }
              );
 }
 

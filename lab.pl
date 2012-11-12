@@ -7,8 +7,8 @@ use strict;
 use Apache::Request();
 use DBI();
 use Config::Std;
-use BWCL::SelectLPL qw(SelectLPLs);
-use BWCL::ViewLPLRecords
+use BWC::SelectLPL qw(SelectLPLs);
+use BWC::ViewLPLRecords
     qw(ViewLPLRecords DuplicateFullLPLRecordsForm DuplicateFullLPLRecords);
 
 #######################################################################
@@ -257,11 +257,11 @@ $dbh->disconnect;
 
 =head1 NAME
 
-lab.pl - View and reproduce similar labor project list trees to bottom.
+labbz.pl - View and reproduce similar labor project list trees to bottom.
 
 =head1 VERSION
 
-This documentation refers to lab.pl version 1.0.00.
+This documentation refers to labbz.pl version 1.0.00.
 
 =head1 SYNOPSIS
 
