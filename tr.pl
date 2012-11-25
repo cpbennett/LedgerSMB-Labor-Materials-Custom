@@ -7,8 +7,8 @@ use strict;
 use Apache::Request();
 use DBI();
 use Config::Std;
-use BWCL::SelectFAL qw(SelectFALs);
-use BWCL::ViewFALRecords
+use BWC::SelectFAL qw(SelectFALs);
+use BWC::ViewFALRecords
     qw(ViewFALRecords ViewFullFALRecords DuplicateFullFALRecordsForm DuplicateFullFALRecords);
 use BWCL::ShowAdmin qw(error_message);
 
@@ -259,11 +259,15 @@ $dbh->disconnect;
 
 =head1 NAME
 
-tr.pl - View and reproduce similar full assembly list trees to bottom.
+treez.pl - View and reproduce similar full assembly list trees to bottom.
 
 =head1 VERSION
 
+<<<<<<< HEAD
 This documentation refers to tr.pl version 2.1.00.
+=======
+This documentation refers to treez.pl version 2.0.00.
+>>>>>>> 046a64e928f11a0dee2d07ade9d70a85832d2c2c
 
 =head1 SYNOPSIS
 

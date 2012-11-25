@@ -825,8 +825,18 @@ sub DeleteDuplicates {
     if (    ( $vendor_name_selected eq "" )
          || ( $vendor_name_selected eq "All" ) )
     {
+<<<<<<< HEAD
         error_message($r, $lang, "un solo nombre de vendor.", "a single vendor name.");
         return;
+=======
+        $r->print(
+            qq{<div class="cent">
+            <p class="error">ERROR!! Please select a single Vendor Name.</p>
+            </div>
+            }
+                );
+        return (0);
+>>>>>>> 046a64e928f11a0dee2d07ade9d70a85832d2c2c
     }
     if ( ($table) && (@d_id) ) {
         my $price;
@@ -926,6 +936,7 @@ sub DeleteDuplicates {
         my $rv  = $sth->execute
             or die "can't execute the query: $sth->errstr\n";
         my @vetor;
+<<<<<<< HEAD
         if ($arg_ref->{lang} eq "es") {
             $r->print(
             qq{<h2>Columnas de tabla=$table:
@@ -943,6 +954,16 @@ sub DeleteDuplicates {
         $r->print(
             qq{<br />
             form id="vendor_products" action="$arg_ref->{Program}{program_path_name}" method="post">
+=======
+        $r->print(
+            qq{<h2>Columns from Table=$table:
+            <br />
+            From Vendor:$vendor_name_selected</h2>
+            }
+                );
+        $r->print(
+            qq{ <form id="vendor_products" action="$program" method="post">
+>>>>>>> 046a64e928f11a0dee2d07ade9d70a85832d2c2c
             <div>
         	<table summary="" border="2" rules="all">
         	<thead>

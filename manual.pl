@@ -58,7 +58,7 @@ if ( $lang eq "en" ) {
 </ul>
 <hr />
 <div>
-	<h2 class="big">Current Table List - vp</h2>
+	<h2 class="big">Current Table List - vprdo</h2>
 	<div>
 	<table summary="" border="2" rules="all">
 	<thead>
@@ -110,7 +110,7 @@ if ( $lang eq "en" ) {
 	</div>
 <hr />
 <div>
-	<h2 class="big">Current Table List - gl</h2>
+	<h2 class="big">Current Table List - glpctest</h2>
 	<div>
 	<table summary="" border="2" rules="all">
 	<thead>
@@ -263,7 +263,7 @@ elsif ( $lang eq "es" ) {
 </ul>
 <hr />
 <div>
-	<h2 class="big">Lista de Tablas Actuales - vp</h2>
+	<h2 class="big">Lista de Tablas Actuales - vprdo</h2>
 	<div>
 	<table summary="" border="2" rules="all">
 	<thead>
@@ -315,7 +315,7 @@ elsif ( $lang eq "es" ) {
 	</div>
 <hr />
 <div>
-	<h2 class="big">Lista de Tablas Actuales - gl</h2>
+	<h2 class="big">Lista de Tablas Actuales - glpctest</h2>
 	<div>
 	<table summary="" border="2" rules="all">
 	<thead>

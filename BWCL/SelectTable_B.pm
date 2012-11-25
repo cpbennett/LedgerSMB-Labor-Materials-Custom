@@ -1,6 +1,10 @@
 package BWCL::SelectTable_B;
 
+<<<<<<< HEAD
 our $VERSION = 4.4.10;
+=======
+our $VERSION = 4.4.00;
+>>>>>>> 046a64e928f11a0dee2d07ade9d70a85832d2c2c
 use warnings;
 use strict;
 
@@ -26,6 +30,8 @@ sub PrepareHead {
     my $case_stringc   = '';
     my @columns        = ();
     my @tables         = ();
+    my $all;
+
     my $sth = $dbh->table_info( '', 'public', undef, 'TABLE' );
     for my $rel ( @{ $sth->fetchall_arrayref( {} ) } ) {
         push( @tables, "\'$rel->{TABLE_NAME}\'" );
@@ -38,13 +44,11 @@ field_selected2[field_selected2.length] = new Option("", "");
 
     $table_string = join( ',', @tables );
     foreach my $chosen (@tables) {
-        $case_string .= qq{
-		case $chosen :
+        $case_string .= qq{case $chosen :
 		field_selected.length = 0;
 		field_selected2.length = 0;
 		field_selected[field_selected.length] = new Option("", "");
 		field_selected2[field_selected2.length] = new Option("", "");
-
 };
         my $statement
             = "SELECT column_name FROM information_schema.columns WHERE table_name = $chosen;";
@@ -53,13 +57,11 @@ field_selected2[field_selected2.length] = new Option("", "");
             or die "can't execute the query: $sth->errstr";
         my $tbl = $sth->fetchall_arrayref or die "$sth->errstr\n";
         for my $i ( 0 .. $#{$tbl} ) {
-            $case_string .= qq{
-field_selected[field_selected.length] = new Option("$tbl->[$i][0]", "$tbl->[$i][0]");
+            $case_string .= qq{field_selected[field_selected.length] = new Option("$tbl->[$i][0]", "$tbl->[$i][0]");
 field_selected2[field_selected2.length] = new Option("$tbl->[$i][0]", "$tbl->[$i][0]");
 };
             if ( $chosen eq $tables[0] ) {
-                $option_string .= qq{
-field_selected[field_selected.length] = new Option("$tbl->[$i][0]", "$tbl->[$i][0]");
+                $option_string .= qq{field_selected[field_selected.length] = new Option("$tbl->[$i][0]", "$tbl->[$i][0]");
 field_selected2[field_selected2.length] = new Option("$tbl->[$i][0]", "$tbl->[$i][0]");
 };
             }
@@ -67,6 +69,7 @@ field_selected2[field_selected2.length] = new Option("$tbl->[$i][0]", "$tbl->[$i
         $case_string .= qq{break;
 };
     }
+<<<<<<< HEAD
     my $array;
     unless ( $arg_ref->{'Program'}{'program_path_name'} =~ /gl/ ) {
         
@@ -173,7 +176,52 @@ case '$classes_aref->[$i][0]' :
 }
                 $case_stringc .= qq{break;
             };
+=======
+    unless ( $program =~ /gl/ ) {
+        my @class_sub;
+        my $old_class = 0;
+        my @all_subclasses_aref;
+my $RR2 = localtime;
+        my $statement = "SELECT DISTINCT (class, subclass) FROM products;";
+        $sth = $dbh->prepare($statement);
+        my $rv = $sth->execute();
+
+        CASE:
+        while  (@all_subclasses_aref   = $sth->fetchrow_array()) {
+            @class_sub = split /,/, $all_subclasses_aref[0];
+            if (!defined $class_sub[0]) {
+                last CASE;
+            }
+            $class_sub[0] =~ s/[\("]*//g;
+            $class_sub[1] =~ s/[\)"]*//g;
+            if ($class_sub[0] ne $old_class) {
+                $option_stringc .= qq{break;
+};
+                $option_stringc .= qq{case '$class_sub[0]' :
+};
+                 $option_stringc .= qq{subclass_selected.length = 0;
+subclass_selected[subclass_selected.length] = new Option("All", "All");
+};
+            }
+            $old_class = $class_sub[0];
+                if (!defined $class_sub[1]) {
+                    next CASE;
+                }
+            if ( $class_sub[1] ne '' ) {
+                $option_stringc .= qq{subclass_selected[subclass_selected.length] = new Option("$class_sub[1]", "$class_sub[1]");
+};
+$all .= qq{subclass_selected[subclass_selected.length] = new Option("$class_sub[1]", "$class_sub[1]");
+};
+
+            }
+
+}
+    $case_stringc = $all;
+    $case_stringc .= $option_stringc;
+
+>>>>>>> 046a64e928f11a0dee2d07ade9d70a85832d2c2c
     }
+
 #######################################################################
 ##		Print Page Head
 
@@ -208,7 +256,7 @@ function setupEvents(evnt) {
 	var opts = document.getElementById("someForm").table_selected.options;
 	var field_selected = document.getElementById("someForm").field_selected.options;
 	var field_selected2 = document.getElementById("someForm").field_selected2.options;
-	$option_string
+    $option_string
 	document.getElementById("someForm").table_selected.onchange = checkSelect;
 	
 }
@@ -280,6 +328,10 @@ function setupEventsC(evnt) {
   for (var i=0,l=cat.length;i<l;i++)
     getElementById("someForm").subclass_selected.options[i+1]=new Option(cat[i],cat[i]);
 					subclass_selected[subclass_selected.length] = new Option("All", "All");
+<<<<<<< HEAD
+=======
+    $all
+>>>>>>> 046a64e928f11a0dee2d07ade9d70a85832d2c2c
 	document.getElementById("someForm").class_selected.onchange = checkSelectC;
 	
 }
@@ -292,6 +344,8 @@ function checkSelectC(evnt) {
 	for ( var i = 0; i < opts.length; i++) {
 		if ( opts[i].selected ) {
 			switch(opts[i].value) {
+            case 'All' :
+            $all
 				$case_stringc
 			}
 		}
@@ -307,7 +361,11 @@ function checkSelectC(evnt) {
         qq#
 </head>
 <body>
+<<<<<<< HEAD
 $arg_ref->{'Top of Page Links'}{'top_of_page_links'}
+=======
+$config_hash_ref->{'Top of Page Links'}{'top_of_page_links'}
+>>>>>>> 046a64e928f11a0dee2d07ade9d70a85832d2c2c
 #
     );
 
@@ -391,8 +449,7 @@ sub SelectTable {
         if ( ( $i == 2 ) || ( $i == 4 ) || ( $i == 6 ) ) {
             $r->print(qq{</tr><tr>});
         }
-        $r->print(
-                  qq{<td><label for="$field_table_aref->[$i][0]}
+        $r->print(qq{<td><label for="$field_table_aref->[$i][0]}
                 . qq{_selected">$select_label</label></td>
 		<td><select id="$field_table_aref->[$i][0]}
                 . qq{_selected" name="$field_table_aref->[$i][0]}
@@ -415,30 +472,36 @@ sub SelectTable {
     }
     if ( $lang eq "es" ) {
         $r->print(
-            qq{
-	<td><label for="itemstoinsert">Numero de unidades en grupo para insertar</label></td><td><select id="itemstoinsert" name="itemstoinsert">
-	<option selected="selected" value="1">1</option>
-	}
-        );
+            qq{<td>
+            <label for="itemstoinsert">Numero de unidades en grupo para insertar</label>
+            </td>
+            <td>
+            <select id="itemstoinsert" name="itemstoinsert">
+        	<option selected="selected" value="1">1</option>
+        	}
+                );
     }
     else {
         $r->print(
-            qq{
-	<td><label for="itemstoinsert">Items to Insert in Group</label></td><td><select id="itemstoinsert" name="itemstoinsert">
-	<option selected="selected" value="1">1</option>
-	}
-        );
+            qq{<td>
+            <label for="itemstoinsert">Items to Insert in Group</label>
+            </td>
+            <td>
+            <select id="itemstoinsert" name="itemstoinsert">
+        	<option selected="selected" value="1">1</option>
+        	}
+                 );
     }
     for my $i ( 2 .. 36 ) {
         $r->print(
-            qq{
-		<option value="$i">$i</option>
-		}
-        );
+            qq{<option value="$i">$i</option>
+	    	}
+                 );
     }
     if ( $lang eq "es" ) {
         $r->print(
             qq{</select></td>	
+<<<<<<< HEAD
 	</tr>
 	<tr>
 	<td><label for="field_selected">Columna</label></td>
@@ -498,107 +561,166 @@ sub SelectTable {
     }
 );
 if (@{$arg_ref->{available_commands}} ~~ /DeleteDuplicates/) {
+=======
+        </tr>
+        <tr>
+        <td><label for="field_selected">Columna</label></td>
+        <td><script type="text/javascript">
+        //<![CDATA[
+        document.writeln('<select id="field_selected" name="field_selected"></select>');
+        //]]>
+        </script>
+        <noscript><input type="text" id="field_selected" name="field_selected" value="" /></noscript>
+        </td>
+        <td><label for="field_value_selected">RegEx para valor de columna</label></td>
+        <td><input type="text" id="field_value_selected" name="field_value_selected" value="" />
+        <label for="field_value_selected_null">NULL</label>
+        <input type="checkbox" value="NULL" id="field_value_selected_null" name="field_value_selected_null" />
+        <label for="field_value_selected_not">NOT</label>
+        <input type="checkbox" value="NOT" id="field_value_selected_not" name="field_value_selected_not" />
+        </td>
+        </tr>
+        <tr>
+        <td><label for="field_selected2">Segunda columna</label></td>
+        <td><script type="text/javascript">
+        //<![CDATA[
+        document.writeln('<select id="field_selected2" name="field_selected2"></select>');
+        //]]>
+        </script>
+        <noscript><input type="text" id="field_selected2" name="field_selected2" value="" /></noscript>
+        </td>
+        <td><label for="field_value_selected2">RegEx para valor de segunda columna</label></td>
+        <td><input type="text" id="field_value_selected2" name="field_value_selected2" value="" />
+        <label for="field_value_selected2_null">NULL</label>
+        <input type="checkbox" value="NULL" id="field_value_selected2_null" name="field_value_selected2_null" /></td>
+        </tr>
+        </tbody></table>
+        <br />
+        <div>
+        <input type="submit" value="Enviar" name="submitForm" onclick="return checkscript()" />
+        <input type="reset" value="Borrar" name="reset1" />
+        </div>
+        <input type="radio" value="InsertRecordGroupForm" id="InsertRecordGroupForm" name="command" />
+        <label class="bigred" for="InsertRecordGroupForm">Insertar registro(s) (Selecciona una tabla con un numero de unidades para insertar)</label>
+        <br />
+        <br />
+        <input type="radio" value="UpdateRecordForm" id="UpdateRecordForm" name="command" />
+        <label class="bigblue" for="UpdateRecordForm">Actualizar un registro (Selecciona una tabla con un numero de ID)</label>
+        <br />
+        <br />
+        <input type="radio" value="ViewRecords" id="ViewRecords" name="command" />
+        <label class="bigblack" for="ViewRecords">Ver Registros (Selecciona una tabla con las opciones arriba y/o con columnas y sus RegEx seleccionados o NULL)</label>
+        <br />
+        <br />
+        <input type="radio" value="ShowColumns" id="ShowColumns" name="command" />
+        <label class="biggreen" for="ShowColumns">Mostrar columnas (Selecciona una tabla)</label>
+        <br />
+        <br />
+        }
+    );
+if ($use_delete_duplicates) {
+>>>>>>> 046a64e928f11a0dee2d07ade9d70a85832d2c2c
 	$r->print(
         qq{<input type="radio" value="DeleteDuplicates" id="DeleteDuplicates" name="command" />
-	<label class="bigred" for="DeleteDuplicates">Borrar Duplicados(Selecciona una tabla, con limitaciones como clase y/o nombre de vendor con products tabla)</label>
-	<br />
-	<br />
-    }
-);
+    	<label class="bigred" for="DeleteDuplicates">Borrar Duplicados(Selecciona una tabla, con limitaciones como clase y/o nombre de vendor con products tabla)</label>
+	    <br />
+	    <br />
+         }
+            );
 }
-$r->print(
-    qq{
-	<input type="radio" value="ShowTables" id="ShowTables" name="command" />
-	<label class="biggreen" for="ShowTables">Mostrar Tablas</label>
-	<br />
-	<br />
-	<div>
-	<input type="submit" value="Enviar" name="submitForm" onclick="return checkscript()" />
-	<input type="reset" value="Borrar" name="reset1" />
-	</div>
-	</div></form>
-	</div>
-	</body></html>
-	}
-        );
+    $r->print(
+        qq{<input type="radio" value="ShowTables" id="ShowTables" name="command" />
+        <label class="biggreen" for="ShowTables">Mostrar Tablas</label>
+        <br />
+        <br />
+        <div>
+        <input type="submit" value="Enviar" name="submitForm" onclick="return checkscript()" />
+        <input type="reset" value="Borrar" name="reset1" />
+        </div>
+        </div></form>
+        </div>
+        </body></html>
+        }
+            );
     }
     else {
         $r->print(
             qq{</select></td>	
-	</tr>
-	<tr>
-	<td><label for="field_selected">Field</label></td>
-	<td><script type="text/javascript">
-	//<![CDATA[
-	document.writeln('<select id="field_selected" name="field_selected"></select>');
-	//]]>
-	</script>
-	<noscript><input type="text" id="field_selected" name="field_selected" value="" /></noscript>
-	</td>
-	<td>
-    <label for="field_value_selected">Field Value RegEx</label></td>
-	<td>
-    <input type="text" id="field_value_selected" name="field_value_selected" value="" /><br />
-    <label for="field_value_selected_not">NOT</label>
-	<input type="checkbox" value="NOT" id="field_value_selected_not" name="field_value_selected_not" />
-	<label for="field_value_selected_null">NULL</label>
-	<input type="checkbox" value="NULL" id="field_value_selected_null" name="field_value_selected_null" /></td>
-	</tr>
-	<tr>
-	<td><label for="field_selected2">Second Field</label></td>
-	<td><script type="text/javascript">
-	//<![CDATA[
-	document.writeln('<select id="field_selected2" name="field_selected2"></select>');
-	//]]>
-	</script>
-	<noscript><input type="text" id="field_selected2" name="field_selected2" value="" /></noscript>
-	</td>
-	<td>
-    <label for="field_value_selected2">Second Field Value RegEx</label></td>
-	<td>
-    <input type="text" id="field_value_selected2" name="field_value_selected2" value="" /><br />
-    <label for="field_value_selected2_not">NOT</label>
-	<input type="checkbox" value="NOT" id="field_value_selected2_not" name="field_value_selected2_not" />
-	<label for="field_value_selected2_null">NULL</label>
-	<input type="checkbox" value="NULL" id="field_value_selected2_null" name="field_value_selected2_null" />
-    </td>
-	</tr>
-	</tbody></table>
-	<br />
-	<div>
-	<input type="submit" value="Submit" name="submitForm" onclick="return checkscript()" />
-	<input type="reset" value="Reset" name="reset1" />
-	</div>
-	<input type="radio" value="InsertRecordGroupForm" id="InsertRecordGroupForm" name="command" />
-	<label class="bigred" for="InsertRecordGroupForm">Insert Record(s) Form (Select a Table and how many items to insert)</label>
-	<br />
-	<br />
-	<input type="radio" value="UpdateRecordForm" id="UpdateRecordForm" name="command" />
-	<label class="bigblue" for="UpdateRecordForm">Update Record Form (Select a Table with an ID)</label>
-	<br />
-	<br />
-	<input type="radio" value="ViewRecords" id="ViewRecords" name="command" />
-	<label class="bigblack" for="ViewRecords">View Records (Select a Table with above options and/or with Fields and their RegEx Selected or NULL)</label>
-	<br />
-	<br />
-	<input type="radio" value="ShowColumns" id="ShowColumns" name="command" />
-	<label class="biggreen" for="ShowColumns">Show Columns (Select a Table)</label>
-	<br />
-	<br />
-        }
+            </tr>
+            <tr>
+            <td><label for="field_selected">Field</label></td>
+            <td><script type="text/javascript">
+            //<![CDATA[
+            document.writeln('<select id="field_selected" name="field_selected"></select>');
+            //]]>
+            </script>
+            <noscript><input type="text" id="field_selected" name="field_selected" value="" /></noscript>
+            </td>
+            <td>
+            <label for="field_value_selected">Field Value RegEx</label></td>
+            <td>
+            <input type="text" id="field_value_selected" name="field_value_selected" value="" /><br />
+            <label for="field_value_selected_not">NOT</label>
+            <input type="checkbox" value="NOT" id="field_value_selected_not" name="field_value_selected_not" />
+            <label for="field_value_selected_null">NULL</label>
+            <input type="checkbox" value="NULL" id="field_value_selected_null" name="field_value_selected_null" />
+            </td>
+            </tr>
+            <tr>
+            <td><label for="field_selected2">Second Field</label></td>
+            <td><script type="text/javascript">
+            //<![CDATA[
+            document.writeln('<select id="field_selected2" name="field_selected2"></select>');
+            //]]>
+            </script>
+            <noscript><input type="text" id="field_selected2" name="field_selected2" value="" /></noscript>
+            </td>
+            <td>
+            <label for="field_value_selected2">Second Field Value RegEx</label></td>
+            <td>
+            <input type="text" id="field_value_selected2" name="field_value_selected2" value="" /><br />
+            <label for="field_value_selected2_not">NOT</label>
+            <input type="checkbox" value="NOT" id="field_value_selected2_not" name="field_value_selected2_not" />
+            <label for="field_value_selected2_null">NULL</label>
+            <input type="checkbox" value="NULL" id="field_value_selected2_null" name="field_value_selected2_null" />
+            </td>
+            </tr>
+            </tbody>
+            </table>
+            <br />
+            <div>
+            <input type="submit" value="Submit" name="submitForm" onclick="return checkscript()" />
+            <input type="reset" value="Reset" name="reset1" />
+            </div>
+            <input type="radio" value="InsertRecordGroupForm" id="InsertRecordGroupForm" name="command" />
+            <label class="bigred" for="InsertRecordGroupForm">Insert Record(s) Form (Select a Table and how many items to insert)</label>
+            <br />
+            <br />
+            <input type="radio" value="UpdateRecordForm" id="UpdateRecordForm" name="command" />
+            <label class="bigblue" for="UpdateRecordForm">Update Record Form (Select a Table with an ID)</label>
+            <br />
+            <br />
+            <input type="radio" value="ViewRecords" id="ViewRecords" name="command" />
+            <label class="bigblack" for="ViewRecords">View Records (Select a Table with above options and/or with Fields and their RegEx Selected or NULL)</label>
+            <br />
+            <br />
+            <input type="radio" value="ShowColumns" id="ShowColumns" name="command" />
+            <label class="biggreen" for="ShowColumns">Show Columns (Select a Table)</label>
+            <br />
+            <br />
+            }
 );
 if (@{$arg_ref->{available_commands}} ~~ /DeleteDuplicates/) {
 	$r->print(
-	qq{<input type="radio" value="DeleteDuplicates" id="DeleteDuplicates" name="command" />
-	<label class="bigred" for="DeleteDuplicates">Delete Duplicates (Select a table, use a limit such as class and/or vendor with products table)</label>
-	<br />
-	<br />
-}
-);
+        qq{<input type="radio" value="DeleteDuplicates" id="DeleteDuplicates" name="command" />
+        <label class="bigred" for="DeleteDuplicates">Delete Duplicates (Select a table, use a limit such as class and/or vendor with products table)</label>
+        <br />
+        <br />
+        }
+            );
 }
 $r->print(
-    qq{
-	<input type="radio" value="ShowTables" id="ShowTables" name="command" />
+    qq{<input type="radio" value="ShowTables" id="ShowTables" name="command" />
 	<label class="biggreen" for="ShowTables">Show Tables</label>
 	<br />
 	<br />
@@ -606,9 +728,11 @@ $r->print(
 	<input type="submit" value="Submit" name="submitForm" onclick="return checkscript()" />
 	<input type="reset" value="Reset" name="reset1" />
 	</div>
-	</div></form>
 	</div>
-	</body></html>
+    </form>
+	</div>
+	</body>
+    </html>
 	}
         );
     }
@@ -622,7 +746,11 @@ BWCL::SelectTable_B
 
 =head1 VERSION
 
+<<<<<<< HEAD
 This documentation refers to BWCL::SelectTable_B version 4.4.10.
+=======
+This documentation refers to BWCL::SelectTable_B version 4.4.00.
+>>>>>>> 046a64e928f11a0dee2d07ade9d70a85832d2c2c
 
 =head1 SYNOPSIS
 
