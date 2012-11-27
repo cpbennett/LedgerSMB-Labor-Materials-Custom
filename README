@@ -26,3 +26,13 @@ There is also a manual application.
 All of these applications work bilingually in English and in Spanish.
 All of the database entries are in English except for items from
 Spanish speaking countries or vendors.
+
+Requirements:
+p5-DBI
+p5-DBD-Pg
+p5-Apache-DBI
+p5-libapreq
+p5-Config-Std
+p5-Class-Std
+postgresql-server
+
