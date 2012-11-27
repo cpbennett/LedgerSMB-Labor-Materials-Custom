@@ -8,11 +8,11 @@ use Apache::Request();
 use DBI();
 
 #subs Modules
-use BWC::ShowAdmin qw(ShowTables ShowColumns error_message);
-use BWC::InsertRecord_B qw(InsertRecordGroup InsertRecordGroupForm);
-use BWC::SelectTable_B qw(PrepareHead SelectTable);
-use BWC::RecordUpdates_B qw(UpdateRecordForm UpdateRecord DeleteDuplicates);
-use BWC::ViewRecords_B qw(ViewRecords);
+use BWCL::ShowAdmin qw(ShowTables ShowColumns error_message);
+use BWCL::InsertRecord_B qw(InsertRecordGroup InsertRecordGroupForm);
+use BWCL::SelectTable_B qw(PrepareHead SelectTable);
+use BWCL::RecordUpdates_B qw(UpdateRecordForm UpdateRecord DeleteDuplicates);
+use BWCL::ViewRecords_B qw(ViewRecords);
 use Config::Std;
 
 #######################################################################
@@ -99,11 +99,11 @@ my $field_selected        = $q->param("field_selected")        || '';
 my $field_value_selected  = $q->param("field_value_selected")  || '';
 my $field_selected2       = $q->param("field_selected2")       || '';
 my $field_value_selected2 = $q->param("field_value_selected2") || '';
-$config_hash_ref->{itemstoinsert}         = $q->param("itemstoinsert")         || '';
+$config_hash_ref->{itemstoinsert} = $q->param("itemstoinsert") || '';
 my $full_assembly_list_category_selected
-    = $q->param("full_assembly_list_category_selected")        || 'All';
+    = $q->param("full_assembly_list_category_selected") || 'All';
 my $full_assembly_list_subcategory_selected
-    = $q->param("full_assembly_list_subcategory_selected")     || 'All';
+    = $q->param("full_assembly_list_subcategory_selected") || 'All';
 
 #######################################################################
 ##		Table Verification
@@ -275,11 +275,7 @@ pg_wmod-B.pl
 
 =head1 VERSION
 
-<<<<<<< HEAD
 This documentation refers to pg.pl version 3.1.00.
-=======
-This documentation refers to pg_wmod-B.pl version 3.0.00.
->>>>>>> 046a64e928f11a0dee2d07ade9d70a85832d2c2c
 
 =head1 SYNOPSIS
 

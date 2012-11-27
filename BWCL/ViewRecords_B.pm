@@ -209,11 +209,7 @@ sub ViewRecords {
         $rc  = $sth->execute             || die $dbh->errstr;
         $tbl = $sth->fetchrow_arrayref;
         unless ( $$tbl[0] ) {
-<<<<<<< HEAD
             error_message( $r, $arg_ref->{lang},
-=======
-            error_message( $r, $lang,
->>>>>>> 046a64e928f11a0dee2d07ade9d70a85832d2c2c
                            "un campo segundo valido",
                            "a valid second field" );
             return;
@@ -244,11 +240,7 @@ sub ViewRecords {
         $rc  = $sth->execute             || die $dbh->errstr;
         $tbl = $sth->fetchrow_arrayref;
         unless ( $$tbl[0] ) {
-<<<<<<< HEAD
             error_message( $r, $arg_ref->{lang},
-=======
-            error_message( $r, $lang,
->>>>>>> 046a64e928f11a0dee2d07ade9d70a85832d2c2c
                            "un campo primero valido",
                            "a valid first field" );
             return;

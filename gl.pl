@@ -8,19 +8,11 @@ use Apache::Request();
 use DBI();
 
 #subs Modules
-<<<<<<< HEAD
 use BWCL::ShowAdmin qw(ShowTables ShowColumns error_message);
 use BWCL::InsertRecord_B qw(InsertRecordGroup InsertRecordGroupForm);
 use BWCL::SelectTable_B qw(PrepareHead SelectTable);
 use BWCL::RecordUpdates_B qw(UpdateRecordForm UpdateRecord);
 use BWCL::ViewRecords_B qw(ViewRecords);
-=======
-use BWC::ShowAdmin qw(ShowTables ShowColumns error_message);
-use BWC::InsertRecord_B qw(InsertRecordGroup InsertRecordGroupForm);
-use BWC::SelectTable_B qw(PrepareHead SelectTable);
-use BWC::RecordUpdates_B qw(UpdateRecordForm UpdateRecord);
-use BWC::ViewRecords_B qw(ViewRecords);
->>>>>>> 046a64e928f11a0dee2d07ade9d70a85832d2c2c
 use Config::Std;
 
 #######################################################################
@@ -37,9 +29,15 @@ my $q = Apache::Request->new(
     DISABLE_UPLOADS => 1
 );
 
-my $dbh
-    = DBI->connect( "DBI:Pg:dbname=$config_hash_ref->{'Database'}{'database'};host=$config_hash_ref->{'Database'}{'hostname'};port=$config_hash_ref->{'Database'}{'port'}",
-    $config_hash_ref->{'Database'}{'username'}, $config_hash_ref->{'Database'}{'password'}, { 'RaiseError' => 1, pg_enable_utf8 => $config_hash_ref->{'Database'}{'pg_enable_utf8'} } );
+my $dbh =
+    DBI->connect(
+    "DBI:Pg:dbname=$config_hash_ref->{'Database'}{'database'};host=$config_hash_ref->{'Database'}{'hostname'};port=$config_hash_ref->{'Database'}{'port'}",
+    $config_hash_ref->{'Database'}{'username'},
+    $config_hash_ref->{'Database'}{'password'},
+    {  'RaiseError' => 1,
+       pg_enable_utf8 =>
+           $config_hash_ref->{'Database'}{'pg_enable_utf8'}
+    } );
 $config_hash_ref->{dbh} = $dbh;
 $config_hash_ref->{r} = $r;
 $config_hash_ref->{q} = $q;
@@ -100,21 +98,21 @@ my $table_selected = $q->param("table_selected")
     || goto ERROR_END;
 $config_hash_ref->{table_selected} = $table_selected;
 my $labor_project_list_category_selected
-    = $q->param("labor_project_list_category_selected")        || 'All';
+    = $q->param("labor_project_list_category_selected") || 'All';
 my $labor_project_list_subcategory_selected
-    = $q->param("labor_project_list_subcategory_selected")     || 'All';
+    = $q->param("labor_project_list_subcategory_selected") || 'All';
 my $labor_project_class_selected
-    = $q->param("labor_project_class_selected")                || 'All';
+    = $q->param("labor_project_class_selected") || 'All';
 my $labor_project_subclass_selected
-    = $q->param("labor_project_subclass_selected")             || 'All';
+    = $q->param("labor_project_subclass_selected") || 'All';
 my $labor_project_section_selected
-    = $q->param("labor_project_section_selected")              || 'All';
+    = $q->param("labor_project_section_selected") || 'All';
 my $id_selected           = $q->param("id_selected")           || '';
 my $field_selected        = $q->param("field_selected")        || '';
 my $field_value_selected  = $q->param("field_value_selected")  || '';
 my $field_selected2       = $q->param("field_selected2")       || '';
 my $field_value_selected2 = $q->param("field_value_selected2") || '';
-$config_hash_ref->{itemstoinsert}         = $q->param("itemstoinsert")         || '';
+$config_hash_ref->{itemstoinsert} = $q->param("itemstoinsert") || '';
 
 #######################################################################
 ##		Table Verification
@@ -277,11 +275,7 @@ pg_glpc-B.pl
 
 =head1 VERSION
 
-<<<<<<< HEAD
 This documentation refers to gl.pl version 3.1.00.
-=======
-This documentation refers to pg_glpc-B.pl version 3.0.00.
->>>>>>> 046a64e928f11a0dee2d07ade9d70a85832d2c2c
 
 =head1 SYNOPSIS
 

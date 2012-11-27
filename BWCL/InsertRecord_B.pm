@@ -1,10 +1,6 @@
 package BWCL::InsertRecord_B;
 
-<<<<<<< HEAD
 our $VERSION = 4.5.00;
-=======
-our $VERSION = 4.4.20;
->>>>>>> 046a64e928f11a0dee2d07ade9d70a85832d2c2c
 
 use warnings;
 use strict;
@@ -50,7 +46,6 @@ sub InsertRecordGroupForm {
     push( @all_fill, @$select_fields_aref );
     push( @all_fill, @$specialty_fields_aref );
 
-<<<<<<< HEAD
      if ($arg_ref->{lang} eq "es") {
             $r->print(
             qq{<h2 class="tiheadbig">Insertar nuevo grupo de registros para $table</h2>
@@ -66,11 +61,6 @@ sub InsertRecordGroupForm {
 	
 	$r->print(
     qq{    	<form id="insertform" name="insertform" action="$arg_ref->{Program}{program_path_name}" method="post">
-=======
-    $r->print(
-        qq{<h2 class="tiheadbig">Insert New Record Group into $table</h2>
-    	<form id="insertform" name="insertform" action="$program" method="post">
->>>>>>> 046a64e928f11a0dee2d07ade9d70a85832d2c2c
         }
              );
     if ( $table eq "full_assembly_list" ) {
@@ -563,7 +553,6 @@ sub InsertRecordGroupForm {
             $ucfirst = ucfirst($ucfirst);
 
             if ( $itemtoi == 3 ) {
-<<<<<<< HEAD
                 $r->print(
                     qq{<td align="left">
                     <label for="$note_field">All?</label>
@@ -577,21 +566,6 @@ sub InsertRecordGroupForm {
             else {
                 $r->print(
                     qq{<td align="left">
-=======
-                $r->print(
-                    qq{<td align="left">
-                    <label for="$note_field">All?</label>
-                    </td>
-                    <td align="left">
-                    <input type="checkbox" value="all" id="$note_field" name="$note_field" />
-                    </td>
-                    }
-                         );
-            }
-            else {
-                $r->print(
-                    qq{<td align="left">
->>>>>>> 046a64e928f11a0dee2d07ade9d70a85832d2c2c
                      </td>
                      <td align="left">
                      </td>
@@ -620,18 +594,13 @@ sub InsertRecordGroupForm {
     }
 
     $r->print(
-<<<<<<< HEAD
         qq{<input type="hidden" name="itemstoinsert" value="$arg_ref->{itemstoinsert}" />
-=======
-        qq{<input type="hidden" name="itemstoinsert" value="$itemstoinsert" />
->>>>>>> 046a64e928f11a0dee2d07ade9d70a85832d2c2c
         <input type="hidden" name="table_selected" value="$table" />
         <input type="hidden" value="InsertRecordGroup" name="command" />
         <div>
         <br />
         <br />
         <br />
-<<<<<<< HEAD
         }
         );
  if ($arg_ref->{lang} eq "es") {
@@ -652,11 +621,6 @@ sub InsertRecordGroupForm {
         }
         $r->print(
         qq{        <br />
-=======
-        <input type="submit" value="Continue" name="submitForm" />
-        <input type="reset" value="Reset" name="reset1" />
-        <br />
->>>>>>> 046a64e928f11a0dee2d07ade9d70a85832d2c2c
         <br />
         <br />
         </div>
@@ -679,11 +643,6 @@ sub InsertRecordGroup {
     my $r         = $arg_ref->{r};
     my $dbh       = $arg_ref->{dbh};
     my $q         = $arg_ref->{q};
-<<<<<<< HEAD
-=======
-    my $program   = $arg_ref->{program};
-    my $lang      = $arg_ref->{lang};
->>>>>>> 046a64e928f11a0dee2d07ade9d70a85832d2c2c
     my $database  = $arg_ref->{database};
     my $sql_list;
     my $table         = $arg_ref->{table_selected};
@@ -720,11 +679,7 @@ sub InsertRecordGroup {
     # Best to stop whole process before any insertions!
     # Should work these two into just one go-round by caching data?
     $table_id_field2 = $dbh->quote($table_id_field);
-<<<<<<< HEAD
     for my $itemtoi ( 3 .. ( $arg_ref->{itemstoinsert} + 2 ) ) {
-=======
-    for my $itemtoi ( 3 .. ( $itemstoinsert + 2 ) ) {
->>>>>>> 046a64e928f11a0dee2d07ade9d70a85832d2c2c
     CURRENCY_CHECKER:
         for my $i ( 0 .. $#field_names ) {
             $results[$i] = $q->param("$field_names[$i]$itemtoi");
@@ -733,16 +688,11 @@ sub InsertRecordGroup {
             {
                 $results[$i] = HTML::Entities::decode( $results[$i] );
                 if ( $results[$i] eq '' ) {
-<<<<<<< HEAD
                     error_message( $r, $arg_ref->{lang},
-=======
-                    error_message( $r, $lang,
->>>>>>> 046a64e928f11a0dee2d07ade9d70a85832d2c2c
                                    "un tipo de moneda",
                                    "a type of currency" );
                     return;
                 }
-<<<<<<< HEAD
 
             }
             else {
@@ -761,21 +711,6 @@ sub InsertRecordGroup {
                 next PULL_RESULTS_FROM_FIELDS;
             }
             elsif ( defined $results[$i] ) {
-=======
-
-            }
-            else {
-                next CURRENCY_CHECKER;
-            }
-        }
-    }
-
-    for my $itemtoi ( 3 .. ( $itemstoinsert + 2 ) ) {
-    PULL_RESULTS_FROM_FIELDS:
-        for my $i ( 0 .. $#field_names ) {
-            $results[$i] = $q->param("$field_names[$i]$itemtoi");
-            if ( defined $results[$i] ) {
->>>>>>> 046a64e928f11a0dee2d07ade9d70a85832d2c2c
                 $results[$i] = HTML::Entities::decode( $results[$i] );
             }
             else {
@@ -799,16 +734,11 @@ sub InsertRecordGroup {
                     $results[$i] = encode( "utf8", $results[$i] );
                 }
                 elsif ( $field_names[$i] eq "up_date"
-<<<<<<< HEAD
                         && (!defined $results[$i]) )
-=======
-                        && !( defined $results[$i] ) )
->>>>>>> 046a64e928f11a0dee2d07ade9d70a85832d2c2c
                 {
                     $results[$i] = "NOW";
                 }
             }
-<<<<<<< HEAD
             if ( defined $results[$i] &&  $results[$i] ne '') {
                 $results[$i]
                     =~ s#\r\n#\n#g;    # For notes or other text areas
@@ -817,11 +747,6 @@ sub InsertRecordGroup {
             else {
                 $results[$i] = undef;
                 $results[$i] = $dbh->quote( $results[$i] );
-=======
-            if ( defined $results[$i] ) {
-                $results[$i]
-                    =~ s#\r\n#\n#g;    # For notes or other textareas
->>>>>>> 046a64e928f11a0dee2d07ade9d70a85832d2c2c
             }
         }
 
@@ -1124,11 +1049,7 @@ BWCL::InsertRecord_B
 
 =head1 VERSION
 
-<<<<<<< HEAD
 This documentation refers to BWCL::InsertRecord_B version 4.5.00.
-=======
-This documentation refers to BWCL::InsertRecord_B version 4.4.20.
->>>>>>> 046a64e928f11a0dee2d07ade9d70a85832d2c2c
 
 =head1 SYNOPSIS
 

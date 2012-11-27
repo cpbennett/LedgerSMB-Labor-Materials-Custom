@@ -1,12 +1,28 @@
-This is my set of applications to create, modify and similarly duplicate
-existing entries into slightly modified entries.
+This is a set of applications to:
+Create
+Modify
+View, including with searching
+Duplicate existing full assemblies or labor projects into new, similar
+but modified versions to allow cloning existing into missing sets with
+new characteristics. This allows minimal work to be done instead of a
+full creation by hand.
 
 There are 4 applications.
-Two are to insert, view, update, show column information and delete
-duplicate entries in the products table (which means parts to be
-purchased, not sold)
+Two are to:
+Insert new entries into either the materials or labor databases.
+View, with search capabilities either the materials or labor databases.
+Update existing entries in either the materials or labor databases.
+Show column or table information including comments.
+Delete duplicate entries in the products table (which consists of parts
+to be purchased, not to be sold) of the materials database.
 
-The other two are for duplicating existing entries to something closely
-similar and also for seeing the "big picture" of a complete materials
-or labor assembly from bottom to top with all table entries.
+Two are to:
+Duplicate existing entries into something similar but modified.
+View the full details top to bottom of a complete materials or
+labor assembly with all of the related table entries.
 
+There is also a manual application.
+
+All of these applications work bilingually in English and in Spanish.
+All of the database entries are in English except for items from
+Spanish speaking countries or vendors.
