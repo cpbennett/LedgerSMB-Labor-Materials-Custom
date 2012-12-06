@@ -9,7 +9,7 @@ our @ISA       = qw(Exporter);
 our @EXPORT_OK = qw(PrepareHead SelectTable);
 
 #######################################################################
-##		Sub PrepareHead
+##        Sub PrepareHead
 
 sub PrepareHead {
     my ($arg_ref) = @_;
@@ -17,7 +17,7 @@ sub PrepareHead {
     my $dbh       = $arg_ref->{dbh};
 
 #######################################################################
-    #	Prepare Javascript in Head
+    #    Prepare Javascript in Head
 
     my $table_string   = "";
     my $case_string    = "";
@@ -41,10 +41,10 @@ field_selected2[field_selected2.length] = new Option("", "");
     foreach my $chosen (@tables) {
         $case_string .= qq{
         case $chosen :
-		field_selected.length = 0;
-		field_selected2.length = 0;
-		field_selected[field_selected.length] = new Option("", "");
-		field_selected2[field_selected2.length] = new Option("", "");
+        field_selected.length = 0;
+        field_selected2.length = 0;
+        field_selected[field_selected.length] = new Option("", "");
+        field_selected2[field_selected2.length] = new Option("", "");
 };
         my $statement
             = "SELECT column_name FROM information_schema.columns WHERE table_name = $chosen;";
@@ -183,7 +183,7 @@ case '$classes_aref->[$i][0]' :
     }
 
 #######################################################################
-##		Print Page Head
+##        Print Page Head
 
     $r->print(
         qq#<?xml version="1.0" encoding="utf-8"?>
@@ -205,42 +205,42 @@ case '$classes_aref->[$i][0]' :
 <script type="text/javascript">
 //<![CDATA[
 if (window.addEventListener) {
-	window.addEventListener("load",setupEvents,false);
+    window.addEventListener("load",setupEvents,false);
 } else if (window.attachEvent) {
-	window.attachEvent("onload",setupEvents);
+    window.attachEvent("onload",setupEvents);
 } else {
-	window.onload=setupEvents;
+    window.onload=setupEvents;
 }
 
 function setupEvents(evnt) {
-	var opts = document.getElementById("someForm").table_selected.options;
-	var field_selected = document.getElementById("someForm").field_selected.options;
-	var field_selected2 = document.getElementById("someForm").field_selected2.options;
+    var opts = document.getElementById("someForm").table_selected.options;
+    var field_selected = document.getElementById("someForm").field_selected.options;
+    var field_selected2 = document.getElementById("someForm").field_selected2.options;
     $option_string
-	document.getElementById("someForm").table_selected.onchange = checkSelect;
-	
+    document.getElementById("someForm").table_selected.onchange = checkSelect;
+    
 }
 
 function checkSelect(evnt) {
-	var opts = document.getElementById("someForm").table_selected.options;
-	var field_selected = document.getElementById("someForm").field_selected.options;
-	var field_selected2 = document.getElementById("someForm").field_selected2.options;
+    var opts = document.getElementById("someForm").table_selected.options;
+    var field_selected = document.getElementById("someForm").field_selected.options;
+    var field_selected2 = document.getElementById("someForm").field_selected2.options;
 
-	for ( var i = 0; i < opts.length; i++) {
-		if ( opts[i].selected ) {
-			switch(opts[i].value) {
-				$case_string
-			}
-		}
-	}
+    for ( var i = 0; i < opts.length; i++) {
+        if ( opts[i].selected ) {
+            switch(opts[i].value) {
+                $case_string
+            }
+        }
+    }
 
-	return false;
+    return false;
 }
 function checkscript() {
-	for (i=0;i<document.someForm.command.length;i++) {
-		if (document.someForm.command[i].checked) {
-			return true;
-		}
+    for (i=0;i<document.someForm.command.length;i++) {
+        if (document.someForm.command[i].checked) {
+            return true;
+        }
 }
 #
              );
@@ -273,39 +273,39 @@ return false;
             qq#<script type="text/javascript">
 //<![CDATA[
 if (window.addEventListener) {
-	window.addEventListener("load",setupEventsC,false);
+    window.addEventListener("load",setupEventsC,false);
 } else if (window.attachEvent) {
-	window.attachEvent("onload",setupEventsC);
+    window.attachEvent("onload",setupEventsC);
 } else {
-	window.onload=setupEventsC;
+    window.onload=setupEventsC;
 }
 $array
 
 function setupEventsC(evnt) {
-	var opts = document.getElementById("someForm").class_selected.options;
-	var subclass_selected = document.getElementById("someForm").subclass_selected.options;
+    var opts = document.getElementById("someForm").class_selected.options;
+    var subclass_selected = document.getElementById("someForm").subclass_selected.options;
       document.getElementById("someForm").subclass_selected.options.length=1;
   for (var i=0,l=cat.length;i<l;i++)
     getElementById("someForm").subclass_selected.options[i+1]=new Option(cat[i],cat[i]);
-					subclass_selected[subclass_selected.length] = new Option("All", "All");
-	document.getElementById("someForm").class_selected.onchange = checkSelectC;
-	
+                    subclass_selected[subclass_selected.length] = new Option("All", "All");
+    document.getElementById("someForm").class_selected.onchange = checkSelectC;
+    
 }
 
 
 function checkSelectC(evnt) {
-	var opts = document.getElementById("someForm").class_selected.options;
-	var subclass_selected = document.getElementById("someForm").subclass_selected.options;
+    var opts = document.getElementById("someForm").class_selected.options;
+    var subclass_selected = document.getElementById("someForm").subclass_selected.options;
 
-	for ( var i = 0; i < opts.length; i++) {
-		if ( opts[i].selected ) {
-			switch(opts[i].value) {
-				$case_stringc
-			}
-		}
-	}
+    for ( var i = 0; i < opts.length; i++) {
+        if ( opts[i].selected ) {
+            switch(opts[i].value) {
+                $case_stringc
+            }
+        }
+    }
 
-	return false;
+    return false;
 }
  </script>
 #
@@ -321,7 +321,7 @@ $arg_ref->{'Top of Page Links'}{'top_of_page_links'}
 
 }
 #######################################################################
-##		Sub SelectTable
+##        Sub SelectTable
 
 sub SelectTable {
     my ($arg_ref)        = @_;
@@ -337,48 +337,48 @@ sub SelectTable {
     if ( $lang eq "es" ) {
         $r->print(
             qq{<div>
-	<h2>Favor de seleccionar un comando y tabla para usar</h2>
-	<form id="someForm" name="someForm" action="$arg_ref->{'Program'}{'program_path_name'}" method="post">
-	<div>
-	<table summary="" border="2" rules="all">
-	<tbody>
-	<tr>
-	<td><label for="table_selected">Tabla</label></td>
-	<td><select id="table_selected" name="table_selected">
-	}
+    <h2>Favor de seleccionar un comando y tabla para usar</h2>
+    <form id="someForm" name="someForm" action="$arg_ref->{'Program'}{'program_path_name'}" method="post">
+    <div>
+    <table summary="" border="2" rules="all">
+    <tbody>
+    <tr>
+    <td><label for="table_selected">Tabla</label></td>
+    <td><select id="table_selected" name="table_selected">
+    }
                  );
     }
     else {
         $r->print(
             qq{<div>
-	<h2>Please select a command and a table to use</h2>
-	<form id="someForm" name="someForm" action="$arg_ref->{'Program'}{'program_path_name'}" method="post">
-	<div>
-	<table summary="" border="2" rules="all">
-	<tbody>
-	<tr>
-	<td><label for="table_selected">Table</label></td>
-	<td><select id="table_selected" name="table_selected">
-	}
+    <h2>Please select a command and a table to use</h2>
+    <form id="someForm" name="someForm" action="$arg_ref->{'Program'}{'program_path_name'}" method="post">
+    <div>
+    <table summary="" border="2" rules="all">
+    <tbody>
+    <tr>
+    <td><label for="table_selected">Table</label></td>
+    <td><select id="table_selected" name="table_selected">
+    }
                  );
     }
     my $sth = $dbh->table_info( '', 'public', undef, 'TABLE' );
     for my $rel ( @{ $sth->fetchall_arrayref( {} ) } ) {
         $r->print(
             qq{<option value="$rel->{TABLE_NAME}">$rel->{TABLE_NAME}</option>
-	}
+    }
                  );
     }
     $sth->finish();
     $r->print(
         qq{</select></td>
-	<td><label for="id_selected">ID</label></td>
-	<td><input type="text" id="id_selected" name="id_selected" value="" /></td>
-	</tr><tr>
-	}
+    <td><label for="id_selected">ID</label></td>
+    <td><input type="text" id="id_selected" name="id_selected" value="" /></td>
+    </tr><tr>
+    }
              );
     #######################################################################
-    #	loop for pre-chosen fields/tables
+    #    loop for pre-chosen fields/tables
     for my $i ( 0 .. $#$field_table_aref ) {
         $ucfirst = $field_table_aref->[$i][0];
         $ucfirst =~ s/_(\w)/ \u$1/g;
@@ -402,11 +402,11 @@ sub SelectTable {
         $r->print(
                   qq{<td><label for="$field_table_aref->[$i][0]}
                 . qq{_selected">$select_label</label></td>
-		<td><select id="$field_table_aref->[$i][0]}
+        <td><select id="$field_table_aref->[$i][0]}
                 . qq{_selected" name="$field_table_aref->[$i][0]}
                 . qq{_selected">
-		<option value="All">All</option>
-		}
+        <option value="All">All</option>
+        }
         );
 
         foreach my $select (@$select_array_ref) {
@@ -415,7 +415,7 @@ sub SelectTable {
                     ; # Pisses me off I can't find a way to deal with BOTH ' and " in XHTML forms
                 $r->print(
                     qq{<option value="$select">$select</option>
-		}
+        }
                          );
             }
         }
@@ -429,7 +429,7 @@ sub SelectTable {
             <td>
             <select id="itemstoinsert" name="itemstoinsert">
             <option selected="selected" value="1">1</option>
-        	}
+            }
                  );
     }
     else {
@@ -439,195 +439,218 @@ sub SelectTable {
             </td>
             <td>
             <select id="itemstoinsert" name="itemstoinsert">
-        	<option selected="selected" value="1">1</option>
-        	}
+            <option selected="selected" value="1">1</option>
+            }
                  );
     }
     for my $i ( 2 .. 36 ) {
         $r->print(
             qq{<option value="$i">$i</option>
-    		}
+        }
                  );
     }
     if ( $lang eq "es" ) {
         $r->print(
-            qq{</select></td>	
-	</tr>
-	<tr>
-	<td><label for="field_selected">Columna</label></td>
-	<td><script type="text/javascript">
-	//<![CDATA[
-	document.writeln('<select id="field_selected" name="field_selected"></select>');
-	//]]>
-	</script>
-	<noscript><input type="text" id="field_selected" name="field_selected" value="" /></noscript>
-	</td>
-	<td><label for="field_value_selected">RegEx para valor de columna</label></td>
-	<td><input type="text" id="field_value_selected" name="field_value_selected" value="" />
-	<label for="field_value_selected_null">NULL</label>
-	<input type="checkbox" value="NULL" id="field_value_selected_null" name="field_value_selected_null" />
-	<label for="field_value_selected_not">NOT</label>
-	<input type="checkbox" value="NOT" id="field_value_selected_not" name="field_value_selected_not" />
+            qq{</select></td>    
+    </tr>
+    <tr>
+    <td><label for="field_selected">Columna</label></td>
+    <td><script type="text/javascript">
+    //<![CDATA[
+    document.writeln('<select id="field_selected" name="field_selected"></select>');
+    //]]>
+    </script>
+    <noscript><input type="text" id="field_selected" name="field_selected" value="" /></noscript>
     </td>
-	</tr>
-	<tr>
-	<td><label for="field_selected2">Segunda columna</label></td>
-	<td><script type="text/javascript">
-	//<![CDATA[
-	document.writeln('<select id="field_selected2" name="field_selected2"></select>');
-	//]]>
-	</script>
-	<noscript><input type="text" id="field_selected2" name="field_selected2" value="" /></noscript>
-	</td>
-	<td><label for="field_value_selected2">RegEx para valor de segunda columna</label></td>
-	<td><input type="text" id="field_value_selected2" name="field_value_selected2" value="" />
-	<label for="field_value_selected2_null">NULL</label>
-	<input type="checkbox" value="NULL" id="field_value_selected2_null" name="field_value_selected2_null" />
+    <td><label for="field_value_selected">RegEx para valor de columna</label></td>
+    <td><input type="text" id="field_value_selected" name="field_value_selected" value="" />
+    <label for="field_value_selected_null">NULL</label>
+    <input type="checkbox" value="NULL" id="field_value_selected_null" name="field_value_selected_null" />
+    <label for="field_value_selected_not">NOT</label>
+    <input type="checkbox" value="NOT" id="field_value_selected_not" name="field_value_selected_not" />
+    </td>
+    </tr>
+    <tr>
+    <td><label for="field_selected2">Segunda columna</label></td>
+    <td><script type="text/javascript">
+    //<![CDATA[
+    document.writeln('<select id="field_selected2" name="field_selected2"></select>');
+    //]]>
+    </script>
+    <noscript><input type="text" id="field_selected2" name="field_selected2" value="" /></noscript>
+    </td>
+    <td><label for="field_value_selected2">RegEx para valor de segunda columna</label></td>
+    <td><input type="text" id="field_value_selected2" name="field_value_selected2" value="" />
+    <label for="field_value_selected2_null">NULL</label>
+    <input type="checkbox" value="NULL" id="field_value_selected2_null" name="field_value_selected2_null" />
     <label for="field_value_selected2_not">NOT</label>
-	<input type="checkbox" value="NOT" id="field_value_selected2_not" name="field_value_selected2_not" /></td>
-	</tr>
-	</tbody></table>
-	<br />
-	<div>
-	<input type="submit" value="Enviar" name="submitForm" onclick="return checkscript()" />
-	<input type="reset" value="Borrar" name="reset1" />
-	</div>
-	<input type="radio" value="InsertRecordGroupForm" id="InsertRecordGroupForm" name="command" />
-	<label class="bigred" for="InsertRecordGroupForm">Insertar registro(s) (Selecciona una tabla con un numero de unidades para insertar)</label>
-	<br />
-	<br />
-	<input type="radio" value="UpdateRecordForm" id="UpdateRecordForm" name="command" />
-	<label class="bigblue" for="UpdateRecordForm">Actualizar un registro (Selecciona una tabla con un numero de ID)</label>
-	<br />
-	<br />
-	<input type="radio" value="ViewRecords" id="ViewRecords" name="command" />
-	<label class="bigblack" for="ViewRecords">Ver Registros (Selecciona una tabla con las opciones arriba y/o con columnas y sus RegEx seleccionados o NULL)</label>
-	<br />
-	<br />
-	<input type="radio" value="ShowColumns" id="ShowColumns" name="command" />
-	<label class="biggreen" for="ShowColumns">Mostrar columnas (Selecciona una tabla)</label>
-	<br />
-	<br />
+    <input type="checkbox" value="NOT" id="field_value_selected2_not" name="field_value_selected2_not" /></td>
+    </tr>
+    </tbody></table>
+    <br />
+    <div>
+    <input type="submit" value="Enviar" name="submitForm" onclick="return checkscript()" />
+    <input type="reset" value="Borrar" name="reset1" />
+    </div>
+    <input type="radio" value="InsertRecordGroupForm" id="InsertRecordGroupForm" name="command" />
+    <label class="bigred" for="InsertRecordGroupForm">Insertar registro(s) (Selecciona una tabla con un numero de unidades para insertar)</label>
+    <br />
+    <br />
+    <input type="radio" value="UpdateRecordForm" id="UpdateRecordForm" name="command" />
+    <label class="bigblue" for="UpdateRecordForm">Actualizar un registro (Selecciona una tabla con un numero de ID)</label>
+    <br />
+    <br />
+    <input type="radio" value="ViewRecords" id="ViewRecords" name="command" />
+    <label class="bigblack" for="ViewRecords">Ver Registros (Selecciona una tabla con las opciones arriba y/o con columnas y sus RegEx seleccionados o NULL)</label>
+    <br />
+    <br />
+    <input type="radio" value="ShowColumns" id="ShowColumns" name="command" />
+    <label class="biggreen" for="ShowColumns">Mostrar columnas (Selecciona una tabla)</label>
+    <br />
+    <br />
     }
                  );
-        if ( @{ $arg_ref->{available_commands} } ~~ /DeleteDuplicates/ )
-        {
+        if ( @{ $arg_ref->{Commands}{commands} } ~~ /DeleteDuplicates/ ) {
             $r->print(
                 qq{<input type="radio" value="DeleteDuplicates" id="DeleteDuplicates" name="command" />
-<label class="bigred" for="DeleteDuplicates">Borrar Duplicados(Selecciona una tabla, con limitaciones como clase y/o nombre de vendor con products tabla)</label>
-<br />
-<br />
-                }
+    <label class="bigred" for="DeleteDuplicates">Borrar Duplicados(Selecciona una tabla, con limitaciones como clase y/o nombre de vendor con products tabla)</label>
+    <br />
+    <br />
+    }
                      );
         }
-        $r->print(
-            qq{<input type="radio" value="ShowTables" id="ShowTables" name="command" />
-<label class="biggreen" for="ShowTables">Mostrar Tablas</label>
-<br />
-<br />
-<div>
-<input type="submit" value="Enviar" name="submitForm" onclick="return checkscript()" />
-<input type="reset" value="Borrar" name="reset1" />
-</div>
-</div></form>
-</div>
-</body></html>
+        if ( @{ $arg_ref->{Commands}{commands} } ~~ /DeleteRecord/ ) {
+            $r->print(
+                qq{<input type="radio" value="DeleteRecordForm" id="DeleteRecordForm" name="command" />
+    <label class="bigpurple" for="DeleteRecordForm">Borrar un Registro (Selecciona una tabla con un numero de ID)</label>
+    <br />
+    <br />
+    }
+                     );
         }
+
+        $r->print(
+            qq{
+    <input type="radio" value="ShowTables" id="ShowTables" name="command" />
+    <label class="biggreen" for="ShowTables">Mostrar Tablas</label>
+    <br />
+    <br />
+    <div>
+    <input type="submit" value="Enviar" name="submitForm" onclick="return checkscript()" />
+    <input type="reset" value="Borrar" name="reset1" />
+    </div>
+    </div></form>
+    </div>
+    </body></html>
+    }
                  );
     }
     else {
         $r->print(
-            qq{</select></td>	
-	</tr>
-	<tr>
-	<td><label for="field_selected">Field</label></td>
-	<td><script type="text/javascript">
-	//<![CDATA[
-	document.writeln('<select id="field_selected" name="field_selected"></select>');
-	//]]>
-	</script>
-	<noscript><input type="text" id="field_selected" name="field_selected" value="" /></noscript>
-	</td>
-	<td>
-    <label for="field_value_selected">Field Value RegEx</label></td>
-	<td>
+            qq{</select></td>    
+    </tr>
+    <tr>
+    <td><label for="field_selected">Field</label></td>
+    <td><script type="text/javascript">
+    //<![CDATA[
+    document.writeln('<select id="field_selected" name="field_selected"></select>');
+    //]]>
+    </script>
+    <noscript><input type="text" id="field_selected" name="field_selected" value="" /></noscript>
+    </td>
+    <td>
+    <label for="field_value_selected">Field Value RegEx</label>
+    </td>
+    <td>
     <input type="text" id="field_value_selected" name="field_value_selected" value="" /><br />
     <label for="field_value_selected_not">NOT</label>
-	<input type="checkbox" value="NOT" id="field_value_selected_not" name="field_value_selected_not" />
-	<label for="field_value_selected_null">NULL</label>
-	<input type="checkbox" value="NULL" id="field_value_selected_null" name="field_value_selected_null" />
+    <input type="checkbox" value="NOT" id="field_value_selected_not" name="field_value_selected_not" />
+    <label for="field_value_selected_null">NULL</label>
+    <input type="checkbox" value="NULL" id="field_value_selected_null" name="field_value_selected_null" />
     </td>
-	</tr>
-	<tr>
-	<td><label for="field_selected2">Second Field</label></td>
-	<td><script type="text/javascript">
-	//<![CDATA[
-	document.writeln('<select id="field_selected2" name="field_selected2"></select>');
-	//]]>
-	</script>
-	<noscript><input type="text" id="field_selected2" name="field_selected2" value="" /></noscript>
-	</td>
-	<td>
-    <label for="field_value_selected2">Second Field Value RegEx</label></td>
-	<td>
+    </tr>
+    <tr>
+    <td><label for="field_selected2">Second Field</label></td>
+    <td><script type="text/javascript">
+    //<![CDATA[
+    document.writeln('<select id="field_selected2" name="field_selected2"></select>');
+    //]]>
+    </script>
+    <noscript><input type="text" id="field_selected2" name="field_selected2" value="" /></noscript>
+    </td>
+    <td>
+    <label for="field_value_selected2">Second Field Value RegEx</label>
+    </td>
+    <td>
     <input type="text" id="field_value_selected2" name="field_value_selected2" value="" /><br />
     <label for="field_value_selected2_not">NOT</label>
-	<input type="checkbox" value="NOT" id="field_value_selected2_not" name="field_value_selected2_not" />
-	<label for="field_value_selected2_null">NULL</label>
-	<input type="checkbox" value="NULL" id="field_value_selected2_null" name="field_value_selected2_null" />
+    <input type="checkbox" value="NOT" id="field_value_selected2_not" name="field_value_selected2_not" />
+    <label for="field_value_selected2_null">NULL</label>
+    <input type="checkbox" value="NULL" id="field_value_selected2_null" name="field_value_selected2_null" />
     </td>
-	</tr>
-	</tbody>
+    </tr>
+    </tbody>
     </table>
     <br />
-	<div>
-	<input type="submit" value="Submit" name="submitForm" onclick="return checkscript()" />
-	<input type="reset" value="Reset" name="reset1" />
-	</div>
-	<input type="radio" value="InsertRecordGroupForm" id="InsertRecordGroupForm" name="command" />
-	<label class="bigred" for="InsertRecordGroupForm">Insert Record(s) Form (Select a Table and how many items to insert)</label>
-	<br />
-	<br />
-	<input type="radio" value="UpdateRecordForm" id="UpdateRecordForm" name="command" />
-	<label class="bigblue" for="UpdateRecordForm">Update Record Form (Select a Table with an ID)</label>
-	<br />
-	<br />
-	<input type="radio" value="ViewRecords" id="ViewRecords" name="command" />
-	<label class="bigblack" for="ViewRecords">View Records (Select a Table with above options and/or with Fields and their RegEx Selected or NULL)</label>
-	<br />
-	<br />
-	<input type="radio" value="ShowColumns" id="ShowColumns" name="command" />
-	<label class="biggreen" for="ShowColumns">Show Columns (Select a Table)</label>
-	<br />
-	<br />
-            }
+    <div>
+    <input type="submit" value="Submit" name="submitForm" onclick="return checkscript()" />
+    <input type="reset" value="Reset" name="reset1" />
+    </div>
+    <input type="radio" value="InsertRecordGroupForm" id="InsertRecordGroupForm" name="command" />
+    <label class="bigred" for="InsertRecordGroupForm">Insert Record(s) Form (Select a Table and how many items to insert)</label>
+    <br />
+    <br />
+    <input type="radio" value="UpdateRecordForm" id="UpdateRecordForm" name="command" />
+    <label class="bigblue" for="UpdateRecordForm">Update Record Form (Select a Table with an ID)</label>
+    <br />
+    <br />
+    <input type="radio" value="ViewRecords" id="ViewRecords" name="command" />
+    <label class="bigblack" for="ViewRecords">View Records (Select a Table with above options and/or with Fields and their RegEx Selected or NULL)</label>
+    <br />
+    <br />
+    <input type="radio" value="ShowColumns" id="ShowColumns" name="command" />
+    <label class="biggreen" for="ShowColumns">Show Columns (Select a Table)</label>
+    <br />
+    <br />
+        }
                  );
-        if ( @{ $arg_ref->{available_commands} } ~~ /DeleteDuplicates/ )
+        if ( @{ $arg_ref->{Commands}{commands} } ~~ /DeleteDuplicates/ )
         {
             $r->print(
                 qq{<input type="radio" value="DeleteDuplicates" id="DeleteDuplicates" name="command" />
-	<label class="bigred" for="DeleteDuplicates">Delete Duplicates (Select a table, use a limit such as class and/or vendor with products table)</label>
-	<br />
-	<br />
+    <label class="bigred" for="DeleteDuplicates">Delete Duplicates (Select a table, use a limit such as class and/or vendor with products table)</label>
+    <br />
+    <br />
 }
                      );
         }
+        if ( @{ $arg_ref->{Commands}{commands} } ~~ /DeleteRecord/ )
+        {
+            $r->print(
+                qq{<input type="radio" value="DeleteRecordForm" id="DeleteRecordForm" name="command" />
+    <label class="bigpurple" for="DeleteRecordForm">Delete a Record (Select a Table with an ID)</label>
+    <br />
+    <br />
+    }
+                     );
+        }
+
         $r->print(
             qq{
-	<input type="radio" value="ShowTables" id="ShowTables" name="command" />
-	<label class="biggreen" for="ShowTables">Show Tables</label>
-	<br />
-	<br />
-	<div>
-	<input type="submit" value="Submit" name="submitForm" onclick="return checkscript()" />
-	<input type="reset" value="Reset" name="reset1" />
-	</div>
-	</div>
+    <input type="radio" value="ShowTables" id="ShowTables" name="command" />
+    <label class="biggreen" for="ShowTables">Show Tables</label>
+    <br />
+    <br />
+    <div>
+    <input type="submit" value="Submit" name="submitForm" onclick="return checkscript()" />
+    <input type="reset" value="Reset" name="reset1" />
+    </div>
+    </div>
     </form>
-	</div>
-	</body>
+    </div>
+    </body>
     </html>
-	}
+    }
                  );
     }
 }

@@ -13,6 +13,7 @@ use BWCL::InsertRecord_B qw(InsertRecordGroup InsertRecordGroupForm);
 use BWCL::SelectTable_B qw(PrepareHead SelectTable);
 use BWCL::RecordUpdates_B qw(UpdateRecordForm UpdateRecord);
 use BWCL::ViewRecords_B qw(ViewRecords);
+use BWCL::DeleteRecord_B qw(DeleteRecord DeleteRecordForm);
 use Config::Std;
 
 #######################################################################
@@ -29,15 +30,9 @@ my $q = Apache::Request->new(
     DISABLE_UPLOADS => 1
 );
 
-my $dbh =
-    DBI->connect(
-    "DBI:Pg:dbname=$config_hash_ref->{'Database'}{'database'};host=$config_hash_ref->{'Database'}{'hostname'};port=$config_hash_ref->{'Database'}{'port'}",
-    $config_hash_ref->{'Database'}{'username'},
-    $config_hash_ref->{'Database'}{'password'},
-    {  'RaiseError' => 1,
-       pg_enable_utf8 =>
-           $config_hash_ref->{'Database'}{'pg_enable_utf8'}
-    } );
+my $dbh
+    = DBI->connect( "DBI:Pg:dbname=$config_hash_ref->{'Database'}{'database'};host=$config_hash_ref->{'Database'}{'hostname'};port=$config_hash_ref->{'Database'}{'port'}",
+    $config_hash_ref->{'Database'}{'username'}, $config_hash_ref->{'Database'}{'password'}, { 'RaiseError' => 1, pg_enable_utf8 => $config_hash_ref->{'Database'}{'pg_enable_utf8'} } );
 $config_hash_ref->{dbh} = $dbh;
 $config_hash_ref->{r} = $r;
 $config_hash_ref->{q} = $q;
@@ -98,21 +93,21 @@ my $table_selected = $q->param("table_selected")
     || goto ERROR_END;
 $config_hash_ref->{table_selected} = $table_selected;
 my $labor_project_list_category_selected
-    = $q->param("labor_project_list_category_selected") || 'All';
+    = $q->param("labor_project_list_category_selected")        || 'All';
 my $labor_project_list_subcategory_selected
-    = $q->param("labor_project_list_subcategory_selected") || 'All';
+    = $q->param("labor_project_list_subcategory_selected")     || 'All';
 my $labor_project_class_selected
-    = $q->param("labor_project_class_selected") || 'All';
+    = $q->param("labor_project_class_selected")                || 'All';
 my $labor_project_subclass_selected
-    = $q->param("labor_project_subclass_selected") || 'All';
+    = $q->param("labor_project_subclass_selected")             || 'All';
 my $labor_project_section_selected
-    = $q->param("labor_project_section_selected") || 'All';
+    = $q->param("labor_project_section_selected")              || 'All';
 my $id_selected           = $q->param("id_selected")           || '';
 my $field_selected        = $q->param("field_selected")        || '';
 my $field_value_selected  = $q->param("field_value_selected")  || '';
 my $field_selected2       = $q->param("field_selected2")       || '';
 my $field_value_selected2 = $q->param("field_value_selected2") || '';
-$config_hash_ref->{itemstoinsert} = $q->param("itemstoinsert") || '';
+$config_hash_ref->{itemstoinsert}         = $q->param("itemstoinsert")         || '';
 
 #######################################################################
 ##		Table Verification
@@ -213,7 +208,8 @@ unless ( $labor_project_section_selected eq "All" ) {
 }
 #######################################################################
 ##		ID Selected Verification
-if ( $command eq "UpdateRecordForm" && $id_selected !~ /^\d+$/ ) {
+if ( ($command eq "UpdateRecordForm" || $command eq "DeleteRecordForm")
+    && $id_selected !~ /^\d+$/ ) {
     error_message($r, $lang, "un numero de ID valido", "a valid ID number");
     goto ERROR_END;
 }
@@ -271,7 +267,7 @@ $dbh->disconnect;
 
 =head1 NAME
 
-pg_glpc-B.pl
+gl.pl
 
 =head1 VERSION
 

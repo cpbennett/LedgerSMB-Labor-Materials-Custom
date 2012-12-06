@@ -259,7 +259,7 @@ $dbh->disconnect;
 
 =head1 NAME
 
-treez.pl - View and reproduce similar full assembly list trees to bottom.
+tr.pl - View and reproduce similar full assembly list trees to bottom.
 
 =head1 VERSION
 

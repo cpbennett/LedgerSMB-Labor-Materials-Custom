@@ -13,6 +13,7 @@ use BWCL::InsertRecord_B qw(InsertRecordGroup InsertRecordGroupForm);
 use BWCL::SelectTable_B qw(PrepareHead SelectTable);
 use BWCL::RecordUpdates_B qw(UpdateRecordForm UpdateRecord DeleteDuplicates);
 use BWCL::ViewRecords_B qw(ViewRecords);
+use BWCL::DeleteRecord_B qw(DeleteRecord DeleteRecordForm);
 use Config::Std;
 
 #######################################################################
@@ -99,11 +100,11 @@ my $field_selected        = $q->param("field_selected")        || '';
 my $field_value_selected  = $q->param("field_value_selected")  || '';
 my $field_selected2       = $q->param("field_selected2")       || '';
 my $field_value_selected2 = $q->param("field_value_selected2") || '';
-$config_hash_ref->{itemstoinsert} = $q->param("itemstoinsert") || '';
+$config_hash_ref->{itemstoinsert}         = $q->param("itemstoinsert")         || '';
 my $full_assembly_list_category_selected
-    = $q->param("full_assembly_list_category_selected") || 'All';
+    = $q->param("full_assembly_list_category_selected")        || 'All';
 my $full_assembly_list_subcategory_selected
-    = $q->param("full_assembly_list_subcategory_selected") || 'All';
+    = $q->param("full_assembly_list_subcategory_selected")     || 'All';
 
 #######################################################################
 ##		Table Verification
@@ -202,12 +203,11 @@ unless ( $full_assembly_list_subcategory_selected eq "All" ) {
 
 #######################################################################
 ##		ID Selected Verification
-if ( $command eq "UpdateRecordForm" && $id_selected !~ /^\d+$/ ) {
-    error_message($r, $lang, "un numero de ID valido",
-        "a valid ID number");
+if ( ($command eq "UpdateRecordForm" || $command eq "DeleteRecordForm")
+    && $id_selected !~ /^\d+$/ ) {
+    error_message($r, $lang, "un numero de ID valido", "a valid ID number");
     goto ERROR_END;
-}
-#######################################################################
+}#######################################################################
 ##		Items to Insert Verification
 if ( $command eq "InsertRecordForm" && $config_hash_ref->{itemstoinsert} !~ /^\d+$/ ) {
     error_message($r, $lang, "un numero de unidades para insertar",
@@ -271,7 +271,7 @@ $dbh->disconnect;
 
 =head1 NAME
 
-pg_wmod-B.pl
+pg.pl
 
 =head1 VERSION
 

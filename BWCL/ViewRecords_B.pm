@@ -23,8 +23,15 @@ sub ViewRecords {
     my $q                  = $arg_ref->{q};
     my $table              = $arg_ref->{table_selected};
     my $table2             = $dbh->quote($table);
-    my $field              = $q->param("field_selected");
-    my $field_value        = $q->param("field_value_selected");
+    my $table_id_field     = $arg_ref->{table_id_field};
+    my $table_id           = $arg_ref->{table_id};
+    my $where_statementx = '';
+    if (defined $table_id_field) {
+    $where_statementx = "WHERE $table_id_field = $table_id";
+    goto DELETE_VIEW;
+    }
+    my $field              = $arg_ref->{field_selected} || $q->param("field_selected");
+    my $field_value        = $arg_ref->{field_value_selected} || $q->param("field_value_selected");
     my $field_value_null   = $q->param("field_value_selected_null");
     my $field_value_not    = $q->param("field_value_selected_not");
     my $field2             = $q->param("field_selected2");
@@ -58,7 +65,7 @@ sub ViewRecords {
     my $fetch_all_href;
     my $view_array_ref;
     my @where_statementx = ();
-    my $where_statementx = '';
+    
 
     if ( (defined $full_assembly_list_category)
          && ( $full_assembly_list_category ne 'All' ) )
@@ -341,6 +348,7 @@ sub ViewRecords {
 	    }
              );
 
+             DELETE_VIEW:
     ( $statement, $fetch_all_href ) = Selecter( "ViewTable", $table );
     $sth = $dbh->prepare(
                     "SELECT $statement FROM $table $where_statementx;");
@@ -648,7 +656,6 @@ sub view_table {
     $r->print(
         qq{</tbody>
         </table>
-        <h2>Number of Rows = $num_of_rows</h2>
         </div>
         }
              );

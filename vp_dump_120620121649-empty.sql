@@ -55,6 +55,21 @@ END;$$;
 ALTER FUNCTION public.assembly_part_description_product_description_update() OWNER TO bencon;
 
 --
+-- Name: full_assembly_full_assembly_list_id_delete_run(); Type: FUNCTION; Schema: public; Owner: bencon
+--
+
+CREATE FUNCTION full_assembly_full_assembly_list_id_delete_run() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+BEGIN
+UPDATE full_assembly set full_assembly_full_assembly_list_id=NULL WHERE full_assembly_full_assembly_list_id=OLD.full_assembly_list_id;
+RETURN NULL;
+END;$$;
+
+
+ALTER FUNCTION public.full_assembly_full_assembly_list_id_delete_run() OWNER TO bencon;
+
+--
 -- Name: full_assembly_full_assembly_list_id_update(); Type: FUNCTION; Schema: public; Owner: bencon
 --
 
@@ -78,7 +93,7 @@ CREATE FUNCTION full_assembly_list_total_full_assembly_delete_run() RETURNS trig
     LANGUAGE plpgsql
     AS $$
 BEGIN
-UPDATE full_assembly_list set full_assembly_list_total=(SELECT SUM(full_assembly_assembly_rowtotal) FROM full_assembly WHERE full_assembly_name=OLD.full_assembly_name);
+UPDATE full_assembly_list set full_assembly_list_total=(SELECT SUM(full_assembly_assembly_rowtotal) FROM full_assembly WHERE full_assembly_name=OLD.full_assembly_name) WHERE full_assembly_list_name=OLD.full_assembly_name;
 RETURN NULL;
 END;$$;
 
@@ -1831,94 +1846,6 @@ ALTER TABLE ONLY vendors ALTER COLUMN vendor_id SET DEFAULT nextval('vendors_ven
 
 
 --
--- Data for Name: assemblies; Type: TABLE DATA; Schema: public; Owner: bencon
---
-
-COPY assemblies (assembly_id, assembly_notes, assembly_url, assembly_subtotal, assembly_category, assembly_description, assembly_name, assembly_currency) FROM stdin;
-\.
-
-
---
--- Data for Name: assemblies_parts; Type: TABLE DATA; Schema: public; Owner: bencon
---
-
-COPY assemblies_parts (assembly_part_id, assembly_part_notes, assembly_part_assembly_id, assembly_part_subtotal, assembly_part_quantity, assembly_part_product_id, assembly_part_description, assembly_part_subclass, assembly_part_class, assembly_part_name, assembly_part_currency) FROM stdin;
-\.
-
-
---
--- Data for Name: countries; Type: TABLE DATA; Schema: public; Owner: bencon
---
-
-COPY countries (country, country_id) FROM stdin;
-\.
-
-
---
--- Data for Name: currencies; Type: TABLE DATA; Schema: public; Owner: bencon
---
-
-COPY currencies (currency_id, currency) FROM stdin;
-\.
-
-
---
--- Data for Name: customers; Type: TABLE DATA; Schema: public; Owner: bencon
---
-
-COPY customers (cust_id, cust_bill_notes, cust_bill_email2, cust_bill_email, cust_bill_phone_fax, cust_bill_phone_work2, cust_bill_phone_work, cust_bill_phone_cell2, cust_bill_phone_cell, cust_bill_phone_home, cust_bill_zip, cust_bill_state, cust_bill_city, cust_bill_street_addr2, cust_bill_street_addr, cust_bill_business_name, residential_or_commercial, cust_bill_lname2, cust_bill_fname2, cust_bill_lname, cust_bill_fname, cust_bill_country) FROM stdin;
-\.
-
-
---
--- Data for Name: full_assembly; Type: TABLE DATA; Schema: public; Owner: bencon
---
-
-COPY full_assembly (full_assembly_id, full_assembly_notes, full_assembly_url, full_assembly_full_assembly_list_id, full_assembly_assembly_id, full_assembly_assembly_rowtotal, full_assembly_assembly_subtotal, full_assembly_assembly_quantity, full_assembly_name, full_assembly_currency) FROM stdin;
-\.
-
-
---
--- Data for Name: full_assembly_list; Type: TABLE DATA; Schema: public; Owner: bencon
---
-
-COPY full_assembly_list (full_assembly_list_id, full_assembly_list_notes, full_assembly_list_total, full_assembly_list_subcategory, full_assembly_list_category, full_assembly_list_name, full_assembly_list_currency) FROM stdin;
-\.
-
-
---
--- Data for Name: jobsites; Type: TABLE DATA; Schema: public; Owner: bencon
---
-
-COPY jobsites (jobsite_id, jobsite_notes, jobsite_website, jobsite_phone_work2, jobsite_phone_cell2, jobsite_email, jobsite_phone_fax, jobsite_phone_work, jobsite_phone_cell, jobsite_phone_home, jobsite_zip, jobsite_state, jobsite_city, jobsite_street_addr2, jobsite_street_addr, jobsite_business_name, residential_or_commercial, cust_id, jobsite_country) FROM stdin;
-\.
-
-
---
--- Data for Name: products; Type: TABLE DATA; Schema: public; Owner: bencon
---
-
-COPY products (product_id, product_notes, product_url, check_days, up_date, vendor_name, model, sku, price, subclass, class, product_description, product_currency) FROM stdin;
-\.
-
-
---
--- Data for Name: vendor_contacts; Type: TABLE DATA; Schema: public; Owner: bencon
---
-
-COPY vendor_contacts (vend_contact_id, ven_contact_notes, ven_contact_home_phone, ven_contact_fax, ven_contact_email, ven_contact_cell_phone, ven_contact_phone, ven_contact_lname, ven_contact_fname, vendor_name, ven_contact_country) FROM stdin;
-\.
-
-
---
--- Data for Name: vendors; Type: TABLE DATA; Schema: public; Owner: bencon
---
-
-COPY vendors (vendor_id, vendor_notes, vendor_email, vendor_phone2, search_access, vendor_fax, vendor_website, hours_open, vendor_phone, vendor_zip, vendor_state, vendor_city, vendor_street_address2, vendor_street_address, vendor_name, vendor_country, vendor_currency) FROM stdin;
-\.
-
-
---
 -- Name: assemblies_parts_pkey; Type: CONSTRAINT; Schema: public; Owner: bencon; Tablespace: 
 --
 
@@ -2072,6 +1999,13 @@ CREATE TRIGGER assembly_part_description_product_description_update_trigger AFTE
 --
 
 CREATE TRIGGER assembly_part_description_update_trigger BEFORE UPDATE OF assembly_part_product_id ON assemblies_parts FOR EACH ROW EXECUTE PROCEDURE assembly_part_description();
+
+
+--
+-- Name: full_assembly_full_assembly_list_id_delete_run_trigger; Type: TRIGGER; Schema: public; Owner: bencon
+--
+
+CREATE TRIGGER full_assembly_full_assembly_list_id_delete_run_trigger BEFORE DELETE ON full_assembly_list FOR EACH ROW EXECUTE PROCEDURE full_assembly_full_assembly_list_id_delete_run();
 
 
 --

@@ -90,8 +90,8 @@ $labor_project_list_string = join( ',', @labor_project_lists );
 foreach my $chosen (@labor_project_lists) {
     $chosenh        = $chosen;
     $chosenh_pretty = $chosen;
-    $chosenh_pretty =~ s/"/''/g;
-# This substitution is done for form which allows javascript to function
+    $chosenh_pretty =~ s/"/''/g
+        ; # This substitution is done for form which allows javascript to function
     $case_string .= qq{
 		case "$chosenh_pretty" :
 		labor_project_selected.length = 0;
@@ -120,8 +120,8 @@ foreach my $chosen (@labor_project_lists) {
 
         $option = $$option_aref[0];
         unless ( defined $option ) { next; }
-        $option =~ s/"/''/g;
-# This substitution is done for form which allows javascript to function
+        $option =~ s/"/''/g
+            ; # This substitution is done for form which allows javascript to function
         $case_string .= qq{
 labor_project_selected[labor_project_selected.length] = new Option("$option", "$tbl->[$i][0]");
 };
@@ -261,7 +261,7 @@ $dbh->disconnect;
 
 =head1 NAME
 
-labbz.pl - View and reproduce similar labor project list trees to bottom.
+lab.pl - View and reproduce similar labor project list trees to bottom.
 
 =head1 VERSION
 
