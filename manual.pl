@@ -1,10 +1,18 @@
 #!/usr/bin/perl
 
-our $VERSION = 0.1.00;
+our $VERSION = 0.1.10;
 use warnings;
 use strict;
 
 use Apache::Request();
+use Config::Std;
+
+my $filename = 'manual.cfg';
+my $config_hash_ref;
+read_config($filename => $config_hash_ref);
+
+my $labor_database = $config_hash_ref->{Databases}{labor_database};
+my $materials_database = $config_hash_ref->{Databases}{materials_database};
 my $r = Apache->request;
 my $q = Apache::Request->new(
     $r,
@@ -53,12 +61,13 @@ if ( $lang eq "en" ) {
 <li class="medium2"><strong>Update Record</strong> - Used to update an existing record from a table from list of tables AND using the ID value that you need to know for that entry!<br /><br /></li>
 <li class="medium2"><strong>View Records</strong> - Used to view records of a given table from list. You may pick a class and/or subclass and/or vendor if viewing products table only. Use % or _ as wildcards for Field Value entries.<br /><br /></li>
 <li class="medium2"><strong>Delete Duplicates</strong> - Use to delete existing records in products table where duplicate entries exist.<br /><br /></li>
+<li class="medium2"><strong>Delete a Record</strong> - Use to delete existing records in any table using the ID value that record. <br /><br /></li>
 <li class="medium2"><strong>Show Columns</strong> - Shows all columns and their properties from a selected table from list. Use these field names for View Records command.<br /><br /></li>
 <li class="medium2"><strong>Show Tables</strong> - Shows all tables in this database.<br /><br /></li>
 </ul>
 <hr />
 <div>
-	<h2 class="big">Current Table List - vprdo</h2>
+	<h2 class="big">Current Table List - $materials_database</h2>
 	<div>
 	<table summary="" border="2" rules="all">
 	<thead>
@@ -110,7 +119,7 @@ if ( $lang eq "en" ) {
 	</div>
 <hr />
 <div>
-	<h2 class="big">Current Table List - glpctest</h2>
+	<h2 class="big">Current Table List - $labor_database</h2>
 	<div>
 	<table summary="" border="2" rules="all">
 	<thead>
@@ -153,7 +162,15 @@ if ( $lang eq "en" ) {
 	<tr>
 	<td class="medium3" align="left">contractors</td><td class="medium3" align="left">Contractors who provide services</td>
 	</tr>
-
+	<tr>
+	<td class="medium3" align="left">expenses</td><td class="medium3" align="left">Miscellaneous overhead expenses.</td>
+	</tr>
+	<tr>
+	<td class="medium3" align="left">expenses_total</td><td class="medium3" align="left">A single total of all overhead expenses converted to a daily total.</td>
+</tr>
+	<tr>
+	<td class="medium3" align="left">time_units</td><td class="medium3" align="left">Miscellaneous time units. Includes a multiplication factor to convert to daily value.</td>
+</tr>
 	</tbody>
 	</table>
 	</div>
@@ -196,6 +213,9 @@ So %2%(x|X)%4%(x|X)%8% will perform the search of:<br />
 <h3 class="medium">Delete Duplicates:</h3>
 <p class="medium2">Use to delete existing records in products table where duplicate entries exist. A vendor must be selected. Only entries with duplicate sku AND model will be selected. Some entries have differing product_urls or product_descriptions, usually due to a minor difference such as color or other options. This is a defect in the vendor's database design. Please do not delete these items.
 </p>
+<h3 class="medium">Delete a Record:</h3>
+<p class="medium2">Use to delete an existing record in any table using the ID value that you need to know for that single entry. Only ID field (such as cust_id ) can be used for this command. This command may fail and remind you that entries in other tables may need to be deleted first as all of those entries depend on this record. These other records may be deleted and then you can delete this particular record. Some records may have a huge number of other records depending on it. You should consider using a command line or other methods to deal with these situations.
+</p>
 <h3 class="medium">Show Columns:</h3>
 <p class="medium2">Shows all columns (also called fields) and their properties from a selected table from list. Use these field names for the View Some Records command. You will probably need to use the View All Records command to obtain the needed field values to then use View Some Records unless you already know what value you are searching for.
 </p>
@@ -218,7 +238,7 @@ So %2%(x|X)%4%(x|X)%8% will perform the search of:<br />
 
 <hr />
 
-<div class="right"><br /><br />Last Updated: July 17, 2012<br /><br /></div>
+<div class="right"><br /><br />Last Updated: December 09, 2012<br /><br /></div>
 <br />
 </div>
 </body></html>
@@ -258,12 +278,13 @@ elsif ( $lang eq "es" ) {
 <li class="medium2"><strong>Actualización de Registro</strong> - Se utiliza para actualizar un registro existente de una tabla de la lista de tablas y utilizando el ID de valor que hay que saber para que la entrada!<br /><br /></li>
 <li class="medium2"><strong>Ver los Registros</strong> - Utilizado para ver todos los registros de una tabla de la lista. Usted puede elegir una clase o subclase de la clase y ver si la tabla de productos solamente. Además, se puede escoger un proveedor de la lista de proveedores, solamente cuando usando la tabla productos.  Se utiliza para ver determinadas registros combinados de una determinada tabla de la lista. Usted tendrá que escoger un terreno y el valor que desee partido. Ver columnas para mostrar los nombres de la columna real. Utilice % (el signo de porcentaje) como comodín.<br /><br /></li>
 <li class="medium2"><strong>Borrar Duplicados</strong> - Usa para borrar registros en la tabla de productos cuando unos registros son duplicados.<br /><br /></li>
+<li class="medium2"><strong>Borrar un Registro</strong> - Usa para borrar registros en cualquier tabla uutilizando el ID de valor para el registro.<br /><br /></li>
 <li class="medium2"><strong>Mostrar Columnas</strong> - Muestra todas las columnas y sus propiedades de una tabla seleccionada de la lista. Utilice estos nombres de columna para ver algunos registros comando.<br /><br /></li>
 <li class="medium2"><strong>Mostrar Tablas</strong> - Muestra todas las tablas en esta base de datos.<br /><br /></li>
 </ul>
 <hr />
 <div>
-	<h2 class="big">Lista de Tablas Actuales - vprdo</h2>
+	<h2 class="big">Lista de Tablas Actuales - $materials_database</h2>
 	<div>
 	<table summary="" border="2" rules="all">
 	<thead>
@@ -315,7 +336,7 @@ elsif ( $lang eq "es" ) {
 	</div>
 <hr />
 <div>
-	<h2 class="big">Lista de Tablas Actuales - glpctest</h2>
+	<h2 class="big">Lista de Tablas Actuales - $labor_database</h2>
 	<div>
 	<table summary="" border="2" rules="all">
 	<thead>
@@ -358,7 +379,15 @@ elsif ( $lang eq "es" ) {
 	<tr>
 	<td class="medium3" align="left">contractors</td><td class="medium3" align="left">Los contratistas que prestan servicios</td>
 	</tr>
-
+	<tr>
+	<td class="medium3" align="left">expenses</td><td class="medium3" align="left">Los varios gastos corrientes.</td>
+	</tr>
+	<tr>
+	<td class="medium3" align="left">expenses_total</td><td class="medium3" align="left">Un total de los varios gastos corrientes para cobrar por día.</td>
+</tr>
+	<tr>
+	<td class="medium3" align="left">time_units</td><td class="medium3" align="left">Los varios periodos de tiempo, incluyendo una conversión a un tiempo de un día.</td>
+</tr>
 	</tbody>
 	</table>
 	</div>
@@ -408,6 +437,10 @@ Entonces %2%(x|X)%4%(x|X)%8% buscara así:</p>
 
 <p class="medium2">Usa para borrar registros en la tabla de productos cuando unos registros son duplicados. Un proveedor necesita estar seleccionado. Solamente registros con las columnas sku y model duplicados a mismo tiempo estarán mostrados. Unos de estos no son de veras duplicados por diferencias como color o product_url, etc. Se debe ver este problema como un defecto en el diseño del base de datos del proveedor. ¡Por favor de no borrar estos registros!</p>
 
+<h3 class="medium">Borrar un Registro:</h3>
+
+<p class="medium2">Se utiliza para eliminar un registro existente en una tabla utilizando el valor de ID que usted necesita saber para esa única entrada. Sólo el campo ID (como cust_id) se puede utilizar para este comando. Este comando puede fallar y le recordamos que las entradas de otras tablas puede ser necesario borrar primero como todas las entradas dependen de este registro. Estos otros registros se pueden eliminar y entonces usted puede eliminar este registro particular. Algunos registros pueden tener un gran número de registros otros que dependen de el. Usted debe considerar el uso de una línea de comandos u otros métodos para hacer frente a estas situaciones.</p>
+
 <h3 class="medium">Mostrar Columnas:</h3>
 <p class="medium2">Muestra todas las columnas y sus propiedades de una tabla seleccionada de la lista. Utilice estos nombres de columna para el comando Ver Algunos registros. Usted probablemente necesitará utilizar el comando Ver todos los registros necesarios para obtener los valores de las columnas a continuación, utilice Ver algunos registros a menos que usted ya conoce el valor de lo que está buscando.</p>
 
@@ -430,7 +463,7 @@ Entonces %2%(x|X)%4%(x|X)%8% buscara así:</p>
 
 <p class="medium2">Esto es una unidad solamente que junta toda la información desde abajo hasta algo completo, incluyendo precio, categoría y mas. Esta es el precio final y completo para este unidad completada.</p>
 <hr />
-<div class="right"><br /><br />Última Actualización: 25 de agosto de 2012 <br /><br /></div><br /></div>
+<div class="right"><br /><br />Última Actualización: 09 de deciembre de 2012 <br /><br /></div><br /></div>
 </body></html>
 }
     );
