@@ -24,7 +24,7 @@ sub PrepareHead {
         my @both_columns;
         my $field_table_aref = $arg_ref->{field_table_aref};
         my $l = 0;
-        my $primary_and_secondary;
+        my $primary_splitter_secondary;
         my @primary_secondary_split;
         my $old_primary = '';
         my $primary;
@@ -35,18 +35,17 @@ sub PrepareHead {
         # Next step subtracts one to remove single alone field on form
     for my $k (0 .. ($#$field_table_aref - 3) ) {
         $statement
-            = "SELECT DISTINCT ($field_table_aref->[$l][0], $field_table_aref->[$l+1][0]) FROM $field_table_aref->[$l][1] WHERE $field_table_aref->[$l][0] IS NOT NULL;";
+            = "SELECT DISTINCT ($field_table_aref->[$l][0], '#'::text, $field_table_aref->[$l+1][0]) FROM $field_table_aref->[$l][1] WHERE $field_table_aref->[$l][0] IS NOT NULL;";
         $sth = $dbh->prepare($statement);
         $rv1 = $sth->execute();
         
     CASE:
         while ( @both_columns = $sth->fetchrow_array() ) {
-            $primary_and_secondary = $both_columns[0];
-            $primary_and_secondary =~ s/\(//g;
-            $primary_and_secondary =~ s/\)//g;
-            $primary_and_secondary =~ s/^"//g;
-            $primary_and_secondary =~ s/"$//g;
-            @primary_secondary_split = split /","/, $primary_and_secondary;
+            $primary_splitter_secondary = $both_columns[0];
+            $primary_splitter_secondary =~ s/\(//g;
+            $primary_splitter_secondary =~ s/\)//g;
+            $primary_splitter_secondary =~ s/"//g;
+            @primary_secondary_split = split /,#,/, $primary_splitter_secondary;
             $primary     = $primary_secondary_split[0];
             $secondary  = $primary_secondary_split[1] || '';
             if ( !defined $primary ) {
