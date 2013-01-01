@@ -44,17 +44,17 @@ sub ViewRecords {
     my $labor_project_list_category
         = $q->param("labor_project_list_category_selected");
     my $labor_project_list_subcategory
-        = $q->param("labor_project_list_subcategory_selected");
+        = $q->param("labor_project_list_subcategory_selectedlabor_project_list_category_selected");
     my $labor_project_class = $q->param("labor_project_class_selected");
     my $labor_project_section = $q->param("labor_project_section_selected");
     my $labor_project_subclass
-        = $q->param("labor_project_subclass_selected");
+        = $q->param("labor_project_subclass_selectedlabor_project_class_selected");
     my $full_assembly_list_name
         = $q->param("full_assembly_list_name_selected");
     my $full_assembly_list_category
         = $q->param("full_assembly_list_category_selected");
     my $full_assembly_list_subcategory
-        = $q->param("full_assembly_list_subcategory_selected");
+        = $q->param("full_assembly_list_subcategory_selectedfull_assembly_list_category_selected");
     my $num_of_rows;
     my $sth;
     my $statement;
