@@ -44,8 +44,9 @@ sub PrepareHead {
             $primary_and_secondary = $both_columns[0];
             $primary_and_secondary =~ s/\(//g;
             $primary_and_secondary =~ s/\)//g;
-            $primary_and_secondary =~ s/"//g;
-            @primary_secondary_split = split /,/, $primary_and_secondary;
+            $primary_and_secondary =~ s/^"//g;
+            $primary_and_secondary =~ s/"$//g;
+            @primary_secondary_split = split /","/, $primary_and_secondary;
             $primary     = $primary_secondary_split[0];
             $secondary  = $primary_secondary_split[1] || '';
             if ( !defined $primary ) {
