@@ -1,6 +1,7 @@
 #!/usr/bin/perl
 
 our $VERSION = 3.1.00;
+
 use warnings;
 use strict;
 
@@ -22,7 +23,6 @@ use Config::Std;
 my $filename = 'Products.cfg';
 my $config_hash_ref;
 read_config($filename => $config_hash_ref);
-
 my $r = Apache->request;
 my $q = Apache::Request->new(
     $r,
@@ -47,7 +47,7 @@ my $tbl;
 
 my $commands = $config_hash_ref->{'Commands'}{'commands'};
 ##	This gives preset filled select lists for "preferred" fields.
-##	Is an array of arrays. field,table pairs
+##	Is an array of arrays consisting of field and table pairs.
 ##	Is designed to works with odd numbers due to table cells.
 ##	Not sure if it will work with no fields at all
 my @field_select_tables = (
@@ -96,9 +96,9 @@ my $class_selected        = $q->param("class_selected")        || 'All';
 my $subclass_selected     = $q->param("subclass_selected")     || 'All';
 my $vendor_name_selected  = $q->param("vendor_name_selected")  || 'All';
 my $id_selected           = $q->param("id_selected")           || '';
-my $field_selected        = $q->param("field_selected")        || '';
+my $field_selectedtable_selected        = $q->param("field_selectedtable_selected")        || '';
 my $field_value_selected  = $q->param("field_value_selected")  || '';
-my $field_selected2       = $q->param("field_selected2")       || '';
+my $field_selected2table_selected       = $q->param("field_selected2table_selected")       || '';
 my $field_value_selected2 = $q->param("field_value_selected2") || '';
 $config_hash_ref->{itemstoinsert}         = $q->param("itemstoinsert")         || '';
 my $full_assembly_list_category_selected
@@ -200,7 +200,6 @@ unless ( $full_assembly_list_subcategory_selected eq "All" ) {
         goto ERROR_END;
     }
 }
-
 #######################################################################
 ##		ID Selected Verification
 if ( ($command eq "UpdateRecordForm" || $command eq "DeleteRecordForm")
@@ -216,10 +215,10 @@ if ( $command eq "InsertRecordForm" && $config_hash_ref->{itemstoinsert} !~ /^\d
 }
 #######################################################################
 ##		Field Selected Verification
-    if ($field_selected) {
-       $field_selected
-        = $dbh->quote($field_selected);
-        $statement = "SELECT (SELECT DISTINCT column_name FROM information_schema.columns WHERE table_name = $table_selected AND column_name = $field_selected);";
+    if ($field_selectedtable_selected) {
+       $field_selectedtable_selected
+        = $dbh->quote($field_selectedtable_selected);
+        $statement = "SELECT (SELECT DISTINCT column_name FROM information_schema.columns WHERE table_name = $table_selected AND column_name = $field_selectedtable_selected);";
     $sth = $dbh->prepare($statement) || die $dbh->errstr;
     $rc  = $sth->execute             || die $dbh->errstr;
     $tbl = $sth->fetchrow_arrayref;
@@ -231,10 +230,10 @@ if ( $command eq "InsertRecordForm" && $config_hash_ref->{itemstoinsert} !~ /^\d
 }
 #######################################################################
 ##		Field Selected2 Verification
-if ($field_selected2) {
-       $field_selected2
-        = $dbh->quote($field_selected2);
-        $statement = "SELECT (SELECT DISTINCT column_name FROM information_schema.columns WHERE table_name = $table_selected AND column_name = $field_selected2);";
+if ($field_selected2table_selected) {
+       $field_selected2table_selected
+        = $dbh->quote($field_selected2table_selected);
+        $statement = "SELECT (SELECT DISTINCT column_name FROM information_schema.columns WHERE table_name = $table_selected AND column_name = $field_selected2table_selected);";
     $sth = $dbh->prepare($statement) || die $dbh->errstr;
     $rc  = $sth->execute             || die $dbh->errstr;
     $tbl = $sth->fetchrow_arrayref;
@@ -248,7 +247,7 @@ if ($field_selected2) {
 ##		Select a Sub
 
 
-if ( $command eq "DeleteDuplicates" && $table_selected ne "products" ) {
+if ( $command eq "DeleteDuplicates" && $config_hash_ref->{table_selected} ne "products" ) {
     error_message($r, $lang, "la tabla products solamente",
         "only the products table");
     goto ERROR_END;

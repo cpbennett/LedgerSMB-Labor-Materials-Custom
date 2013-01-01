@@ -1,6 +1,7 @@
 package BWCL::SelectTable_B;
 
-our $VERSION = 4.4.10;
+our $VERSION = 4.5.50;
+
 use warnings;
 use strict;
 
@@ -15,172 +16,82 @@ sub PrepareHead {
     my ($arg_ref) = @_;
     my $r         = $arg_ref->{r};
     my $dbh       = $arg_ref->{dbh};
+    my @tables    = ();
+    my @array;
+    my $sth;
+ 
+       #       this section creates javascript variable cat"x"
+        my @both_columns;
+        my $field_table_aref = $arg_ref->{field_table_aref};
+        my $l = 0;
+        my $primary_and_secondary;
+        my @primary_secondary_split;
+        my $old_primary = '';
+        my $primary;
+        my $secondary;
+        my $statement;
+        my $rv1;
 
-#######################################################################
-    #    Prepare Javascript in Head
-
-    my $table_string   = "";
-    my $case_string    = "";
-    my $option_string  = "";
-    my $option_stringc = '';
-    my $case_stringc   = '';
-    my @columns        = ();
-    my @tables         = ();
-
-    my $sth = $dbh->table_info( '', 'public', undef, 'TABLE' );
-    for my $rel ( @{ $sth->fetchall_arrayref( {} ) } ) {
-        push( @tables, "\'$rel->{TABLE_NAME}\'" );
-    }
-    $sth->finish();
-    $option_string
-        .= qq{field_selected[field_selected.length] = new Option("", "");
-field_selected2[field_selected2.length] = new Option("", "");
-};
-
-    $table_string = join( ',', @tables );
-    foreach my $chosen (@tables) {
-        $case_string .= qq{
-        case $chosen :
-        field_selected.length = 0;
-        field_selected2.length = 0;
-        field_selected[field_selected.length] = new Option("", "");
-        field_selected2[field_selected2.length] = new Option("", "");
-};
-        my $statement
-            = "SELECT column_name FROM information_schema.columns WHERE table_name = $chosen;";
-        my $sth = $dbh->prepare($statement);
-        my $rv  = $sth->execute()
-            or die "can't execute the query: $sth->errstr";
-        my $tbl = $sth->fetchall_arrayref or die "$sth->errstr\n";
-        for my $i ( 0 .. $#{$tbl} ) {
-            $case_string .= qq{
-field_selected[field_selected.length] = new Option("$tbl->[$i][0]", "$tbl->[$i][0]");
-field_selected2[field_selected2.length] = new Option("$tbl->[$i][0]", "$tbl->[$i][0]");
-};
-            if ( $chosen eq $tables[0] ) {
-                $option_string .= qq{
-field_selected[field_selected.length] = new Option("$tbl->[$i][0]", "$tbl->[$i][0]");
-field_selected2[field_selected2.length] = new Option("$tbl->[$i][0]", "$tbl->[$i][0]");
-};
-            }
-        }
-        $case_string .= qq{break;
-};
-    }
-    my $array;
-    unless ( $arg_ref->{'Program'}{'program_path_name'} =~ /gl/ ) {
-
-#######################################################################
-       #       This section successfully creates javascript variable cat
-        my @all_subclasses_aref;
-        my $statement
-            = "SELECT DISTINCT (class, subclass) FROM products WHERE class IS NOT NULL;";
+        # Next step subtracts one to remove single alone field on form
+    for my $k (0 .. ($#$field_table_aref - 3) ) {
+        $statement
+            = "SELECT DISTINCT ($field_table_aref->[$l][0], $field_table_aref->[$l+1][0]) FROM $field_table_aref->[$l][1] WHERE $field_table_aref->[$l][0] IS NOT NULL;";
         $sth = $dbh->prepare($statement);
-        my $rv1 = $sth->execute();
-        my $classsuball;
-        my @class_sub;
-        my $old_class = '';
-        my $class;
-        my $subclass;
-        #######################################################################
-        #   This sections works perfect
-        #   BEGIN
-        $array = qq|var cat={
-|;
+        $rv1 = $sth->execute();
+        
     CASE:
-        while ( @all_subclasses_aref = $sth->fetchrow_array() ) {
-            $classsuball = $all_subclasses_aref[0];
-            $classsuball =~ s/\(//g;
-            $classsuball =~ s/\)//g;
-            $classsuball =~ s/"//g;
-            @class_sub = split /,/, $classsuball;
-            $class     = $class_sub[0];
-            $subclass  = $class_sub[1] || '';
-            if ( $class eq $old_class ) {
+        while ( @both_columns = $sth->fetchrow_array() ) {
+            $primary_and_secondary = $both_columns[0];
+            $primary_and_secondary =~ s/\(//g;
+            $primary_and_secondary =~ s/\)//g;
+            $primary_and_secondary =~ s/"//g;
+            @primary_secondary_split = split /,/, $primary_and_secondary;
+            $primary     = $primary_secondary_split[0];
+            $secondary  = $primary_secondary_split[1] || '';
+            if ( !defined $primary ) {
+                next CASE;
+            }
 
-                if ( $subclass ne '' ) {
-                    $array .= qq{, '$subclass'};
+            if ( $primary eq $old_primary ) {
+
+                if ( $secondary ne '' ) {
+                    $array[$k] .= qq{, '$secondary'};
                 }
                 next CASE;
             }
-            elsif ( $old_class ne '' ) {
-                $array .= qq{],
+            elsif ( $old_primary ne '' ) {
+                $array[$k] .= qq{],
 };
-                $array .= qq{'$class':['All', '$subclass'};
+                $array[$k] .= qq{'$primary':['All', '$secondary'};
             }
             else {
-                $array .= qq{'$class':['All', '$subclass'};
+                $array[$k] .= qq{'$primary':['All', '$secondary'};
             }
-            $old_class = $class;
+            $old_primary = $primary;
         }
-        $array .= "]
-        }";
-        $array =~ s/, ''//g;
-        #######################################################################
-        #   END
-
-        $statement
-            = "SELECT DISTINCT subclass FROM products ORDER BY subclass;";
-        $sth = $dbh->prepare($statement);
-        my $rv = $sth->execute()
-            or die "can't execute the query: $sth->errstr";
-
-        my $all_subclasses_aref = $sth->fetchall_arrayref
-            or die "$sth->errstr\n";
-        for my $i ( 0 .. $#{$all_subclasses_aref} ) {
-            if ( defined $all_subclasses_aref->[$i][0] ) {
-                $option_stringc
-                    .= qq{    subclass_selected[subclass_selected.length] = new Option("$all_subclasses_aref->[$i][0]", "$all_subclasses_aref->[$i][0]");
-};
-
-#            warn(qq{subclass_selected[subclass_selected.length] = new Option("$all_subclasses_aref->[$i][0]", "$all_subclasses_aref->[$i][0]");});
-
-            }
+        $array[$k] .= "]
         }
-        my $subclass_aref;
-        $case_stringc .= qq{
-case 'All' :
-    subclass_selected.length = 0;
-    subclass_selected[subclass_selected.length] = new Option("All", "All");
-$option_stringc
-};
-#######################################################################
-        #   All good above
-        $statement
-            = "SELECT distinct class, subclass from products ORDER BY class, subclass;";
-        $sth = $dbh->prepare($statement);
-        $rv  = $sth->execute()
-            or die "can't execute the query: $sth->errstr";
-        my $classes_aref = $sth->fetchall_arrayref
-            or die "$sth->errstr\n";
-        $old_class = '';
-        for my $i ( 0 .. $#{$classes_aref} ) {
-            $class = $classes_aref->[$i][0];
-            if ( !defined $class ) {
-                next;
-            }
-            if ( $class ne $old_class ) {
-                $case_stringc .= qq{break;
-            };
-                $case_stringc .= qq|
-case '$classes_aref->[$i][0]' :
-    subclass_selected.length = 0;
-    subclass_selected[subclass_selected.length] = new Option("All", "All");
-|;
-            }
-            for my $j ( 1 .. $#{ $classes_aref->[$i] } ) {
-                if ( defined $classes_aref->[$i][$j] ) {
-                    $case_stringc
-                        .= qq|    subclass_selected[subclass_selected.length] = new Option("$classes_aref->[$i][$j]", "$classes_aref->[$i][$j]");
-|;
-                }
-            }
-            $old_class = $class;
+}";
+        $array[$k] =~ s/, ''//g;
+        $array[$k] = qq|var cat$k={'$field_table_aref->[$l][0]_selected':
+        {$array[$k]|;
 
-        }
-        $case_stringc .= qq{break;
-            };
-    }
+ $array[$k] .= qq|
+ function dropdownlist_category_selected$k(listname,listindex)
+{
+  var catsel$k=document.someForm.elements['$field_table_aref->[$l+1][0]_selected'+listname];
+  catsel$k.options.length=1;
+  if (listindex in cat$k| . qq|[listname])
+    for (var i=0,l=cat$k| . qq|[listname][listindex].length;i<l;i++)
+      catsel$k.options[i+1]=new Option(cat$k| .qq|[listname][listindex][i],cat$k| .qq|[listname][listindex][i]);
+return true;
+
+      }
+      |;
+
+$l = $l + 2;
+$old_primary = '';
+}
 
 #######################################################################
 ##        Print Page Head
@@ -202,49 +113,84 @@ case '$classes_aref->[$i][0]' :
 <link rel="stylesheet" type="text/css" href="/print.css" media="print" />
 <link rel="stylesheet" type="text/css" href="/handheldimg.css" media="handheld" />
 <script type="text/javascript" src="/javascript/external.js"></script>
-<script type="text/javascript">
-//<![CDATA[
-if (window.addEventListener) {
-    window.addEventListener("load",setupEvents,false);
-} else if (window.attachEvent) {
-    window.attachEvent("onload",setupEvents);
-} else {
-    window.onload=setupEvents;
+#
+);
+        $field_table_aref = $arg_ref->{field_table_aref};
+        for my $k (0 .. ($#$field_table_aref - 3) ) {
+
+        $r->print(
+            qq#<script type="text/javascript">
+$array[$k]
+ </script>
+    #
+);
 }
+$r->print(
+            qq#<script type="text/javascript">
+            #
+            );
 
-function setupEvents(evnt) {
-    var opts = document.getElementById("someForm").table_selected.options;
-    var field_selected = document.getElementById("someForm").field_selected.options;
-    var field_selected2 = document.getElementById("someForm").field_selected2.options;
-    $option_string
-    document.getElementById("someForm").table_selected.onchange = checkSelect;
-    
-}
-
-function checkSelect(evnt) {
-    var opts = document.getElementById("someForm").table_selected.options;
-    var field_selected = document.getElementById("someForm").field_selected.options;
-    var field_selected2 = document.getElementById("someForm").field_selected2.options;
-
-    for ( var i = 0; i < opts.length; i++) {
-        if ( opts[i].selected ) {
-            switch(opts[i].value) {
-                $case_string
-            }
-        }
+my $tablecol;   
+$sth = $dbh->table_info( '', 'public', undef, 'TABLE' );
+    for my $rel ( @{ $sth->fetchall_arrayref( {} ) } ) {
+        push( @tables, "\'$rel->{TABLE_NAME}\'" );
     }
+    $sth->finish();
+        $tablecol = qq|var tablecol={
+  'table_selected':{|;
+    my %temp = ();
+    @tables = grep ++$temp{$_} < 2, @tables;
+    foreach my $chosen (@tables) {
+    $tablecol .= qq|
+    $chosen:[|;
+        my $statement
+            = "SELECT DISTINCT column_name FROM information_schema.columns WHERE table_name = $chosen;";
+        my $sth = $dbh->prepare($statement);
+        my $rv  = $sth->execute()
+            or die "can't execute the query: $sth->errstr";
+        my $tbl = $sth->fetchall_arrayref or die "$sth->errstr\n";
+        for my $i ( 0 .. $#{$tbl} ) {
+            $tablecol .= qq|'$tbl->[$i][0]',|;
+            }
+            $tablecol =~ s/,$//g;
+        $tablecol .= qq|],|;
+        }
+        $tablecol =~ s/,$//g;
+    $tablecol .= qq|
+    }
+}|;
 
-    return false;
+$r->print( qq#
+$tablecol
+
+function dropdownlist_table_selected(listname,listindex)
+{
+  var subfield=document.someForm.elements['field_selected'+listname];
+  subfield.options.length=1;
+  if (listindex in tablecol[listname])
+    for (var i=0,l=tablecol[listname][listindex].length;i<l;i++)
+      subfield.options[i+1]=new Option(tablecol[listname][listindex][i],tablecol[listname][listindex][i]);
+
+  var subfield2=document.someForm.elements['field_selected2'+listname];
+  subfield2.options.length=1;
+  if (listindex in tablecol[listname])
+    for (var i=0,l=tablecol[listname][listindex].length;i<l;i++)
+      subfield2.options[i+1]=new Option(tablecol[listname][listindex][i],tablecol[listname][listindex][i]);
+
+  return true;
 }
+
+
+
 function checkscript() {
     for (i=0;i<document.someForm.command.length;i++) {
         if (document.someForm.command[i].checked) {
             return true;
         }
 }
-#
-             );
 
+#
+);
     if ( $arg_ref->{lang} eq "es" ) {
         $r->print(
             qq{
@@ -263,54 +209,10 @@ alert("Please Select a Command");
         qq#
 return false;
 }
-//]]>
 </script>
 #
              );
 
-    unless ( $arg_ref->{'Program'}{'program_path_name'} =~ /gl/ ) {
-        $r->print(
-            qq#<script type="text/javascript">
-//<![CDATA[
-if (window.addEventListener) {
-    window.addEventListener("load",setupEventsC,false);
-} else if (window.attachEvent) {
-    window.attachEvent("onload",setupEventsC);
-} else {
-    window.onload=setupEventsC;
-}
-$array
-
-function setupEventsC(evnt) {
-    var opts = document.getElementById("someForm").class_selected.options;
-    var subclass_selected = document.getElementById("someForm").subclass_selected.options;
-      document.getElementById("someForm").subclass_selected.options.length=1;
-  for (var i=0,l=cat.length;i<l;i++)
-    getElementById("someForm").subclass_selected.options[i+1]=new Option(cat[i],cat[i]);
-                    subclass_selected[subclass_selected.length] = new Option("All", "All");
-    document.getElementById("someForm").class_selected.onchange = checkSelectC;
-    
-}
-
-
-function checkSelectC(evnt) {
-    var opts = document.getElementById("someForm").class_selected.options;
-    var subclass_selected = document.getElementById("someForm").subclass_selected.options;
-
-    for ( var i = 0; i < opts.length; i++) {
-        if ( opts[i].selected ) {
-            switch(opts[i].value) {
-                $case_stringc
-            }
-        }
-    }
-
-    return false;
-}
- </script>
-#
-                 );
-    }
     $r->print(
         qq#
 </head>
@@ -318,6 +220,7 @@ function checkSelectC(evnt) {
 $arg_ref->{'Top of Page Links'}{'top_of_page_links'}
 #
              );
+
 
 }
 #######################################################################
@@ -344,7 +247,7 @@ sub SelectTable {
     <tbody>
     <tr>
     <td><label for="table_selected">Tabla</label></td>
-    <td><select id="table_selected" name="table_selected">
+    <td><select id="table_selected" name="table_selected" onchange="dropdownlist_table_selected(this.name,this.options[this.selectedIndex].value);">
     }
                  );
     }
@@ -358,7 +261,7 @@ sub SelectTable {
     <tbody>
     <tr>
     <td><label for="table_selected">Table</label></td>
-    <td><select id="table_selected" name="table_selected">
+    <td><select id="table_selected" name="table_selected" onchange="dropdownlist_table_selected(this.name,this.options[this.selectedIndex].value);">
     }
                  );
     }
@@ -374,7 +277,8 @@ sub SelectTable {
         qq{</select></td>
     <td><label for="id_selected">ID</label></td>
     <td><input type="text" id="id_selected" name="id_selected" value="" /></td>
-    </tr><tr>
+    </tr>
+    <tr>
     }
              );
     #######################################################################
@@ -397,15 +301,27 @@ sub SelectTable {
             || die $dbh->errstr;
 
         if ( ( $i == 2 ) || ( $i == 4 ) || ( $i == 6 ) ) {
-            $r->print(qq{</tr><tr>});
+            $r->print(qq{</tr>
+                <tr>});
         }
-        $r->print(
-                  qq{<td><label for="$field_table_aref->[$i][0]}
-                . qq{_selected">$select_label</label></td>
-        <td><select id="$field_table_aref->[$i][0]}
-                . qq{_selected" name="$field_table_aref->[$i][0]}
-                . qq{_selected">
-        <option value="All">All</option>
+            if ( $i == 0 ) {
+            $r->print(qq{<td><label for="$field_table_aref->[$i][0]_selected">$select_label</label></td>
+        <td><select id="$field_table_aref->[$i][0]_selected" name="$field_table_aref->[$i][0]_selected" onchange="dropdownlist_category_selected0(this.name,this.options[this.selectedIndex].value);"}
+            );
+        }
+            elsif ( $i == 2 ) {
+                 $r->print(qq{<td><label for="$field_table_aref->[$i][0]_selected">$select_label</label></td>
+        <td><select id="$field_table_aref->[$i][0]_selected" name="$field_table_aref->[$i][0]_selected" onchange="dropdownlist_category_selected1(this.name,this.options[this.selectedIndex].value);"}
+            );
+        }
+        else {
+             $r->print(
+                  qq{<td><label for="$field_table_aref->[$i][0]_selected$field_table_aref->[$i-1][0]_selected">$select_label</label></td>
+        <td><select id="$field_table_aref->[$i][0]_selected$field_table_aref->[$i-1][0]_selected" name="$field_table_aref->[$i][0]_selected$field_table_aref->[$i-1][0]_selected"}
+            );
+        }
+
+ $r->print(qq{><option value="All">All</option>
         }
         );
 
@@ -454,13 +370,8 @@ sub SelectTable {
             qq{</select></td>    
     </tr>
     <tr>
-    <td><label for="field_selected">Columna</label></td>
-    <td><script type="text/javascript">
-    //<![CDATA[
-    document.writeln('<select id="field_selected" name="field_selected"></select>');
-    //]]>
-    </script>
-    <noscript><input type="text" id="field_selected" name="field_selected" value="" /></noscript>
+    <td><label for="field_selectedtable_selected">Columna</label></td>
+    <td><select id="field_selectedtable_selected" name="field_selectedtable_selected"></select>
     </td>
     <td><label for="field_value_selected">RegEx para valor de columna</label></td>
     <td><input type="text" id="field_value_selected" name="field_value_selected" value="" />
@@ -471,13 +382,8 @@ sub SelectTable {
     </td>
     </tr>
     <tr>
-    <td><label for="field_selected2">Segunda columna</label></td>
-    <td><script type="text/javascript">
-    //<![CDATA[
-    document.writeln('<select id="field_selected2" name="field_selected2"></select>');
-    //]]>
-    </script>
-    <noscript><input type="text" id="field_selected2" name="field_selected2" value="" /></noscript>
+    <td><label for="field_selected2table_selected">Segunda columna</label></td>
+    <td><select id="field_selected2table_selected" name="field_selected2table_selected"></select>
     </td>
     <td><label for="field_value_selected2">RegEx para valor de segunda columna</label></td>
     <td><input type="text" id="field_value_selected2" name="field_value_selected2" value="" />
@@ -486,7 +392,8 @@ sub SelectTable {
     <label for="field_value_selected2_not">NOT</label>
     <input type="checkbox" value="NOT" id="field_value_selected2_not" name="field_value_selected2_not" /></td>
     </tr>
-    </tbody></table>
+    </tbody>
+    </table>
     <br />
     <div>
     <input type="submit" value="Enviar" name="submitForm" onclick="return checkscript()" />
@@ -550,13 +457,8 @@ sub SelectTable {
             qq{</select></td>    
     </tr>
     <tr>
-    <td><label for="field_selected">Field</label></td>
-    <td><script type="text/javascript">
-    //<![CDATA[
-    document.writeln('<select id="field_selected" name="field_selected"></select>');
-    //]]>
-    </script>
-    <noscript><input type="text" id="field_selected" name="field_selected" value="" /></noscript>
+    <td><label for="field_selectedtable_selected">Field</label></td>
+    <td><select id="field_selectedtable_selected" name="field_selectedtable_selected"></select>
     </td>
     <td>
     <label for="field_value_selected">Field Value RegEx</label>
@@ -570,13 +472,8 @@ sub SelectTable {
     </td>
     </tr>
     <tr>
-    <td><label for="field_selected2">Second Field</label></td>
-    <td><script type="text/javascript">
-    //<![CDATA[
-    document.writeln('<select id="field_selected2" name="field_selected2"></select>');
-    //]]>
-    </script>
-    <noscript><input type="text" id="field_selected2" name="field_selected2" value="" /></noscript>
+    <td><label for="field_selected2table_selected">Second Field</label></td>
+    <td><select id="field_selected2table_selected" name="field_selected2table_selected"></select>
     </td>
     <td>
     <label for="field_value_selected2">Second Field Value RegEx</label>
@@ -663,7 +560,7 @@ BWCL::SelectTable_B
 
 =head1 VERSION
 
-This documentation refers to BWCL::SelectTable_B version 4.4.10.
+This documentation refers to BWCL::SelectTable_B version 4.5.50.
 
 =head1 SYNOPSIS
 

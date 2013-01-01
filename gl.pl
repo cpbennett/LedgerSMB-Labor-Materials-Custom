@@ -1,6 +1,7 @@
 #!/usr/bin/perl
 
 our $VERSION = 3.1.00;
+
 use warnings;
 use strict;
 
@@ -47,7 +48,7 @@ my $tbl;
 
 my $commands = $config_hash_ref->{'Commands'}{'commands'};
 ##	This gives preset filled select lists for "preferred" fields.
-##	Is an array of arrays. field,table pairs
+##	Is an array of arrays consisting of field and table pairs.
 ##	Is designed to works with odd numbers due to table cells.
 ##	Not sure if it will work with no fields at all
 my @field_select_tables = (
@@ -103,9 +104,9 @@ my $labor_project_subclass_selected
 my $labor_project_section_selected
     = $q->param("labor_project_section_selected")              || 'All';
 my $id_selected           = $q->param("id_selected")           || '';
-my $field_selected        = $q->param("field_selected")        || '';
+my $field_selectedtable_selected        = $q->param("field_selectedtable_selected")        || '';
 my $field_value_selected  = $q->param("field_value_selected")  || '';
-my $field_selected2       = $q->param("field_selected2")       || '';
+my $field_selected2table_selected       = $q->param("field_selected2table_selected")       || '';
 my $field_value_selected2 = $q->param("field_value_selected2") || '';
 $config_hash_ref->{itemstoinsert}         = $q->param("itemstoinsert")         || '';
 
@@ -221,9 +222,9 @@ if ( $command eq "InsertRecordForm" && $config_hash_ref->{itemstoinsert} !~ /^\d
 }
 #######################################################################
 ##		Field Selected Verification
-    if ($field_selected) {
-       $field_selected = $dbh->quote($field_selected);
-        $statement = "SELECT (SELECT DISTINCT column_name FROM information_schema.columns WHERE table_name = $table_selected AND column_name = $field_selected);";
+    if ($field_selectedtable_selected) {
+       $field_selectedtable_selected = $dbh->quote($field_selectedtable_selected);
+        $statement = "SELECT (SELECT DISTINCT column_name FROM information_schema.columns WHERE table_name = $table_selected AND column_name = $field_selectedtable_selected);";
     $sth = $dbh->prepare($statement) || die $dbh->errstr;
     $rc  = $sth->execute             || die $dbh->errstr;
     $tbl = $sth->fetchrow_arrayref;
@@ -235,9 +236,9 @@ if ( $command eq "InsertRecordForm" && $config_hash_ref->{itemstoinsert} !~ /^\d
 }
 #######################################################################
 ##		Field Selected2 Verification
-if ($field_selected2) {
-       $field_selected2 = $dbh->quote($field_selected2);
-        $statement = "SELECT (SELECT DISTINCT column_name FROM information_schema.columns WHERE table_name = $table_selected AND column_name = $field_selected2);";
+if ($field_selected2table_selected) {
+       $field_selected2table_selected = $dbh->quote($field_selected2table_selected);
+        $statement = "SELECT (SELECT DISTINCT column_name FROM information_schema.columns WHERE table_name = $table_selected AND column_name = $field_selected2table_selected);";
     $sth = $dbh->prepare($statement) || die $dbh->errstr;
     $rc  = $sth->execute             || die $dbh->errstr;
     $tbl = $sth->fetchrow_arrayref;
