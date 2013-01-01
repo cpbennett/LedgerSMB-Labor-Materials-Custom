@@ -1,0 +1,12 @@
+<div>
+<h2>This is a test database</h2>
+<p>Please feel free to insert and update anything</p>
+<p>Be sure to try inserting multiple items by setting Items to Insert in Group to a setting higher than 1.<br />
+This will allow you to use JavaScript to duplicate fields down entire list.</p>
+<p>To see manual pages in English, add ?lang=en to manual URL.<br />
+To see manual pages in Spanish, add ?lang=es to manual URL.</p>
+</div>
+
+
+Add to SelectTable_B.pm at around line 242
+
