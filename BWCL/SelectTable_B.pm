@@ -1,6 +1,6 @@
 package BWCL::SelectTable_B;
 
-our $VERSION = 4.5.50;
+our $VERSION = 4.5.55;
 
 use warnings;
 use strict;
@@ -299,29 +299,34 @@ sub SelectTable {
             = "SELECT DISTINCT $field_table_aref->[$i][0] FROM $field_table_aref->[$i][1] WHERE $field_table_aref->[$i][0] IS NOT NULL AND $field_table_aref->[$i][0] <> '' ORDER BY $field_table_aref->[$i][0];";
         my $select_array_ref = $dbh->selectcol_arrayref($statement)
             || die $dbh->errstr;
-
         if ( ( $i == 2 ) || ( $i == 4 ) || ( $i == 6 ) ) {
             $r->print(qq{</tr>
                 <tr>});
         }
             if ( $i == 0 ) {
             $r->print(qq{<td><label for="$field_table_aref->[$i][0]_selected">$select_label</label></td>
-        <td><select id="$field_table_aref->[$i][0]_selected" name="$field_table_aref->[$i][0]_selected" onchange="dropdownlist_category_selected0(this.name,this.options[this.selectedIndex].value);"}
+        <td><select id="$field_table_aref->[$i][0]_selected" name="$field_table_aref->[$i][0]_selected" onchange="dropdownlist_category_selected0(this.name,this.options[this.selectedIndex].value);">}
             );
         }
             elsif ( $i == 2 ) {
                  $r->print(qq{<td><label for="$field_table_aref->[$i][0]_selected">$select_label</label></td>
-        <td><select id="$field_table_aref->[$i][0]_selected" name="$field_table_aref->[$i][0]_selected" onchange="dropdownlist_category_selected1(this.name,this.options[this.selectedIndex].value);"}
+        <td><select id="$field_table_aref->[$i][0]_selected" name="$field_table_aref->[$i][0]_selected" onchange="dropdownlist_category_selected1(this.name,this.options[this.selectedIndex].value);">}
+            );
+        }
+        elsif ( $i != 4 ) {
+             $r->print(
+                  qq{<td><label for="$field_table_aref->[$i][0]_selected$field_table_aref->[$i-1][0]_selected">$select_label</label></td>
+        <td><select id="$field_table_aref->[$i][0]_selected$field_table_aref->[$i-1][0]_selected" name="$field_table_aref->[$i][0]_selected$field_table_aref->[$i-1][0]_selected">}
             );
         }
         else {
              $r->print(
                   qq{<td><label for="$field_table_aref->[$i][0]_selected$field_table_aref->[$i-1][0]_selected">$select_label</label></td>
-        <td><select id="$field_table_aref->[$i][0]_selected$field_table_aref->[$i-1][0]_selected" name="$field_table_aref->[$i][0]_selected$field_table_aref->[$i-1][0]_selected"}
+        <td><select id="$field_table_aref->[$i][0]_selected" name="$field_table_aref->[$i][0]_selected">}
             );
         }
 
- $r->print(qq{><option value="All">All</option>
+ $r->print(qq{<option value="All">All</option>
         }
         );
 
@@ -560,7 +565,7 @@ BWCL::SelectTable_B
 
 =head1 VERSION
 
-This documentation refers to BWCL::SelectTable_B version 4.5.50.
+This documentation refers to BWCL::SelectTable_B version 4.5.55.
 
 =head1 SYNOPSIS
 

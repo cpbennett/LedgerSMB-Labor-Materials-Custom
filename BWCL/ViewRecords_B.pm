@@ -1,6 +1,7 @@
 package BWCL::ViewRecords_B;
 
 our $VERSION = 2.1.00;
+
 use warnings;
 use strict;
 
@@ -30,16 +31,16 @@ sub ViewRecords {
     $where_statementx = "WHERE $table_id_field = $table_id";
     goto DELETE_VIEW;
     }
-    my $field              = $arg_ref->{field_selected} || $q->param("field_selected");
+    my $field              = $arg_ref->{field_selectedtable_selected} || $q->param("field_selectedtable_selected");
     my $field_value        = $arg_ref->{field_value_selected} || $q->param("field_value_selected");
     my $field_value_null   = $q->param("field_value_selected_null");
     my $field_value_not    = $q->param("field_value_selected_not");
-    my $field2             = $q->param("field_selected2");
+    my $field2             = $q->param("field_selected2table_selected");
     my $field_value2       = $q->param("field_value_selected2");
     my $field_value2_null  = $q->param("field_value_selected2_null");
     my $field_value2_not   = $q->param("field_value_selected2_not");
     my $class              = $q->param("class_selected");
-    my $subclass           = $q->param("subclass_selected");
+    my $subclass           = $q->param("subclass_selectedclass_selected");
     my $vendor_name        = $q->param("vendor_name_selected");
     my $labor_project_list_category
         = $q->param("labor_project_list_category_selected");
@@ -365,7 +366,7 @@ sub ViewUpdatedRecord {
     my $r                      = shift;
     my $dbh                    = shift;
     my $viewUpdatedRecordtable = shift;
-    my $field_selected         = shift;
+    my $field_selectedtable_selected         = shift;
     my $field_value_selected   = shift;
     my $column_list;
     my @columns;
@@ -377,14 +378,14 @@ sub ViewUpdatedRecord {
     my $viewUpdatedRecordtable2 = $dbh->quote($viewUpdatedRecordtable);
 
     if (    ($viewUpdatedRecordtable)
-         && ($field_selected)
+         && ($field_selectedtable_selected)
          && ($field_value_selected) )
     {
         $r->print(
             qq{<div>
             <h2>Viewing New or Updated Records from $viewUpdatedRecordtable Table
             <br />
-        	Field = $field_selected
+        	Field = $field_selectedtable_selected
             <br />
         	Value = $field_value_selected
             </h2>
@@ -416,7 +417,7 @@ sub ViewUpdatedRecord {
                  );
         $sth
             = $dbh->prepare(
-            "SELECT $column_list FROM $viewUpdatedRecordtable WHERE $field_selected = $field_value_selected;"
+            "SELECT $column_list FROM $viewUpdatedRecordtable WHERE $field_selectedtable_selected = $field_value_selected;"
             );
         $sth->execute;
 
