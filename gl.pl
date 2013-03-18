@@ -10,12 +10,12 @@ use Apache::Request();
 use DBI();
 
 #subs Modules
-use BWC::ShowAdmin qw(ShowTables ShowAllTables ShowColumns error_message);
-use BWC::InsertRecord_B qw(InsertRecordGroup InsertRecordGroupForm);
-use BWC::SelectTable_B qw(PrepareHead SelectTable);
-use BWC::RecordUpdates_B qw(UpdateRecordForm UpdateRecord);
-use BWC::ViewRecords_B qw(ViewRecords);
-use BWC::DeleteRecord_B qw(DeleteRecord DeleteRecordForm);
+use BWCL::ShowAdmin qw(ShowTables ShowAllTables ShowColumns error_message);
+use BWCL::InsertRecord_B qw(InsertRecordGroup InsertRecordGroupForm);
+use BWCL::SelectTable_B qw(PrepareHead SelectTable);
+use BWCL::RecordUpdates_B qw(UpdateRecordForm UpdateRecord);
+use BWCL::ViewRecords_B qw(ViewRecords);
+use BWCL::DeleteRecord_B qw(DeleteRecord DeleteRecordForm);
 use Config::Std;
 
 #######################################################################

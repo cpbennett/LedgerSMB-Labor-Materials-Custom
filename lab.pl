@@ -8,10 +8,10 @@ use strict;
 use Apache::Request();
 use DBI();
 use Config::Std;
-use BWC::SelectLPL qw(SelectLPLs);
-use BWC::ViewLPLRecords
+use BWCL::SelectLPL qw(SelectLPLs);
+use BWCL::ViewLPLRecords
   qw(ViewLPLRecords DuplicateFullLPLRecordsForm DuplicateFullLPLRecords);
-use BWC::ShowAdmin qw(error_message);
+use BWCL::ShowAdmin qw(error_message);
 
 #######################################################################
 ##        Connect to Database

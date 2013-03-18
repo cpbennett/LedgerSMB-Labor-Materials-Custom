@@ -8,10 +8,10 @@ use strict;
 use Apache::Request();
 use DBI();
 use Config::Std;
-use BWC::SelectFAL qw(SelectFALs);
-use BWC::ViewFALRecords
+use BWCL::SelectFAL qw(SelectFALs);
+use BWCL::ViewFALRecords
   qw(ViewFALRecords ViewFullFALRecords DuplicateFullFALRecordsForm DuplicateFullFALRecords);
-use BWC::ShowAdmin qw(error_message);
+use BWCL::ShowAdmin qw(error_message);
 
 #######################################################################
 ##        Connect to Database
