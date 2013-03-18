@@ -1,7 +1,8 @@
 #!/usr/bin/perl
 
-our $VERSION = 3.1.00;
+our $VERSION = 3.2.00;
 
+# BETA TEST
 use warnings;
 use strict;
 
@@ -9,20 +10,20 @@ use Apache::Request();
 use DBI();
 
 #subs Modules
-use BWCL::ShowAdmin qw(ShowTables ShowColumns error_message);
-use BWCL::InsertRecord_B qw(InsertRecordGroup InsertRecordGroupForm);
-use BWCL::SelectTable_B qw(PrepareHead SelectTable);
-use BWCL::RecordUpdates_B qw(UpdateRecordForm UpdateRecord);
-use BWCL::ViewRecords_B qw(ViewRecords);
-use BWCL::DeleteRecord_B qw(DeleteRecord DeleteRecordForm);
+use BWC::ShowAdmin qw(ShowTables ShowAllTables ShowColumns error_message);
+use BWC::InsertRecord_B qw(InsertRecordGroup InsertRecordGroupForm);
+use BWC::SelectTable_B qw(PrepareHead SelectTable);
+use BWC::RecordUpdates_B qw(UpdateRecordForm UpdateRecord);
+use BWC::ViewRecords_B qw(ViewRecords);
+use BWC::DeleteRecord_B qw(DeleteRecord DeleteRecordForm);
 use Config::Std;
 
 #######################################################################
-##		Connect to Database
+##        Connect to Database
 
 my $filename = 'Labor.cfg';
 my $config_hash_ref;
-read_config($filename => $config_hash_ref);
+read_config( $filename => $config_hash_ref );
 
 my $r = Apache->request;
 my $q = Apache::Request->new(
@@ -31,12 +32,20 @@ my $q = Apache::Request->new(
     DISABLE_UPLOADS => 1
 );
 
-my $dbh
-    = DBI->connect( "DBI:Pg:dbname=$config_hash_ref->{'Database'}{'database'};host=$config_hash_ref->{'Database'}{'hostname'};port=$config_hash_ref->{'Database'}{'port'}",
-    $config_hash_ref->{'Database'}{'username'}, $config_hash_ref->{'Database'}{'password'}, { 'RaiseError' => 1, pg_enable_utf8 => $config_hash_ref->{'Database'}{'pg_enable_utf8'} } );
+my $dbh = DBI->connect(
+    "DBI:Pg:dbname=$config_hash_ref->{'Database'}{'database'};
+    host=$config_hash_ref->{'Database'}{'hostname'};
+    port=$config_hash_ref->{'Database'}{'port'}",
+    $config_hash_ref->{'Database'}{'username'},
+    $config_hash_ref->{'Database'}{'password'},
+    {
+        'RaiseError'   => 1,
+        pg_enable_utf8 => $config_hash_ref->{'Database'}{'pg_enable_utf8'}
+    }
+);
 $config_hash_ref->{dbh} = $dbh;
-$config_hash_ref->{r} = $r;
-$config_hash_ref->{q} = $q;
+$config_hash_ref->{r}   = $r;
+$config_hash_ref->{q}   = $q;
 my $sth;
 my $statement;
 my $rc;
@@ -48,221 +57,265 @@ my $tbl;
 
 my $commands = $config_hash_ref->{'Commands'}{'commands'};
 ##	This gives preset filled select lists for "preferred" fields.
-##	Is an array of arrays consisting of field and table pairs.
+##	Is an array of arrays. field,table pairs
 ##	Is designed to works with odd numbers due to table cells.
 ##	Not sure if it will work with no fields at all
-my @field_select_tables = (
-    [ "labor_project_list_category"    => "labor_project_list" ],
-    [ "labor_project_list_subcategory" => "labor_project_list" ],
-    [ "labor_project_class"            => "labor_project" ],
-    [ "labor_project_subclass"         => "labor_project" ],
-    [ "labor_project_section"          => "labor_project" ],
-);
+
+my $fields_of_tables_select = $config_hash_ref->{'FieldsAndTables'}{'Pair'};
+my @field_select_tables     = ();
+my $ij                      = 0;
+while ( $ij <= $#$fields_of_tables_select ) {
+    push @field_select_tables,
+      (
+        [
+            "$$fields_of_tables_select[$ij]" =>
+              "$$fields_of_tables_select[$ij+1]"
+        ]
+      );
+    $ij = $ij + 2;
+}
+
 #######################################################################
-##		Print Header
+##        Print Header
 
 $r->content_type("text/html");
 $r->send_http_header;
-my $lang 
-    = $q->param("lang")
-    || $r->headers_in->get('Accept-Language')
-    || "en";
+my $lang =
+     $q->param("lang")
+  || $r->headers_in->get('Accept-Language')
+  || "en";
 
 $lang = substr $lang, 0, 2;
 
-$config_hash_ref->{lang} = $lang;
-my $title = "Labor DB";
-my $description
-    = "Database Access-General Labor/Labor Categories/Labor Projects";
+$config_hash_ref->{lang}             = $lang;
+$config_hash_ref->{field_table_aref} = \@field_select_tables;
 
-$config_hash_ref->{title} = $title;
-$config_hash_ref->{description} = $description;
-$config_hash_ref->{field_table_aref}      = \@field_select_tables;
-
-PrepareHead( $config_hash_ref );
+PrepareHead($config_hash_ref);
 
 #######################################################################
-##		Get CGI Params
+##        Get CGI Params
 
 my $command = $q->param("command")
-    || goto ERROR_END;
-unless ($command~~@$commands) {
-    error_message($r, $lang, "un comando valido", "a valid command");
+  || goto ERROR_END;
+unless ( $command ~~ @$commands ) {
+    error_message( $r, $lang, "un comando valido", "a valid command" );
     goto ERROR_END;
 }
-my $table_selected = $q->param("table_selected")
-    || goto ERROR_END;
-$config_hash_ref->{table_selected} = $table_selected;
-my $labor_project_list_category_selected
-    = $q->param("labor_project_list_category_selected")        || 'All';
-my $labor_project_list_subcategory_selected
-    = $q->param("labor_project_list_subcategory_selected")     || 'All';
-my $labor_project_class_selected
-    = $q->param("labor_project_class_selected")                || 'All';
-my $labor_project_subclass_selected
-    = $q->param("labor_project_subclass_selected")             || 'All';
-my $labor_project_section_selected
-    = $q->param("labor_project_section_selected")              || 'All';
-my $id_selected           = $q->param("id_selected")           || '';
-my $field_selectedtable_selected        = $q->param("field_selectedtable_selected")        || '';
-my $field_value_selected  = $q->param("field_value_selected")  || '';
-my $field_selected2table_selected       = $q->param("field_selected2table_selected")       || '';
-my $field_value_selected2 = $q->param("field_value_selected2") || '';
-$config_hash_ref->{itemstoinsert}         = $q->param("itemstoinsert")         || '';
+my $table = $q->param("table_selected")
+  || goto ERROR_END;
+$config_hash_ref->{table} = $table;
+$config_hash_ref->{labor_project_list_category} =
+  $q->param("labor_project_list_category_selected") || 'All';
+$config_hash_ref->{labor_project_list_subcategory} = $q->param(
+"labor_project_list_subcategory_selectedlabor_project_list_category_selected"
+) || 'All';
+$config_hash_ref->{labor_project_class} =
+  $q->param("labor_project_class_selected")
+  || 'All';
+$config_hash_ref->{labor_project_subclass} =
+  $q->param("labor_project_subclass_selectedlabor_project_class_selected")
+  || 'All';
+$config_hash_ref->{labor_project_section} =
+  $q->param("labor_project_section_selected")
+  || 'All';
+$config_hash_ref->{id} = $q->param("id_selected") || '';
+$config_hash_ref->{field} = $q->param("field_selectedtable_selected") || '';
+$config_hash_ref->{field_value}      = $q->param("field_value_selected") || '';
+$config_hash_ref->{field_value_not}  = $q->param("field_value_selected_not");
+$config_hash_ref->{field_value_null} = $q->param("field_value_selected_null");
+$config_hash_ref->{field2} = $q->param("field_selected2table_selected") || '';
+$config_hash_ref->{field_value2}     = $q->param("field_value_selected2") || '';
+$config_hash_ref->{field_value2_not} = $q->param("field_value_selected2_not");
+$config_hash_ref->{field_value2_null} = $q->param("field_value_selected2_null");
+$config_hash_ref->{itemstoinsert} = $q->param("itemstoinsert") || '';
 
 #######################################################################
-##		Table Verification
-$table_selected = $dbh->quote($table_selected);
-$statement
-    = "SELECT DISTINCT table_name FROM information_schema.tables WHERE
-    table_name = $table_selected AND table_schema = 'public' AND
+##        Table Verification
+$table     = $dbh->quote($table);
+$statement = "SELECT DISTINCT table_name FROM information_schema.tables WHERE
+    table_name = $table AND table_schema = 'public' AND
     table_type='BASE TABLE';";
 $sth = $dbh->prepare($statement) || die $dbh->errstr;
 $rc  = $sth->execute             || die $dbh->errstr;
 $tbl = $sth->fetchrow_arrayref;
 $sth->finish();
+
 unless ( $$tbl[0] ) {
-    error_message($r, $lang, "una tabla valida", "a valid table");
+    error_message( $r, $lang, "una tabla valida", "a valid table" );
     goto ERROR_END;
 }
 #######################################################################
-##		Labor Category Verification
-unless ( $labor_project_list_category_selected eq "All" ) {
-    my $labor_project_list_category_selected2
-        = $dbh->quote($labor_project_list_category_selected);
-    $statement
-        = "SELECT $labor_project_list_category_selected2 FROM labor_project_list;";
+##        Labor Category Verification
+unless ( $config_hash_ref->{labor_project_list_category} eq "All" ) {
+    my $labor_project_list_category =
+      $dbh->quote( $config_hash_ref->{labor_project_list_category} );
+    $statement =
+"SELECT labor_project_list_category FROM labor_project_list WHERE labor_project_list_category = $labor_project_list_category;";
     $sth = $dbh->prepare($statement) || die $dbh->errstr;
     $rc  = $sth->execute             || die $dbh->errstr;
     $tbl = $sth->fetchrow_arrayref;
     $sth->finish();
     unless ( $$tbl[0] ) {
-        error_message($r, $lang, "una labor project list category valida",
-            "a valid labor project list category");
+        error_message(
+            $r, $lang,
+            "una labor project list category valida",
+            "a valid labor project list category"
+        );
         goto ERROR_END;
     }
 }
 #######################################################################
-##		Labor Subcategory Verification
-unless ( $labor_project_list_subcategory_selected eq "All" ) {
-    my $labor_project_list_subcategory_selected2
-        = $dbh->quote($labor_project_list_subcategory_selected);
-    $statement
-        = "SELECT $labor_project_list_subcategory_selected2 FROM labor_project_list;";
+##        Labor Subcategory Verification
+unless ( $config_hash_ref->{labor_project_list_subcategory} eq "All" ) {
+    my $labor_project_list_subcategory =
+      $dbh->quote( $config_hash_ref->{labor_project_list_subcategory} );
+    $statement =
+"SELECT labor_project_list_subcategory FROM labor_project_list WHERE labor_project_list_subcategory = $labor_project_list_subcategory;";
     $sth = $dbh->prepare($statement) || die $dbh->errstr;
     $rc  = $sth->execute             || die $dbh->errstr;
     $tbl = $sth->fetchrow_arrayref;
     $sth->finish();
     unless ( $$tbl[0] ) {
-        error_message($r, $lang, "una labor project list subcategory valida",
-            "a valid labor project list subcategory");
+        error_message(
+            $r, $lang,
+            "una labor project list subcategory valida",
+            "a valid labor project list subcategory"
+        );
         goto ERROR_END;
     }
 }
 #######################################################################
-##		Labor Project Class Verification
-unless ( $labor_project_class_selected eq "All" ) {
-    my $labor_project_class_selected2
-        = $dbh->quote($labor_project_class_selected);
-    $statement
-        = "SELECT $labor_project_class_selected2 FROM labor_project;";
+##        Labor Project Class Verification
+unless ( $config_hash_ref->{labor_project_class} eq "All" ) {
+    my $labor_project_class =
+      $dbh->quote( $config_hash_ref->{labor_project_class} );
+    $statement =
+"SELECT labor_project_class FROM labor_project WHERE labor_project_class = $labor_project_class;";
     $sth = $dbh->prepare($statement) || die $dbh->errstr;
     $rc  = $sth->execute             || die $dbh->errstr;
     $tbl = $sth->fetchrow_arrayref;
     $sth->finish();
     unless ( $$tbl[0] ) {
-        error_message($r, $lang, "un clase de labor project valido", "a valid labor project class");
+        error_message(
+            $r, $lang,
+            "un clase de labor project valido",
+            "a valid labor project class"
+        );
         goto ERROR_END;
     }
 }
 #######################################################################
-##		Labor Project Subclass Verification
-unless ( $labor_project_subclass_selected eq "All" ) {
-    my $labor_project_subclass_selected2
-        = $dbh->quote($labor_project_subclass_selected);
-    $statement
-        = "SELECT $labor_project_subclass_selected2 FROM labor_project;";
+##        Labor Project Subclass Verification
+unless ( $config_hash_ref->{labor_project_subclass} eq "All" ) {
+    my $labor_project_subclass =
+      $dbh->quote( $config_hash_ref->{labor_project_subclass} );
+    $statement =
+"SELECT labor_project_subclass FROM labor_project WHERE labor_project_subclass = $labor_project_subclass;";
     $sth = $dbh->prepare($statement) || die $dbh->errstr;
     $rc  = $sth->execute             || die $dbh->errstr;
     $tbl = $sth->fetchrow_arrayref;
     $sth->finish();
     unless ( $$tbl[0] ) {
-        error_message($r, $lang, "un subclase de labor project valido", "a valid labor project subclass");
+        error_message(
+            $r, $lang,
+            "un subclase de labor project valido",
+            "a valid labor project subclass"
+        );
         goto ERROR_END;
     }
 }
 #######################################################################
-##		Labor Project Section Verification
-unless ( $labor_project_section_selected eq "All" ) {
-    my $labor_project_section_selected2
-        = $dbh->quote($labor_project_section_selected);
-    $statement
-        = "SELECT $labor_project_section_selected2 FROM labor_project;";
+##        Labor Project Section Verification
+unless ( $config_hash_ref->{labor_project_section} eq "All" ) {
+    my $labor_project_section =
+      $dbh->quote( $config_hash_ref->{labor_project_section} );
+    $statement =
+"SELECT labor_project_section FROM labor_project WHERE labor_project_section = $labor_project_section;";
     $sth = $dbh->prepare($statement) || die $dbh->errstr;
     $rc  = $sth->execute             || die $dbh->errstr;
     $tbl = $sth->fetchrow_arrayref;
     $sth->finish();
     unless ( $$tbl[0] ) {
-        error_message($r, $lang, "una sección de labor project valido", "a valid labor project section");
+        error_message(
+            $r, $lang,
+            "una sección de labor project valido",
+            "a valid labor project section"
+        );
         goto ERROR_END;
     }
 }
 #######################################################################
-##		ID Selected Verification
-if ( ($command eq "UpdateRecordForm" || $command eq "DeleteRecordForm")
-    && $id_selected !~ /^\d+$/ ) {
-    error_message($r, $lang, "un numero de ID valido", "a valid ID number");
+##        ID Selected Verification
+if ( ( $command eq "UpdateRecordForm" || $command eq "DeleteRecordForm" )
+    && $config_hash_ref->{id} !~ /^\d+$/ )
+{
+    error_message( $r, $lang, "un numero de ID valido", "a valid ID number" );
     goto ERROR_END;
 }
 #######################################################################
-##		Items to Insert Verification
-if ( $command eq "InsertRecordForm" && $config_hash_ref->{itemstoinsert} !~ /^\d+$/ ) {
-    error_message($r, $lang, "un numero de unidades para insertar", "a number of items to insert");
+##        Items to Insert Verification
+if (   $command eq "InsertRecordGroupForm"
+    && $config_hash_ref->{itemstoinsert} !~ /^\d+$/ )
+{
+    error_message(
+        $r, $lang,
+        "un numero de unidades para insertar",
+        "a number of items to insert"
+    );
     goto ERROR_END;
 }
 #######################################################################
-##		Field Selected Verification
-    if ($field_selectedtable_selected) {
-       $field_selectedtable_selected = $dbh->quote($field_selectedtable_selected);
-        $statement = "SELECT (SELECT DISTINCT column_name FROM information_schema.columns WHERE table_name = $table_selected AND column_name = $field_selectedtable_selected);";
+##        Field Selected Verification
+if ( $config_hash_ref->{field} ) {
+    my $field = $dbh->quote( $config_hash_ref->{field} );
+    $statement =
+"SELECT (SELECT DISTINCT column_name FROM information_schema.columns WHERE table_name = $table AND column_name = $field);";
     $sth = $dbh->prepare($statement) || die $dbh->errstr;
     $rc  = $sth->execute             || die $dbh->errstr;
     $tbl = $sth->fetchrow_arrayref;
     $sth->finish();
     unless ( $$tbl[0] ) {
-        error_message($r, $lang, "un campo primero valido", "a valid first field");
+        error_message(
+            $r, $lang,
+            "un campo primero valido",
+            "a valid first field"
+        );
         goto ERROR_END;
     }
 }
 #######################################################################
-##		Field Selected2 Verification
-if ($field_selected2table_selected) {
-       $field_selected2table_selected = $dbh->quote($field_selected2table_selected);
-        $statement = "SELECT (SELECT DISTINCT column_name FROM information_schema.columns WHERE table_name = $table_selected AND column_name = $field_selected2table_selected);";
+##        Field Selected2 Verification
+if ( $config_hash_ref->{field2} ) {
+    my $field2 = $dbh->quote( $config_hash_ref->{field2} );
+    $statement =
+"SELECT (SELECT DISTINCT column_name FROM information_schema.columns WHERE table_name = $table AND column_name = $field2);";
     $sth = $dbh->prepare($statement) || die $dbh->errstr;
     $rc  = $sth->execute             || die $dbh->errstr;
     $tbl = $sth->fetchrow_arrayref;
     $sth->finish();
     unless ( $$tbl[0] ) {
-        error_message($r, $lang, "un segunda columna valida", "a valid second column");
+        error_message(
+            $r, $lang,
+            "un segunda columna valida",
+            "a valid second column"
+        );
         goto ERROR_END;
     }
 }
 #######################################################################
-##		Select a Sub
-    $dbh->{AutoCommit} = 0;
-    my $sub = \&{"$command"};
-    &$sub( $config_hash_ref );
-    $dbh->commit();
-    $dbh->{AutoCommit} = 1;
+##        Select a Sub
+$dbh->{AutoCommit} = 0;
+my $sub = \&{"$command"};
+&$sub($config_hash_ref);
+$dbh->commit();
+$dbh->{AutoCommit} = 1;
 
 #######################################################################
-##		Call SelectTable
+##        Call SelectTable
 ERROR_END:
 
-SelectTable( $config_hash_ref );
+SelectTable($config_hash_ref);
 $dbh->disconnect;
-
 
 =pod
 
@@ -272,7 +325,8 @@ gl.pl
 
 =head1 VERSION
 
-This documentation refers to gl.pl version 3.1.00.
+This documentation refers to gl.pl version 3.2.00.
+BETA TEST
 
 =head1 SYNOPSIS
 

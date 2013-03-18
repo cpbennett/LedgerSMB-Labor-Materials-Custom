@@ -1,6 +1,7 @@
 package BWCL::SelectFAL;
 
-our $VERSION = 1.4.10;
+our $VERSION = 1.4.20;
+
 use warnings;
 use strict;
 
@@ -9,7 +10,7 @@ our @ISA       = qw(Exporter);
 our @EXPORT_OK = qw(SelectFALs);
 
 #######################################################################
-##		Sub SelectFALs
+##        Sub SelectFALs
 
 sub SelectFALs {
     my ($arg_ref) = @_;
@@ -22,20 +23,19 @@ sub SelectFALs {
     my $build;
     $r->print(
         qq{<div>
-	<h2>Please select both an item and an item section to see</h2>
-	<form id="someForm" name="someForm" action="$arg_ref->{Program}{program_path_name}" method="post">
-	<div>
-	<table summary="" border="2" rules="all">
-	<tbody>
-	<tr>
-	<td><label for="full_assembly_list_selected">Full Assembly List Item</label></td>
-	<td><select id="full_assembly_list_selected" name="full_assembly_list_selected">
-	}
+<h2>Please select both an item and an item section to see</h2>
+<form id="someForm" name="someForm" action="$arg_ref->{Program}{program_path_name}" method="post">
+<div>
+<table summary="" border="2" rules="all">
+<tbody>
+<tr>
+<td><label for="full_assembly_list_selected">Full Assembly List Item</label></td>
+<td><select id="full_assembly_list_selected" name="full_assembly_list_selected">
+    }
     );
-    $sth
-        = $dbh->prepare(
-        "SELECT full_assembly_list_name FROM full_assembly_list ORDER BY full_assembly_list_name;"
-        );
+    $sth = $dbh->prepare(
+"SELECT full_assembly_list_name FROM full_assembly_list ORDER BY full_assembly_list_name;"
+    );
     $sth->execute;
 
     while ( @vetor = $sth->fetchrow ) {
@@ -43,33 +43,33 @@ sub SelectFALs {
     }
     $sth->finish();
     for my $build (@full_assembly_lists) {
-        $build =~ s/"/''/g
-            ; # This substitution is done for form which allows javascript to function
+    #$build =~ s/"/''/g;
+        $build =~ s/"/&quot;/g;
+# This substitution is done for form which allows javascript to function
         $r->print(
             qq{<option value="$build">$build</option>
-	}
+    }
         );
     }
     $r->print(
         qq{</select></td>
-	</tr>
-	<tr>
-	<td><label for="assembly_selected">Full Assembly Section to See</label></td>
-	<td><script type="text/javascript">
-	//<![CDATA[
-	document.writeln("<select id='assembly_selected' name='assembly_selected'></select>");
-	//]]>
-	</script>
-	<noscript><input type="text" id="assembly_selected" name="assembly_selected" value="All" /></noscript>
-	</td>
-	</tr>
-	<tr>
-	<td><label for="currency_selected">Currency - Used for Duplicate Records Only</label></td>
-	<td><select id="currency_selected" name="currency_selected">
-	}
+</tr>
+<tr>
+<td><label for="assembly_selected">Full Assembly Section to See</label></td>
+<td><script type="text/javascript">
+//<![CDATA[
+document.writeln("<select id='assembly_selected' name='assembly_selected'></select>");
+//]]>
+</script>
+</td>
+</tr>
+<tr>
+<td><label for="currency_selected">Currency - Used for Duplicate Records Only</label></td>
+<td><select id="currency_selected" name="currency_selected">
+    }
     );
-    $sth = $dbh->prepare(
-        "SELECT currency FROM currencies ORDER BY currency DESC;");
+    $sth =
+      $dbh->prepare("SELECT currency FROM currencies ORDER BY currency DESC;");
     $sth->execute;
     while ( @vetor = $sth->fetchrow ) {
         push( @currencies, @vetor );
@@ -78,36 +78,35 @@ sub SelectFALs {
     for my $currency (@currencies) {
         $r->print(
             qq{<option value="$currency">$currency</option>
-	}
+    }
         );
     }
     $r->print(
         qq{</select></td>
-	</tr>
+</tr>
+</tbody></table>
+<br />
+<label for="command">View Records</label>
+<input type="radio" value="ViewFALRecords" checked="checked" id="ViewFALRecords" name="command" />
+<br />
+<br />
+<label for="command">View Full Records</label>
+<input type="radio" value="ViewFullFALRecords" id="ViewFullFALRecords" name="command" />
+<br />
+<br />
+<label for="command">Duplicate Records</label>
+<input type="radio" value="DuplicateFullFALRecordsForm" id="DuplicateFullFALRecordsForm" name="command" />
+<br />
+<br />
 
-	</tbody></table>
-	<br />
-	<label for="command">View Records</label>
-	<input type="radio" value="ViewFALRecords" checked="checked" id="ViewFALRecords" name="command" />
-	<br />
-	<br />
-	<label for="command">View Full Records</label>
-	<input type="radio" value="ViewFullFALRecords" id="ViewFullFALRecords" name="command" />
-	<br />
-	<br />
-	<label for="command">Duplicate Records</label>
-	<input type="radio" value="DuplicateFullFALRecordsForm" id="DuplicateFullFALRecordsForm" name="command" />
-	<br />
-	<br />
-
-	<div>
-	<input type="submit" value="Submit" name="submitForm" />
-	<input type="reset" value="Reset" name="reset1" />
-	</div>
-	</div></form>
-	</div>
-	</body></html>
-	}
+<div>
+<input type="submit" value="Submit" name="submitForm" />
+<input type="reset" value="Reset" name="reset1" />
+</div>
+</div></form>
+</div>
+</body></html>
+    }
     );
 }
 
@@ -115,17 +114,19 @@ sub SelectFALs {
 
 =head1 NAME
 
-BWCL::SelectFAL - Select which tree to examine or duplicate.
+BWCL::SelectFAL
 
 =head1 VERSION
 
-This documentation refers to BWCL::SelectFAL version 1.4.10.
+This documentation refers to BWCL::SelectFAL version 1.4.11.
 
 =head1 SYNOPSIS
 
+Select which tree to examine or duplicate.
 
 =head1 DESCRIPTION
 
+SelectFALs Shows a menu of materials trees to examine or duplicate.
 
 =head1 BUGS AND LIMITATIONS
 

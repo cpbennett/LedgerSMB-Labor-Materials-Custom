@@ -1,23 +1,24 @@
 #!/usr/bin/perl
 
-our $VERSION = 1.1.00;
+our $VERSION = 1.1.11;
+
 use warnings;
 use strict;
 
 use Apache::Request();
 use DBI();
 use Config::Std;
-use BWCL::SelectLPL qw(SelectLPLs);
-use BWCL::ViewLPLRecords
-    qw(ViewLPLRecords DuplicateFullLPLRecordsForm DuplicateFullLPLRecords);
-use BWCL::ShowAdmin qw(error_message);
+use BWC::SelectLPL qw(SelectLPLs);
+use BWC::ViewLPLRecords
+  qw(ViewLPLRecords DuplicateFullLPLRecordsForm DuplicateFullLPLRecords);
+use BWC::ShowAdmin qw(error_message);
 
 #######################################################################
-##		Connect to Database
+##        Connect to Database
 
 my $filename = 'LaborViewerDuplicator.cfg';
 my $config_hash_ref;
-read_config($filename => $config_hash_ref);
+read_config( $filename => $config_hash_ref );
 
 my $r = Apache->request;
 my $q = Apache::Request->new(
@@ -26,33 +27,39 @@ my $q = Apache::Request->new(
     DISABLE_UPLOADS => 1
 );
 
-my $dbh
-    = DBI->connect( "DBI:Pg:dbname=$config_hash_ref->{'Database'}{'database'};host=$config_hash_ref->{'Database'}{'hostname'};port=$config_hash_ref->{'Database'}{'port'}",
-    $config_hash_ref->{'Database'}{'username'}, $config_hash_ref->{'Database'}{'password'}, { 'RaiseError' => 1, pg_enable_utf8 => $config_hash_ref->{'Database'}{'pg_enable_utf8'} } );
+my $dbh = DBI->connect(
+"DBI:Pg:dbname=$config_hash_ref->{'Database'}{'database'};host=$config_hash_ref->{'Database'}{'hostname'};port=$config_hash_ref->{'Database'}{'port'}",
+    $config_hash_ref->{'Database'}{'username'},
+    $config_hash_ref->{'Database'}{'password'},
+    {
+        'RaiseError'   => 1,
+        pg_enable_utf8 => $config_hash_ref->{'Database'}{'pg_enable_utf8'}
+    }
+);
 $config_hash_ref->{dbh} = $dbh;
-$config_hash_ref->{r} = $r;
-$config_hash_ref->{q} = $q;
+$config_hash_ref->{r}   = $r;
+$config_hash_ref->{q}   = $q;
 ## Note: Nonpersistent Database connection in a Persistent Environment is as Follows:
 ##my $dbh = DBI->connect("DBI:Pg:dbname=$database;host=$hostname;port=5432", $username, $password, {'RaiseError' => 1, dbi_connect_method => 'connect'});
 
 my $program = $config_hash_ref->{'Program'}{'program_path_name'};
 
 #######################################################################
-##		Print Header
+##        Print Header
 
 $r->content_type("text/html");
 $r->send_http_header;
-my $lang 
-    = $q->param("lang")
-    || $r->headers_in->get('Accept-Language')
-    || "en";
+my $lang =
+     $q->param("lang")
+  || $r->headers_in->get('Accept-Language')
+  || "en";
 
 $lang = substr $lang, 0, 2;
 
 $config_hash_ref->{lang} = $lang;
 
 #######################################################################
-#	Prepare Javascript in Head
+#    Prepare Javascript in Head
 
 my $labor_project_list_string = "";
 my $case_string               = "";
@@ -82,20 +89,20 @@ while ( @vetor = $sth->fetchrow ) {
     push( @labor_project_lists, @vetor );
 }
 $sth->finish();
-$option_string
-    .= qq{labor_project_selected[labor_project_selected.length] = new Option("All", "All");
+$option_string .=
+qq{labor_project_selected[labor_project_selected.length] = new Option("All", "All");
 };
 
 $labor_project_list_string = join( ',', @labor_project_lists );
 foreach my $chosen (@labor_project_lists) {
     $chosenh        = $chosen;
     $chosenh_pretty = $chosen;
-    $chosenh_pretty =~ s/"/''/g
-        ; # This substitution is done for form which allows javascript to function
+    $chosenh_pretty =~ s/"/ In./g
+      ; # This substitution is done for form which allows javascript to function
     $case_string .= qq{
-		case "$chosenh_pretty" :
-		labor_project_selected.length = 0;
-		labor_project_selected[labor_project_selected.length] = new Option("All", "All");
+        case "$chosenh_pretty" :
+        labor_project_selected.length = 0;
+        labor_project_selected[labor_project_selected.length] = new Option("All", "All");
 
 };
     $chosen2   = $dbh->quote($chosen);
@@ -106,7 +113,7 @@ foreach my $chosen (@labor_project_lists) {
                 ORDER BY labor_project_id;";
     $sth = $dbh->prepare($statement);
     $rv  = $sth->execute()
-        or die "can't execute the query: $sth->errstr";
+      or die "can't execute the query: $sth->errstr";
     $tbl = $sth->fetchall_arrayref or die "$sth->errstr\n";
 
     for my $i ( 0 .. $#{$tbl} ) {
@@ -116,12 +123,12 @@ foreach my $chosen (@labor_project_lists) {
                        WHERE labor_project_id = $tbl->[$i][0]
                     ORDER BY labor_project_section;";
         my $option_aref = $dbh->selectcol_arrayref($statement)
-            || die $dbh->errstr;
+          || die $dbh->errstr;
 
         $option = $$option_aref[0];
         unless ( defined $option ) { next; }
-        $option =~ s/"/''/g
-            ; # This substitution is done for form which allows javascript to function
+        $option =~ s/"/ In./g
+          ; # This substitution is done for form which allows javascript to function
         $case_string .= qq{
 labor_project_selected[labor_project_selected.length] = new Option("$option", "$tbl->[$i][0]");
 };
@@ -136,7 +143,7 @@ labor_project_selected[labor_project_selected.length] = new Option("$option", "$
 }
 
 #######################################################################
-##		Print Page Head
+##        Print Page Head
 
 $r->print(
     qq{<?xml version="1.0" encoding="utf-8"?>
@@ -156,40 +163,40 @@ $r->print(
 <link rel="stylesheet" type="text/css" href="/handheldimg.css" media="handheld" />
 <script type="text/javascript" src="/javascript/external.js"></script>
 <script type="text/javascript">
-	//<![CDATA[
+    //<![CDATA[
 }
 );
 $r->print(
     qq/
 if (window.addEventListener) {
-	window.addEventListener("load",setupEvents,false);
+    window.addEventListener("load",setupEvents,false);
 } else if (window.attachEvent) {
-	window.attachEvent("onload",setupEvents);
+    window.attachEvent("onload",setupEvents);
 } else {
-	window.onload=setupEvents;
+    window.onload=setupEvents;
 }
 
 function setupEvents(evnt) {
-	var opts = document.getElementById("someForm").labor_project_list_selected.options;
-	var labor_project_selected = document.getElementById("someForm").labor_project_selected.options;
-	$option_string
-	document.getElementById("someForm").labor_project_list_selected.onchange = checkSelect;
-	
+    var opts = document.getElementById("someForm").labor_project_list_selected.options;
+    var labor_project_selected = document.getElementById("someForm").labor_project_selected.options;
+    $option_string
+    document.getElementById("someForm").labor_project_list_selected.onchange = checkSelect;
+    
 }
 
 function checkSelect(evnt) {
-	var opts = document.getElementById("someForm").labor_project_list_selected.options;
-	var labor_project_selected = document.getElementById("someForm").labor_project_selected.options;
+    var opts = document.getElementById("someForm").labor_project_list_selected.options;
+    var labor_project_selected = document.getElementById("someForm").labor_project_selected.options;
 
-	for ( var i = 0; i < opts.length; i++) {
-		if ( opts[i].selected ) {
-			switch(opts[i].value) {
-				$case_string
-			}
-		}
-	}
+    for ( var i = 0; i < opts.length; i++) {
+        if ( opts[i].selected ) {
+            switch(opts[i].value) {
+                $case_string
+            }
+        }
+    }
 
-	return false;
+    return false;
 }
 /
 );
@@ -209,51 +216,50 @@ $config_hash_ref->{'Top of Page Links'}{'top_of_page_links'}
 my $commands = $config_hash_ref->{'Commands'}{'commands'};
 
 #######################################################################
-##		Get CGI Params
+##        Get CGI Params
 
-my $labor_project_list_selected = '';
-my $labor_project_selected      = '';
-my $labor_project_name          = '';
+my $labor_project_name = '';
 
-$labor_project_list_selected = $q->param("labor_project_list_selected")
-    || '';
-$labor_project_selected = $q->param("labor_project_selected") || '';
+$config_hash_ref->{labor_project_list} =
+  $q->param("labor_project_list_selected") || '';
+$config_hash_ref->{labor_project} = $q->param("labor_project_selected") || '';
+$config_hash_ref->{currency}      = $q->param("currency_selected")      || '';
 my $command = $q->param("command")
-    || goto ERROR_END;
-unless ($command~~@$commands) {
-    error_message($r, $lang, "un comando valido", "a valid command");
+  || goto ERROR_END;
+unless ( $command ~~ @$commands ) {
+    error_message( $r, $lang, "un comando valido", "a valid command" );
     goto ERROR_END;
 }
 
 #######################################################################
-##		Select a Sub
+##        Select a Sub
 $dbh->{AutoCommit} = 0;
 
 if ( $command eq "ViewLPLRecords" ) {
-    ViewLPLRecords( $config_hash_ref );
+    ViewLPLRecords($config_hash_ref);
 }
 elsif ( $command eq "ViewFullLPLRecords" ) {
-    ViewFullLPLRecords( $config_hash_ref );
+    ViewFullLPLRecords($config_hash_ref);
 }
 elsif ( $command eq "DuplicateFullLPLRecordsForm" ) {
-    DuplicateFullLPLRecordsForm( $config_hash_ref );
+    DuplicateFullLPLRecordsForm($config_hash_ref);
 }
 elsif ( $command eq "DuplicateFullLPLRecords" ) {
-    DuplicateFullLPLRecords( $config_hash_ref );
+    DuplicateFullLPLRecords($config_hash_ref);
 }
 else {
     $r->print(
-        qq{<div class="cent"><p class="error">Please make a selection.</p></div>}
+qq{<div class="cent"><p class="error">Please make a selection.</p></div>}
     );
 }
 
 $dbh->commit();
 $dbh->{AutoCommit} = 1;
 #######################################################################
-##		Call Select Full Assembly List
+##        Call Select Full Assembly List
 ERROR_END:
 
-SelectLPLs( $config_hash_ref );
+SelectLPLs($config_hash_ref);
 
 $dbh->disconnect;
 
@@ -261,19 +267,20 @@ $dbh->disconnect;
 
 =head1 NAME
 
-lab.pl - View and reproduce similar labor project list trees to bottom.
+lab.pl
 
 =head1 VERSION
 
-This documentation refers to lab.pl version 1.1.00.
+This documentation refers to lab.pl version 1.1.11.
 
 =head1 SYNOPSIS
 
-Form asks which labor project list tree to view or work with for similar
-duplicates
+View and reproduce similar labor project list trees top to bottom.
 
 =head1 DESCRIPTION
 
+Form asks which labor project list tree to view or work with for similar
+duplicates
 
 =head1 BUGS AND LIMITATIONS
 

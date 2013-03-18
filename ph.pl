@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 
-our $VERSION = 3.2.00;
+our $VERSION = 0.0.01;
 
 # BETA TEST
 use warnings;
@@ -21,7 +21,7 @@ use Config::Std;
 #######################################################################
 ##        Connect to Database
 
-my $filename = 'Products.cfg';
+my $filename = 'photos.cfg';
 my $config_hash_ref;
 read_config( $filename => $config_hash_ref );
 
@@ -103,10 +103,10 @@ unless ( $command ~~ @$commands ) {
 }
 
 $config_hash_ref->{table} = $q->param("table_selected") || goto ERROR_END;
-$config_hash_ref->{class} = $q->param("class_selected") || 'All';
-$config_hash_ref->{subclass} = $q->param("subclass_selectedclass_selected")
+$config_hash_ref->{photo_id} = $q->param("photo_id_selected") || 'All';
+$config_hash_ref->{photo_name} = $q->param("photo_name_selected")
   || 'All';
-$config_hash_ref->{vendor_name} = $q->param("vendor_name_selected") || 'All';
+$config_hash_ref->{photo_file} = $q->param("photo_file_selected") || 'All';
 $config_hash_ref->{id}          = $q->param("id_selected")          || '';
 $config_hash_ref->{field} = $q->param("field_selectedtable_selected") || '';
 $config_hash_ref->{field_value}      = $q->param("field_value_selected") || '';
@@ -117,10 +117,10 @@ $config_hash_ref->{field_value2} = $q->param("field_value_selected2") || '';
 $config_hash_ref->{field_value2_null} = $q->param("field_value_selected2_null");
 $config_hash_ref->{field_value2_not}  = $q->param("field_value_selected2_not");
 $config_hash_ref->{itemstoinsert}     = $q->param("itemstoinsert") || '';
-$config_hash_ref->{full_assembly_list_category} =
-  $q->param("full_assembly_list_category_selected") || 'All';
-$config_hash_ref->{full_assembly_list_subcategory} = $q->param(
-"full_assembly_list_subcategory_selectedfull_assembly_list_category_selected"
+$config_hash_ref->{gallery_name} =
+  $q->param("gallery_name_selectedphoto_id_selected") || 'All';
+$config_hash_ref->{photo_name_es} = $q->param(
+"photo_name_es_selectedphoto_name_selected"
 ) || 'All';
 
 #######################################################################
@@ -140,102 +140,102 @@ unless ( $$tbl[0] ) {
 }
 #######################################################################
 ##        Class Verification
-if ( $table eq "products" && $config_hash_ref->{class} ne "All" ) {
-    my $class = $dbh->quote( $config_hash_ref->{class} );
-    $statement =
-      "SELECT class FROM $config_hash_ref->{table} where class = $class;";
-    $sth = $dbh->prepare($statement) || die $dbh->errstr;
-    $rc  = $sth->execute             || die $dbh->errstr;
-    $tbl = $sth->fetchrow_arrayref;
-    $sth->finish();
-    unless ( $$tbl[0] ) {
-        error_message( $r, $lang, "una clase valida", "a valid class" );
-        goto ERROR_END;
-    }
-}
+#if ( $table eq "products" && $config_hash_ref->{class} ne "All" ) {
+#    my $class = $dbh->quote( $config_hash_ref->{class} );
+#    $statement =
+#      "SELECT class FROM $config_hash_ref->{table} where class = $class;";
+#    $sth = $dbh->prepare($statement) || die $dbh->errstr;
+#    $rc  = $sth->execute             || die $dbh->errstr;
+#    $tbl = $sth->fetchrow_arrayref;
+#    $sth->finish();
+#    unless ( $$tbl[0] ) {
+#        error_message( $r, $lang, "una clase valida", "a valid class" );
+#        goto ERROR_END;
+#    }
+#}
 #######################################################################
 ##        Subclass Verification
-if ( $table eq "products" && $config_hash_ref->{subclass} ne "All" ) {
-    my $subclass = $dbh->quote( $config_hash_ref->{subclass} );
-    $statement =
-"SELECT subclass FROM $config_hash_ref->{table} WHERE subclass = $subclass;";
-    $sth = $dbh->prepare($statement) || die $dbh->errstr;
-    $rc  = $sth->execute             || die $dbh->errstr;
-    $tbl = $sth->fetchrow_arrayref;
-    $sth->finish();
-    unless ( $$tbl[0] ) {
-        error_message( $r, $lang, "una subclase valida", "a valid subclass" );
-        goto ERROR_END;
-    }
-}
-#######################################################################
-##        Vendor Name Verification
-if (
-    (
-           $table eq "products"
-        || $table eq "vendors"
-        || $table eq "vendor_contacts"
-    )
-    && $config_hash_ref->{vendor_name} ne "All"
-  )
-{
-    my $vendor_name = $dbh->quote( $config_hash_ref->{vendor_name} );
-    $statement =
-"SELECT vendor_name FROM $config_hash_ref->{table} WHERE vendor_name = $vendor_name;";
-    $sth = $dbh->prepare($statement) || die $dbh->errstr;
-    $rc  = $sth->execute             || die $dbh->errstr;
-    $tbl = $sth->fetchrow_arrayref;
-    $sth->finish();
-    unless ( $$tbl[0] ) {
-        error_message( $r, $lang, "un vendor valido", "a valid vendor" );
-        goto ERROR_END;
-    }
-}
-#######################################################################
-##        Full Assembly List Category Verification
-if (   $table eq "full_assembly_list"
-    && $config_hash_ref->{full_assembly_list_category} ne "All" )
-{
-    my $full_assembly_list_category =
-      $dbh->quote( $config_hash_ref->{full_assembly_list_category} );
-    $statement = "SELECT 
-               FROM $config_hash_ref->{table} WHERE full_assembly_list_category = $full_assembly_list_category;";
-    $sth = $dbh->prepare($statement) || die $dbh->errstr;
-    $rc  = $sth->execute             || die $dbh->errstr;
-    $tbl = $sth->fetchrow_arrayref;
-    $sth->finish();
-    unless ( $$tbl[0] ) {
-        error_message(
-            $r, $lang,
-            "una categoria de full assembly list valida",
-            "a valid full assembly list category"
-        );
-        goto ERROR_END;
-    }
-}
-#######################################################################
-##        Full Assembly List Subcategory Verification
-if (   $table eq "full_assembly_list"
-    && $config_hash_ref->{full_assembly_list_subcategory} ne "All" )
-{
-    my $full_assembly_list_subcategory =
-      $dbh->quote( $config_hash_ref->{full_assembly_list_subcategory} );
-    $statement =
-"SELECT full_assembly_list_subcategory FROM $config_hash_ref->{table} WHERE full_assembly_list_subcategory = $full_assembly_list_subcategory
-               ;";
-    $sth = $dbh->prepare($statement) || die $dbh->errstr;
-    $rc  = $sth->execute             || die $dbh->errstr;
-    $tbl = $sth->fetchrow_arrayref;
-    $sth->finish();
-    unless ( $$tbl[0] ) {
-        error_message(
-            $r, $lang,
-            "una subcategoria de full assembly list valida",
-            "a valid full assembly list subcategory"
-        );
-        goto ERROR_END;
-    }
-}
+#if ( $table eq "products" && $config_hash_ref->{subclass} ne "All" ) {
+#    my $subclass = $dbh->quote( $config_hash_ref->{subclass} );
+#    $statement =
+#"SELECT subclass FROM $config_hash_ref->{table} WHERE subclass = $subclass;";
+#    $sth = $dbh->prepare($statement) || die $dbh->errstr;
+#    $rc  = $sth->execute             || die $dbh->errstr;
+#    $tbl = $sth->fetchrow_arrayref;
+#    $sth->finish();
+#    unless ( $$tbl[0] ) {
+#        error_message( $r, $lang, "una subclase valida", "a valid subclass" );
+#        goto ERROR_END;
+#    }
+#}
+########################################################################
+###        Vendor Name Verification
+#if (
+#    (
+#           $table eq "products"
+#        || $table eq "vendors"
+#        || $table eq "vendor_contacts"
+#    )
+#    && $config_hash_ref->{vendor_name} ne "All"
+#  )
+#{
+#    my $vendor_name = $dbh->quote( $config_hash_ref->{vendor_name} );
+#    $statement =
+#"SELECT vendor_name FROM $config_hash_ref->{table} WHERE vendor_name = $vendor_name;";
+#    $sth = $dbh->prepare($statement) || die $dbh->errstr;
+#    $rc  = $sth->execute             || die $dbh->errstr;
+#    $tbl = $sth->fetchrow_arrayref;
+#    $sth->finish();
+#    unless ( $$tbl[0] ) {
+#        error_message( $r, $lang, "un vendor valido", "a valid vendor" );
+#        goto ERROR_END;
+#    }
+#}
+########################################################################
+###        Full Assembly List Category Verification
+#if (   $table eq "full_assembly_list"
+#    && $config_hash_ref->{full_assembly_list_category} ne "All" )
+#{
+#    my $full_assembly_list_category =
+#      $dbh->quote( $config_hash_ref->{full_assembly_list_category} );
+#    $statement = "SELECT 
+#               FROM $config_hash_ref->{table} WHERE full_assembly_list_category = $full_assembly_list_category;";
+#    $sth = $dbh->prepare($statement) || die $dbh->errstr;
+#    $rc  = $sth->execute             || die $dbh->errstr;
+#    $tbl = $sth->fetchrow_arrayref;
+#    $sth->finish();
+#    unless ( $$tbl[0] ) {
+#        error_message(
+#            $r, $lang,
+#            "una categoria de full assembly list valida",
+#            "a valid full assembly list category"
+#        );
+#        goto ERROR_END;
+#    }
+#}
+########################################################################
+###        Full Assembly List Subcategory Verification
+#if (   $table eq "full_assembly_list"
+#    && $config_hash_ref->{full_assembly_list_subcategory} ne "All" )
+#{
+#    my $full_assembly_list_subcategory =
+#      $dbh->quote( $config_hash_ref->{full_assembly_list_subcategory} );
+#    $statement =
+#"SELECT full_assembly_list_subcategory FROM $config_hash_ref->{table} WHERE full_assembly_list_subcategory = $full_assembly_list_subcategory
+#               ;";
+#    $sth = $dbh->prepare($statement) || die $dbh->errstr;
+#    $rc  = $sth->execute             || die $dbh->errstr;
+#    $tbl = $sth->fetchrow_arrayref;
+#    $sth->finish();
+#    unless ( $$tbl[0] ) {
+#        error_message(
+#            $r, $lang,
+#            "una subcategoria de full assembly list valida",
+#            "a valid full assembly list subcategory"
+#        );
+#        goto ERROR_END;
+#    }
+#}
 #######################################################################
 ##        ID Selected Verification
 if ( ( $command eq "UpdateRecordForm" || $command eq "DeleteRecordForm" )
@@ -296,15 +296,15 @@ if ( $config_hash_ref->{field2} ) {
 #######################################################################
 ##        Select a Sub
 
-if ( $command eq "DeleteDuplicates" && $config_hash_ref->{table} ne "products" )
-{
-    error_message(
-        $r, $lang,
-        "la tabla products solamente",
-        "only the products table"
-    );
-    goto ERROR_END;
-}
+#if ( $command eq "DeleteDuplicates" && $config_hash_ref->{table} ne "products" )
+#{
+#    error_message(
+#        $r, $lang,
+#        "la tabla products solamente",
+#        "only the products table"
+#    );
+#    goto ERROR_END;
+#}
 
 $dbh->{AutoCommit} = 0;
 my $sub = \&{"$command"};
@@ -322,11 +322,11 @@ $dbh->disconnect;
 
 =head1 NAME
 
-pg.pl
+pg_wmod-B.pl
 
 =head1 VERSION
 
-This documentation refers to pg.pl version 3.2.00.
+This documentation refers to pg_beph-B.pl version 0.0.01.
 
 =head1 SYNOPSIS
 
@@ -334,8 +334,8 @@ Hands off commands to appropriate modules.
 
 =head1 DESCRIPTION
 
-Hands off commands to appropriate modules of vendor, customer, jobsite,
-product and assembly database. Performs some error corrections.
+Hands off commands to appropriate modules of database.
+Performs some error corrections.
 Basic Spanish error messages are included.
 These can easily be changed to support another language.
 
@@ -351,7 +351,7 @@ Chris Bennett  (chris@bennettconstruction.us)
 
 =head1 LICENSE AND COPYRIGHT
 
-Copyright (c) 2012 Chris Bennett (chris@bennettconstruction.us).
+Copyright (c) 2013 Chris Bennett (chris@bennettconstruction.us).
 
 Permission to use, copy, modify, and distribute this software for any
 purpose with or without fee is hereby granted, provided that the above

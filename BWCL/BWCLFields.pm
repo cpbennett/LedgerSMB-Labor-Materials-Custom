@@ -1,6 +1,7 @@
-#!/usr/bin/perl
 package BWCL::BWCLFields;
+
 our $VERSION = 1.2.1;
+
 use warnings;
 use strict;
 
@@ -38,6 +39,39 @@ sub Selecter {
             product_notes
         );
         $table_id_field  = "product_id";
+        @no_quote_fields = qw();
+    }
+    elsif ( $table eq "gallery" ) {
+        @select_fields = qw();
+        @field_names = qw(
+            gallery_name
+            order_shown
+            photo_id
+        );
+        @notes_fields    = qw(gallery_notes);
+        $table_id_field  = "gallery_id";
+        @no_quote_fields = qw();
+    }
+    elsif ( $table eq "photos" ) {
+        @select_fields = qw(
+            photo_is_thumbnail
+        );
+        @field_names = qw(
+            photo_name
+            photo_name_es
+            photo_caption
+            photo_caption_es
+            photo_file
+            alt
+            alt_es
+            title
+            title_es
+            width
+            height
+            photo_url
+        );
+        @notes_fields    = qw(photo_notes);
+        $table_id_field  = "photo_id";
         @no_quote_fields = qw();
     }
     elsif ( $table eq "expenses" ) {

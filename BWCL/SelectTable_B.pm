@@ -1,7 +1,8 @@
 package BWCL::SelectTable_B;
 
-our $VERSION = 4.5.55;
+our $VERSION = 4.5.61;
 
+# BETA TEST
 use warnings;
 use strict;
 
@@ -19,35 +20,35 @@ sub PrepareHead {
     my @tables    = ();
     my @array;
     my $sth;
- 
-       #       this section creates javascript variable cat"x"
-        my @both_columns;
-        my $field_table_aref = $arg_ref->{field_table_aref};
-        my $l = 0;
-        my $primary_splitter_secondary;
-        my @primary_secondary_split;
-        my $old_primary = '';
-        my $primary;
-        my $secondary;
-        my $statement;
-        my $rv1;
 
-        # Next step subtracts one to remove single alone field on form
-    for my $k (0 .. ($#$field_table_aref - 3) ) {
-        $statement
-            = "SELECT DISTINCT ($field_table_aref->[$l][0], '#'::text, $field_table_aref->[$l+1][0]) FROM $field_table_aref->[$l][1] WHERE $field_table_aref->[$l][0] IS NOT NULL;";
+    #       this section creates javascript variable cat"x"
+    my @both_columns;
+    my $field_table_aref = $arg_ref->{field_table_aref};
+    my $l                = 0;
+    my $primary_splitter_secondary;
+    my @primary_secondary_split;
+    my $old_primary = '';
+    my $primary;
+    my $secondary;
+    my $statement;
+    my $rv1;
+
+    # Next step subtracts one to remove single alone field on form
+    for my $k ( 0 .. ( $#$field_table_aref - 3 ) ) {
+        $statement =
+"SELECT DISTINCT ($field_table_aref->[$l][0], '#'::text, $field_table_aref->[$l+1][0]) FROM $field_table_aref->[$l][1] WHERE $field_table_aref->[$l][0] IS NOT NULL;";
         $sth = $dbh->prepare($statement);
         $rv1 = $sth->execute();
-        
-    CASE:
+
+      CASE:
         while ( @both_columns = $sth->fetchrow_array() ) {
             $primary_splitter_secondary = $both_columns[0];
             $primary_splitter_secondary =~ s/\(//g;
             $primary_splitter_secondary =~ s/\)//g;
             $primary_splitter_secondary =~ s/"//g;
             @primary_secondary_split = split /,#,/, $primary_splitter_secondary;
-            $primary     = $primary_secondary_split[0];
-            $secondary  = $primary_secondary_split[1] || '';
+            $primary                 = $primary_secondary_split[0];
+            $secondary               = $primary_secondary_split[1] || '';
             if ( !defined $primary ) {
                 next CASE;
             }
@@ -76,22 +77,23 @@ sub PrepareHead {
         $array[$k] = qq|var cat$k={'$field_table_aref->[$l][0]_selected':
         {$array[$k]|;
 
- $array[$k] .= qq|
+        $array[$k] .= qq|
  function dropdownlist_category_selected$k(listname,listindex)
 {
   var catsel$k=document.someForm.elements['$field_table_aref->[$l+1][0]_selected'+listname];
   catsel$k.options.length=1;
   if (listindex in cat$k| . qq|[listname])
     for (var i=0,l=cat$k| . qq|[listname][listindex].length;i<l;i++)
-      catsel$k.options[i+1]=new Option(cat$k| .qq|[listname][listindex][i],cat$k| .qq|[listname][listindex][i]);
+      catsel$k.options[i+1]=new Option(cat$k|
+          . qq|[listname][listindex][i],cat$k| . qq|[listname][listindex][i]);
 return true;
 
       }
       |;
 
-$l = $l + 2;
-$old_primary = '';
-}
+        $l           = $l + 2;
+        $old_primary = '';
+    }
 
 #######################################################################
 ##        Print Page Head
@@ -101,12 +103,12 @@ $old_primary = '';
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="$arg_ref->{lang}" lang="$arg_ref->{lang}">
 <head>
-<title>$arg_ref->{title}</title>
+<title>$arg_ref->{PageInfo}{pagetitle}</title>
 <meta http-equiv="content-type" content="text/html; charset=utf-8" />
 <meta http-equiv="Content-language" content="$arg_ref->{lang}" />
 <meta name="robots" content="noindex,nofollow" />
 <meta http-equiv="Content-Script-Type" content="text/javascript" />
-<meta name="description" content=$arg_ref->{description}" />
+<meta name="description" content="$arg_ref->{PageInfo}{description}" />
 <meta name="author" content="Chris Bennett" />
 <link rel="shortcut icon" href="/favicon.ico" />
 <link href="/db.css" type="text/css" rel="stylesheet" media="screen" />
@@ -114,53 +116,54 @@ $old_primary = '';
 <link rel="stylesheet" type="text/css" href="/handheldimg.css" media="handheld" />
 <script type="text/javascript" src="/javascript/external.js"></script>
 #
-);
-        $field_table_aref = $arg_ref->{field_table_aref};
-        for my $k (0 .. ($#$field_table_aref - 3) ) {
+    );
+    $field_table_aref = $arg_ref->{field_table_aref};
+    for my $k ( 0 .. ( $#$field_table_aref - 3 ) ) {
 
         $r->print(
             qq#<script type="text/javascript">
 $array[$k]
  </script>
     #
-);
-}
-$r->print(
-            qq#<script type="text/javascript">
+        );
+    }
+    $r->print(
+        qq#<script type="text/javascript">
             #
-            );
+    );
 
-my $tablecol;   
-$sth = $dbh->table_info( '', 'public', undef, 'TABLE' );
+    my $tablecol;
+    $sth = $dbh->table_info( '', 'public', undef, 'TABLE' );
     for my $rel ( @{ $sth->fetchall_arrayref( {} ) } ) {
         push( @tables, "\'$rel->{TABLE_NAME}\'" );
     }
     $sth->finish();
-        $tablecol = qq|var tablecol={
+    $tablecol = qq|var tablecol={
   'table_selected':{|;
     my %temp = ();
     @tables = grep ++$temp{$_} < 2, @tables;
     foreach my $chosen (@tables) {
-    $tablecol .= qq|
+        $tablecol .= qq|
     $chosen:[|;
-        my $statement
-            = "SELECT DISTINCT column_name FROM information_schema.columns WHERE table_name = $chosen;";
+        my $statement =
+"SELECT DISTINCT column_name FROM information_schema.columns WHERE table_name = $chosen;";
         my $sth = $dbh->prepare($statement);
         my $rv  = $sth->execute()
-            or die "can't execute the query: $sth->errstr";
+          or die "can't execute the query: $sth->errstr";
         my $tbl = $sth->fetchall_arrayref or die "$sth->errstr\n";
         for my $i ( 0 .. $#{$tbl} ) {
             $tablecol .= qq|'$tbl->[$i][0]',|;
-            }
-            $tablecol =~ s/,$//g;
-        $tablecol .= qq|],|;
         }
         $tablecol =~ s/,$//g;
+        $tablecol .= qq|],|;
+    }
+    $tablecol =~ s/,$//g;
     $tablecol .= qq|
     }
 }|;
 
-$r->print( qq#
+    $r->print(
+        qq#
 $tablecol
 
 function dropdownlist_table_selected(listname,listindex)
@@ -190,20 +193,20 @@ function checkscript() {
 }
 
 #
-);
+    );
     if ( $arg_ref->{lang} eq "es" ) {
         $r->print(
             qq{
 alert("Por favor, selecciona un comando");
 }
-                 );
+        );
     }
     else {
         $r->print(
             qq{
 alert("Please Select a Command");
 }
-                 );
+        );
     }
     $r->print(
         qq#
@@ -211,7 +214,7 @@ return false;
 }
 </script>
 #
-             );
+    );
 
     $r->print(
         qq#
@@ -219,8 +222,7 @@ return false;
 <body>
 $arg_ref->{'Top of Page Links'}{'top_of_page_links'}
 #
-             );
-
+    );
 
 }
 #######################################################################
@@ -234,8 +236,20 @@ sub SelectTable {
     my $lang             = $arg_ref->{lang};
     my $select_label;
     my $ucfirst;
-    my $tbl       = "";
-    my $statement = "";
+    my $tbl         = "";
+    my $sth         = $dbh->table_info( '', 'public', undef, 'TABLE' );
+    my $first_table = ${ $sth->fetchall_arrayref( {} ) }[0]->{TABLE_NAME};
+    my $rv;
+    my @first_columns;
+    my $statement =
+"SELECT column_name FROM information_schema.columns WHERE table_name = '$first_table';";
+    $sth = $dbh->prepare($statement);
+    $rv  = $sth->execute() or die "can't execute the query: $sth->errstr";
+    $tbl = $sth->fetchall_arrayref or die "$sth->errstr\n";
+
+    for my $i ( 0 .. $#{$tbl} ) {
+        push @first_columns, $tbl->[$i][0];
+    }
 
     if ( $lang eq "es" ) {
         $r->print(
@@ -249,7 +263,7 @@ sub SelectTable {
     <td><label for="table_selected">Tabla</label></td>
     <td><select id="table_selected" name="table_selected" onchange="dropdownlist_table_selected(this.name,this.options[this.selectedIndex].value);">
     }
-                 );
+        );
     }
     else {
         $r->print(
@@ -263,14 +277,14 @@ sub SelectTable {
     <td><label for="table_selected">Table</label></td>
     <td><select id="table_selected" name="table_selected" onchange="dropdownlist_table_selected(this.name,this.options[this.selectedIndex].value);">
     }
-                 );
+        );
     }
-    my $sth = $dbh->table_info( '', 'public', undef, 'TABLE' );
+    $sth = $dbh->table_info( '', 'public', undef, 'TABLE' );
     for my $rel ( @{ $sth->fetchall_arrayref( {} ) } ) {
         $r->print(
             qq{<option value="$rel->{TABLE_NAME}">$rel->{TABLE_NAME}</option>
     }
-                 );
+        );
     }
     $sth->finish();
     $r->print(
@@ -280,7 +294,7 @@ sub SelectTable {
     </tr>
     <tr>
     }
-             );
+    );
     #######################################################################
     #    loop for pre-chosen fields/tables
     for my $i ( 0 .. $#$field_table_aref ) {
@@ -289,55 +303,66 @@ sub SelectTable {
         $ucfirst =~ s/ Id/ ID/;
         $ucfirst =~ s/ Url/ URL/;
         $select_label = ucfirst($ucfirst);
-        $select_label
-            =~ s/&/&amp;/g;    #Changed for HTML::Entities --Chris
-        $select_label
-            =~ s/ /&nbsp;/g;    #To make non-breaking spaces in labels
-        $select_label =~ s/"/&quot;/g
-            ; # Pisses me off I can't find a way to deal with BOTH ' and " in XHTML forms
-        $statement
-            = "SELECT DISTINCT $field_table_aref->[$i][0] FROM $field_table_aref->[$i][1] WHERE $field_table_aref->[$i][0] IS NOT NULL AND $field_table_aref->[$i][0] <> '' ORDER BY $field_table_aref->[$i][0];";
+        $select_label =~ s/&/&amp;/g;     #Changed for HTML::Entities --Chris
+        $select_label =~ s/ /&nbsp;/g;    #To make non-breaking spaces in labels
+        $select_label =~ s/'/&apos;/g;
+        $select_label =~ s/"/&quot;/g;
+        # Pisses me off I can't find a way to deal with BOTH ' and " in XHTML forms
+#        $statement =
+#"SELECT DISTINCT $field_table_aref->[$i][0] FROM $field_table_aref->[$i][1] WHERE $field_table_aref->[$i][0] IS NOT NULL AND $field_table_aref->[$i][0] <> '' ORDER BY $field_table_aref->[$i][0];";
+       $statement =
+       "SELECT DISTINCT $field_table_aref->[$i][0] FROM $field_table_aref->[$i][1] WHERE $field_table_aref->[$i][0] IS NOT NULL ORDER BY $field_table_aref->[$i][0];";
+
         my $select_array_ref = $dbh->selectcol_arrayref($statement)
-            || die $dbh->errstr;
+          || die $dbh->errstr;
+
         if ( ( $i == 2 ) || ( $i == 4 ) || ( $i == 6 ) ) {
-            $r->print(qq{</tr>
-                <tr>});
+            $r->print(
+                qq{</tr>
+                <tr>}
+            );
         }
-            if ( $i == 0 ) {
-            $r->print(qq{<td><label for="$field_table_aref->[$i][0]_selected">$select_label</label></td>
+        if ( $i == 0 ) {
+            $r->print(
+qq{<td><label for="$field_table_aref->[$i][0]_selected">$select_label</label></td>
         <td><select id="$field_table_aref->[$i][0]_selected" name="$field_table_aref->[$i][0]_selected" onchange="dropdownlist_category_selected0(this.name,this.options[this.selectedIndex].value);">}
             );
         }
-            elsif ( $i == 2 ) {
-                 $r->print(qq{<td><label for="$field_table_aref->[$i][0]_selected">$select_label</label></td>
+        elsif ( $i == 2 ) {
+            $r->print(
+qq{<td><label for="$field_table_aref->[$i][0]_selected">$select_label</label></td>
         <td><select id="$field_table_aref->[$i][0]_selected" name="$field_table_aref->[$i][0]_selected" onchange="dropdownlist_category_selected1(this.name,this.options[this.selectedIndex].value);">}
             );
         }
         elsif ( $i != 4 ) {
-             $r->print(
-                  qq{<td><label for="$field_table_aref->[$i][0]_selected$field_table_aref->[$i-1][0]_selected">$select_label</label></td>
-        <td><select id="$field_table_aref->[$i][0]_selected$field_table_aref->[$i-1][0]_selected" name="$field_table_aref->[$i][0]_selected$field_table_aref->[$i-1][0]_selected">}
+            $r->print(
+qq{<td><label for="$field_table_aref->[$i][0]_selected$field_table_aref->[$i-1][0]_selected">$select_label</label></td>
+        <td><select id="$field_table_aref->[$i][0]_selected$field_table_aref->[$i-1][0]_selected" name="$field_table_aref->[$i][0]_selected$field_table_aref->[$i-1][0]_selected">
+        }
             );
         }
         else {
-             $r->print(
-                  qq{<td><label for="$field_table_aref->[$i][0]_selected$field_table_aref->[$i-1][0]_selected">$select_label</label></td>
-        <td><select id="$field_table_aref->[$i][0]_selected" name="$field_table_aref->[$i][0]_selected">}
+            $r->print(
+qq{<td><label for="$field_table_aref->[$i][0]_selected$field_table_aref->[$i-1][0]_selected">$select_label</label></td>
+        <td><select id="$field_table_aref->[$i][0]_selected" name="$field_table_aref->[$i][0]_selected">
+        }
             );
         }
 
- $r->print(qq{<option value="All">All</option>
+        $r->print(
+            qq{
+     <option value="All">All</option>
         }
         );
 
         foreach my $select (@$select_array_ref) {
             if ( defined $select ) {
                 $select =~ s/"/&quot;/g
-                    ; # Pisses me off I can't find a way to deal with BOTH ' and " in XHTML forms
+                  ; # Pisses me off I can't find a way to deal with BOTH ' and " in XHTML forms
                 $r->print(
                     qq{<option value="$select">$select</option>
         }
-                         );
+                );
             }
         }
         $r->print(qq{</select></td>});
@@ -351,7 +376,7 @@ sub SelectTable {
             <select id="itemstoinsert" name="itemstoinsert">
             <option selected="selected" value="1">1</option>
             }
-                 );
+        );
     }
     else {
         $r->print(
@@ -362,13 +387,13 @@ sub SelectTable {
             <select id="itemstoinsert" name="itemstoinsert">
             <option selected="selected" value="1">1</option>
             }
-                 );
+        );
     }
     for my $i ( 2 .. 36 ) {
         $r->print(
             qq{<option value="$i">$i</option>
         }
-                 );
+        );
     }
     if ( $lang eq "es" ) {
         $r->print(
@@ -376,8 +401,20 @@ sub SelectTable {
     </tr>
     <tr>
     <td><label for="field_selectedtable_selected">Columna</label></td>
-    <td><select id="field_selectedtable_selected" name="field_selectedtable_selected"></select>
-    </td>
+    <td><select id="field_selectedtable_selected" name="field_selectedtable_selected">
+    <option value=""></option
+    }
+        );
+
+        for my $column (@first_columns) {
+            $r->print(
+                qq{<option value="$column">$column</option>
+    }
+            );
+        }
+
+        $r->print(
+            qq{</select></td>
     <td><label for="field_value_selected">RegEx para valor de columna</label></td>
     <td><input type="text" id="field_value_selected" name="field_value_selected" value="" />
     <label for="field_value_selected_null">NULL</label>
@@ -388,8 +425,19 @@ sub SelectTable {
     </tr>
     <tr>
     <td><label for="field_selected2table_selected">Segunda columna</label></td>
-    <td><select id="field_selected2table_selected" name="field_selected2table_selected"></select>
-    </td>
+    <td><select id="field_selected2table_selected" name="field_selected2table_selected">
+    <option value=""></option>
+    }
+        );
+        for my $column (@first_columns) {
+            $r->print(
+                qq{<option value="$column">$column</option>
+    }
+            );
+        }
+
+        $r->print(
+            qq{</select></td>
     <td><label for="field_value_selected2">RegEx para valor de segunda columna</label></td>
     <td><input type="text" id="field_value_selected2" name="field_value_selected2" value="" />
     <label for="field_value_selected2_null">NULL</label>
@@ -421,24 +469,33 @@ sub SelectTable {
     <br />
     <br />
     }
-                 );
+        );
         if ( @{ $arg_ref->{Commands}{commands} } ~~ /DeleteDuplicates/ ) {
             $r->print(
-                qq{<input type="radio" value="DeleteDuplicates" id="DeleteDuplicates" name="command" />
+qq{<input type="radio" value="DeleteDuplicates" id="DeleteDuplicates" name="command" />
     <label class="bigred" for="DeleteDuplicates">Borrar Duplicados(Selecciona una tabla, con limitaciones como clase y/o nombre de vendor con products tabla)</label>
     <br />
     <br />
     }
-                     );
+            );
         }
         if ( @{ $arg_ref->{Commands}{commands} } ~~ /DeleteRecord/ ) {
             $r->print(
-                qq{<input type="radio" value="DeleteRecordForm" id="DeleteRecordForm" name="command" />
+qq{<input type="radio" value="DeleteRecordForm" id="DeleteRecordForm" name="command" />
     <label class="bigpurple" for="DeleteRecordForm">Borrar un Registro (Selecciona una tabla con un numero de ID)</label>
     <br />
     <br />
     }
-                     );
+            );
+        }
+        if ( @{ $arg_ref->{Commands}{commands} } ~~ /ShowDuplicates/ ) {
+            $r->print(
+qq{<input type="radio" value="ShowDuplicates" id="ShowDuplicates" name="command" />
+    <label class="bigpurple" for="ShowDuplicates">Mostrar Registros Duplicados (Solamente las tablas products y gallery)</label>
+    <br />
+    <br />
+    }
+            );
         }
 
         $r->print(
@@ -455,7 +512,7 @@ sub SelectTable {
     </div>
     </body></html>
     }
-                 );
+        );
     }
     else {
         $r->print(
@@ -463,8 +520,19 @@ sub SelectTable {
     </tr>
     <tr>
     <td><label for="field_selectedtable_selected">Field</label></td>
-    <td><select id="field_selectedtable_selected" name="field_selectedtable_selected"></select>
-    </td>
+    <td><select id="field_selectedtable_selected" name="field_selectedtable_selected">
+    <option value=""></option>
+    }
+        );
+        for my $column (@first_columns) {
+            $r->print(
+                qq{<option value="$column">$column</option>
+    }
+            );
+        }
+
+        $r->print(
+            qq{</select></td>
     <td>
     <label for="field_value_selected">Field Value RegEx</label>
     </td>
@@ -478,8 +546,19 @@ sub SelectTable {
     </tr>
     <tr>
     <td><label for="field_selected2table_selected">Second Field</label></td>
-    <td><select id="field_selected2table_selected" name="field_selected2table_selected"></select>
-    </td>
+    <td><select id="field_selected2table_selected" name="field_selected2table_selected">
+    <option value=""></option>
+    }
+        );
+        for my $column (@first_columns) {
+            $r->print(
+                qq{<option value="$column">$column</option>
+    }
+            );
+        }
+
+        $r->print(
+            qq{</select></td>
     <td>
     <label for="field_value_selected2">Second Field Value RegEx</label>
     </td>
@@ -515,28 +594,34 @@ sub SelectTable {
     <br />
     <br />
         }
-                 );
-        if ( @{ $arg_ref->{Commands}{commands} } ~~ /DeleteDuplicates/ )
-        {
+        );
+        if ( @{ $arg_ref->{Commands}{commands} } ~~ /DeleteDuplicates/ ) {
             $r->print(
-                qq{<input type="radio" value="DeleteDuplicates" id="DeleteDuplicates" name="command" />
+qq{<input type="radio" value="DeleteDuplicates" id="DeleteDuplicates" name="command" />
     <label class="bigred" for="DeleteDuplicates">Delete Duplicates (Select a table, use a limit such as class and/or vendor with products table)</label>
     <br />
     <br />
 }
-                     );
+            );
         }
-        if ( @{ $arg_ref->{Commands}{commands} } ~~ /DeleteRecord/ )
-        {
+        if ( @{ $arg_ref->{Commands}{commands} } ~~ /DeleteRecord/ ) {
             $r->print(
-                qq{<input type="radio" value="DeleteRecordForm" id="DeleteRecordForm" name="command" />
+qq{<input type="radio" value="DeleteRecordForm" id="DeleteRecordForm" name="command" />
     <label class="bigpurple" for="DeleteRecordForm">Delete a Record (Select a Table with an ID)</label>
     <br />
     <br />
     }
-                     );
+            );
         }
-
+        if ( @{ $arg_ref->{Commands}{commands} } ~~ /ShowDuplicates/ ) {
+            $r->print(
+qq{<input type="radio" value="ShowDuplicates" id="ShowDuplicates" name="command" />
+    <label class="bigpurple" for="ShowDuplicates">Show Duplicate Records (Only products and gallery tables)</label>
+    <br />
+    <br />
+    }
+            );
+        }
         $r->print(
             qq{
     <input type="radio" value="ShowTables" id="ShowTables" name="command" />
@@ -553,7 +638,7 @@ sub SelectTable {
     </body>
     </html>
     }
-                 );
+        );
     }
 }
 
@@ -565,7 +650,7 @@ BWCL::SelectTable_B
 
 =head1 VERSION
 
-This documentation refers to BWCL::SelectTable_B version 4.5.55.
+This documentation refers to BWCL::SelectTable_B version 4.5.60.
 
 =head1 SYNOPSIS
 
