@@ -1,6 +1,18 @@
 #!/usr/bin/perl
 
-our $VERSION = 1.1.11;
+our $VERSION = 1.1.12;
+
+=pod
+
+=head1 NAME
+
+lab.pl
+
+=head1 VERSION
+
+This documentation refers to lab.pl version 1.1.12.
+
+=cut
 
 use warnings;
 use strict;
@@ -8,10 +20,10 @@ use strict;
 use Apache::Request();
 use DBI();
 use Config::Std;
-use BWCL::SelectLPL qw(SelectLPLs);
-use BWCL::ViewLPLRecords
+use BWC::SelectLPL qw(SelectLPLs);
+use BWC::ViewLPLRecords
   qw(ViewLPLRecords DuplicateFullLPLRecordsForm DuplicateFullLPLRecords);
-use BWCL::ShowAdmin qw(error_message);
+use BWC::ShowAdmin qw(error_message);
 
 #######################################################################
 ##        Connect to Database
@@ -264,14 +276,6 @@ SelectLPLs($config_hash_ref);
 $dbh->disconnect;
 
 =pod
-
-=head1 NAME
-
-lab.pl
-
-=head1 VERSION
-
-This documentation refers to lab.pl version 1.1.11.
 
 =head1 SYNOPSIS
 

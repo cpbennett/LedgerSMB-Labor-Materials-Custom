@@ -1,6 +1,18 @@
 package BWCL::ViewFALRecords;
 
-our $VERSION = 3.1.20;
+our $VERSION = 3.1.21;
+
+=pod
+
+=head1 NAME
+
+BWCL::ViewFALRecords
+
+=head1 VERSION
+
+This documentation refers to BWCL::ViewFALRecords version 3.1.21.
+
+=cut
 
 use warnings;
 use strict;
@@ -1763,14 +1775,6 @@ qq{INSERT INTO full_assembly_list ($full_assembly_list_fields) VALUES ($full_ass
 }
 
 =pod
-
-=head1 NAME
-
-BWCL::ViewFALRecords
-
-=head1 VERSION
-
-This documentation refers to BWCL::ViewFALRecords version 3.1.20.
 
 =head1 SYNOPSIS
 

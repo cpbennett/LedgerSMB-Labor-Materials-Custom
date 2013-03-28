@@ -1,6 +1,18 @@
 package BWCL::RecordUpdates_B;
 
-our $VERSION = 4.8.20;
+our $VERSION = 4.8.21;
+
+=pod
+
+=head1 NAME
+
+BWCL::RecordUpdates_B
+
+=head1 VERSION
+
+This documentation refers to BWCL::RecordUpdates_B version 4.8.21.
+
+=cut
 
 use warnings;
 use strict;
@@ -1270,14 +1282,6 @@ qq{<option value="$$values_aref[$i]" style="width:99%;">$$names_aref[$i]</option
 }
 
 =pod
-
-=head1 NAME
-
-BWCL::RecordUpdates_B
-
-=head1 VERSION
-
-This documentation refers to BWCL::RecordUpdates_B version 4.8.20.
 
 =head1 SYNOPSIS
 

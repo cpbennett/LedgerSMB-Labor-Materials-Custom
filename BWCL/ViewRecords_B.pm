@@ -1,8 +1,19 @@
 package BWCL::ViewRecords_B;
 
-our $VERSION = 3.0.00;
+our $VERSION = 3.0.01;
 
-# BETA TEST
+=pod
+
+=head1 NAME
+
+BWCL::ViewRecords_B
+
+=head1 VERSION
+
+This documentation refers to BWCL::ViewRecords_B version 3.0.01.
+
+=cut
+
 use warnings;
 use strict;
 
@@ -889,14 +900,6 @@ sub ShowDuplicates {
 }
 
 =pod
-
-=head1 NAME
-
-BWCL::ViewRecords_B
-
-=head1 VERSION
-
-This documentation refers to BWCL::ViewRecords_B version 3.0.00.
 
 =head1 SYNOPSIS
 

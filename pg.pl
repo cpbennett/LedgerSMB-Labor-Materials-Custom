@@ -1,8 +1,19 @@
 #!/usr/bin/perl
 
-our $VERSION = 3.2.00;
+our $VERSION = 3.2.01;
 
-# BETA TEST
+=pod
+
+=head1 NAME
+
+pg.pl
+
+=head1 VERSION
+
+This documentation refers to pg.pl version 3.2.01.
+
+=cut
+
 use warnings;
 use strict;
 
@@ -10,12 +21,12 @@ use Apache::Request();
 use DBI();
 
 #subs Modules
-use BWCL::ShowAdmin qw(ShowTables ShowAllTables ShowColumns error_message);
-use BWCL::InsertRecord_B qw(InsertRecordGroup InsertRecordGroupForm);
-use BWCL::SelectTable_B qw(PrepareHead SelectTable);
-use BWCL::RecordUpdates_B qw(UpdateRecordForm UpdateRecord DeleteDuplicates);
-use BWCL::ViewRecords_B qw(ViewRecords ShowDuplicates);
-use BWCL::DeleteRecord_B qw(DeleteRecord DeleteRecordForm);
+use BWC::ShowAdmin qw(ShowTables ShowAllTables ShowColumns error_message);
+use BWC::InsertRecord_B qw(InsertRecordGroup InsertRecordGroupForm);
+use BWC::SelectTable_B qw(PrepareHead SelectTable);
+use BWC::RecordUpdates_B qw(UpdateRecordForm UpdateRecord DeleteDuplicates);
+use BWC::ViewRecords_B qw(ViewRecords ShowDuplicates);
+use BWC::DeleteRecord_B qw(DeleteRecord DeleteRecordForm);
 use Config::Std;
 
 #######################################################################
@@ -319,14 +330,6 @@ SelectTable($config_hash_ref);
 $dbh->disconnect;
 
 =pod
-
-=head1 NAME
-
-pg.pl
-
-=head1 VERSION
-
-This documentation refers to pg.pl version 3.2.00.
 
 =head1 SYNOPSIS
 

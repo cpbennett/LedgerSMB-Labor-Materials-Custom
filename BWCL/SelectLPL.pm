@@ -1,6 +1,18 @@
 package BWCL::SelectLPL;
 
-our $VERSION = 1.0.20;
+our $VERSION = 1.0.21;
+
+=pod
+
+=head1 NAME
+
+BWCL::SelectLPL
+
+=head1 VERSION
+
+This documentation refers to BWCL::SelectLPL version 1.0.21.
+
+=cut
 
 use warnings;
 use strict;
@@ -113,14 +125,6 @@ document.writeln("<select id='labor_project_selected' name='labor_project_select
 }
 
 =pod
-
-=head1 NAME
-
-BWCL::SelectLPL
-
-=head1 VERSION
-
-This documentation refers to BWCL::SelectLPL version 1.0.11.
 
 =head1 SYNOPSIS
 

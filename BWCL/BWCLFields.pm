@@ -1,6 +1,18 @@
 package BWCL::BWCLFields;
 
-our $VERSION = 1.2.1;
+our $VERSION = 1.2.2;
+
+=pod
+
+=head1 NAME
+
+BWCL::BWCLFields
+
+=head1 VERSION
+
+This documentation refers to BWCL::BWCLFields version 1.2.2.
+
+=cut
 
 use warnings;
 use strict;
@@ -461,14 +473,6 @@ sub Selecter {
 }
 
 =pod
-
-=head1 NAME
-
-BWCL::BWCLFields
-
-=head1 VERSION
-
-This documentation refers to BWCL::BWCLFields version 1.2.1.
 
 =head1 SYNOPSIS
 

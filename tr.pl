@@ -1,6 +1,18 @@
 #!/usr/bin/perl
 
-our $VERSION = 2.2.01;
+our $VERSION = 2.2.02;
+
+=pod
+
+=head1 NAME
+
+tr.pl
+
+=head1 VERSION
+
+This documentation refers to tr.pl version 2.2.02.
+
+=cut
 
 use warnings;
 use strict;
@@ -8,10 +20,10 @@ use strict;
 use Apache::Request();
 use DBI();
 use Config::Std;
-use BWCL::SelectFAL qw(SelectFALs);
-use BWCL::ViewFALRecords
+use BWC::SelectFAL qw(SelectFALs);
+use BWC::ViewFALRecords
   qw(ViewFALRecords ViewFullFALRecords DuplicateFullFALRecordsForm DuplicateFullFALRecords);
-use BWCL::ShowAdmin qw(error_message);
+use BWC::ShowAdmin qw(error_message);
 
 #######################################################################
 ##        Connect to Database
@@ -260,14 +272,6 @@ SelectFALs($config_hash_ref);
 $dbh->disconnect;
 
 =pod
-
-=head1 NAME
-
-tr.pl
-
-=head1 VERSION
-
-This documentation refers to tr.pl version 2.2.01.
 
 =head1 SYNOPSIS
 

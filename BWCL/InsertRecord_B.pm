@@ -1,6 +1,18 @@
 package BWCL::InsertRecord_B;
 
-our $VERSION = 4.5.10;
+our $VERSION = 4.5.11;
+
+=pod
+
+=head1 NAME
+
+BWCL::InsertRecord_B
+
+=head1 VERSION
+
+This documentation refers to BWCL::InsertRecord_B version 4.5.11.
+
+=cut
 
 use warnings;
 use strict;
@@ -996,14 +1008,6 @@ qq|document.insertform.$fillc$u.value=document.insertform.$fillc|
 }
 
 =pod
-
-=head1 NAME
-
-BWCL::InsertRecord_B
-
-=head1 VERSION
-
-This documentation refers to BWCL::InsertRecord_B version 4.5.10.
 
 =head1 SYNOPSIS
 

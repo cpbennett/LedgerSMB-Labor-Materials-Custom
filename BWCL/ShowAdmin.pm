@@ -1,6 +1,18 @@
 package BWCL::ShowAdmin;
 
-our $VERSION = 1.4.12;
+our $VERSION = 1.4.13;
+
+=pod
+
+=head1 NAME
+
+BWCL::ShowAdmin
+
+=head1 VERSION
+
+This documentation refers to BWCL::ShowAdmin version 1.4.13.
+
+=cut
 
 use warnings;
 use strict;
@@ -449,14 +461,6 @@ sub ShowColumns {
 }
 
 =pod
-
-=head1 NAME
-
-BWCL::ShowAdmin
-
-=head1 VERSION
-
-This documentation refers to BWCL::ShowAdmin version 1.4.12.
 
 =head1 SYNOPSIS
 

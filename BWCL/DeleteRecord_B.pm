@@ -1,6 +1,18 @@
 package BWCL::DeleteRecord_B;
 
-our $VERSION = 0.0.02;
+our $VERSION = 0.0.03;
+
+=pod
+
+=head1 NAME
+
+BWCL::DeleteRecord_B
+
+=head1 VERSION
+
+This documentation refers to BWCL::DeleteRecord_B version 0.0.03.
+
+=cut
 
 use warnings;
 use strict;
@@ -214,14 +226,6 @@ that record should also be deleted."
 }
 
 =pod
-
-=head1 NAME
-
-BWCL::DeleteRecord_B
-
-=head1 VERSION
-
-This documentation refers to BWCL::DeleteRecord_B version 0.0.02.
 
 =head1 SYNOPSIS
 

@@ -1,6 +1,18 @@
 package BWCL::ViewLPLRecords;
 
-our $VERSION = 1.1.10;
+our $VERSION = 1.1.11;
+
+=pod
+
+=head1 NAME
+
+BWCL::ViewLPLRecords
+
+=head1 VERSION
+
+This documentation refers to BWCL::ViewLPLRecords version 1.1.11.
+
+=cut
 
 use warnings;
 use strict;

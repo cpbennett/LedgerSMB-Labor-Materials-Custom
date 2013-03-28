@@ -1,8 +1,19 @@
 package BWCL::SelectTable_B;
 
-our $VERSION = 4.5.61;
+our $VERSION = 4.5.62;
 
-# BETA TEST
+=pod
+
+=head1 NAME
+
+BWCL::SelectTable_B
+
+=head1 VERSION
+
+This documentation refers to BWCL::SelectTable_B version 4.5.62.
+
+=cut
+
 use warnings;
 use strict;
 
@@ -643,14 +654,6 @@ qq{<input type="radio" value="ShowDuplicates" id="ShowDuplicates" name="command"
 }
 
 =pod
-
-=head1 NAME
-
-BWCL::SelectTable_B
-
-=head1 VERSION
-
-This documentation refers to BWCL::SelectTable_B version 4.5.60.
 
 =head1 SYNOPSIS
 

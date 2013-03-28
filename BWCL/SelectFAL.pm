@@ -1,6 +1,18 @@
 package BWCL::SelectFAL;
 
-our $VERSION = 1.4.20;
+our $VERSION = 1.4.21;
+
+=pod
+
+=head1 NAME
+
+BWCL::SelectFAL
+
+=head1 VERSION
+
+This documentation refers to BWCL::SelectFAL version 1.4.21.
+
+=cut
 
 use warnings;
 use strict;
@@ -111,14 +123,6 @@ document.writeln("<select id='assembly_selected' name='assembly_selected'></sele
 }
 
 =pod
-
-=head1 NAME
-
-BWCL::SelectFAL
-
-=head1 VERSION
-
-This documentation refers to BWCL::SelectFAL version 1.4.11.
 
 =head1 SYNOPSIS
 
